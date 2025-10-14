@@ -1,0 +1,20 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+RUN npm install -g expo-cli eas-cli
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npx expo export --platform web
+
+RUN eas build --platform android --non-interactive
+#RUN eas build --platform ios --non-interactive
+
+# Stage 2: optionnel, juste pour prod web
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

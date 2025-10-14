@@ -1,0 +1,8 @@
+services:
+  front:
+    container_name: front-test
+    build:
+      context: ./front
+      dockerfile: Dockerfile.test
+    ports:
+      - "8080:8080"
