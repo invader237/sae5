@@ -6,3 +6,11 @@ services:
       dockerfile: Dockerfile.prod
     ports:
       - "80:80"
+  api:
+    container_name: api-prod
+    build:
+      context: ./back
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8000:8000"
+    env_file: .env
