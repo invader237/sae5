@@ -55,7 +55,7 @@ make start fastapi  # Start only the backend container
 
 To stop all running containers:
 ```bash
-make down
+make down ENV=<dev|test|prod>
 ```
 
 ## 🧪 Testing Your Code
@@ -70,10 +70,20 @@ This command runs tests, lint, and build for both the frontend and backend.
 You can also run them independently:
 
 ```bash
-make test front    # Test, lint, and build the frontend
-make test back     # Test, lint, and build the backend
+make test front    # Test the frontend
+make test back     # Test the backend
 ```
 
-Each module also includes a dedicated Makefile for more granular control.
+---
 
-> 💡 Tip: You can also run tests, builds, and linters separately if needed.
+Run linting checks with:
+```bash
+make lint
+```
+
+You can also lint the frontend and backend separately:
+
+```bash
+make lint front    # Lint the frontend code
+make lint back     # Lint the backend code
+```
