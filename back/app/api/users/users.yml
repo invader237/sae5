@@ -1,0 +1,15 @@
+get:
+  summary: Retrieve a list of users
+  description: Fetches a list of all users in the system.
+  operationId: getUsers
+  tags:
+    - Users
+  responses:
+    '200':
+      description: A list of users
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: './DTO/userDTO.yml'

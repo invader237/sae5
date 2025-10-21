@@ -1,0 +1,13 @@
+openapi: 3.0.3
+info:
+  title: SAE5 API
+  version: 1.0.0
+
+paths:
+  /users:
+    $ref: './users/users.yml'
+
+components:
+  schemas:
+    UserDTO:
+      $ref: './users/DTO/userDTO.yml'
