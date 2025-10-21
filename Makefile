@@ -30,7 +30,7 @@ endif
 
 setup:
 	@echo "[*] Installing backend dependencies..."
-#	cd $(BACK_DIR) && pip install -r requirements.txt
+	cd $(BACK_DIR) && pip install -r requirements.txt
 	@echo "[*] Installing frontend dependencies..."
 	cd $(FRONT_DIR) && $(NPM) install
 	@echo "[OK] Setup complete!"
