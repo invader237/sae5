@@ -72,7 +72,7 @@ start-expo:
 
 start-fastapi:
 	@echo "[*] Starting backend (FastAPI)..."
-	$(DOCKER_COMPOSE) -f docker-compose.dev.yml up back
+	$(DOCKER_COMPOSE) -f docker-compose.dev.yml up api
 
 # ============================================
 # Stop and Clean
