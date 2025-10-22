@@ -48,10 +48,7 @@ make start-fastapi  # Start only the backend container
 ```
 
 > ⚠️ Note: The `dev` container does not include live reloading.
-> If you need live reload for local development, use:
-> ```bash 
-> make run-dev-local
-> ```
+> If you need live reload for local development, use the previous commands to start the frontend and backend separately.
 
 To stop all running containers:
 ```bash
