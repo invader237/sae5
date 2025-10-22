@@ -3,6 +3,9 @@
 # ============================================
 .DEFAULT_GOAL := help
 
+SHELL := $(if $(filter Windows_NT,$(OS)),cmd.exe,/bin/bash)
+.SHELLFLAGS := $(if $(filter Windows_NT,$(OS)),/C, -c)
+
 # Variables
 FRONT_DIR := front
 BACK_DIR := back
@@ -30,7 +33,7 @@ endif
 
 setup:
 	@echo "[*] Installing backend dependencies..."
-#	cd $(BACK_DIR) && pip install -r requirements.txt
+	cd $(BACK_DIR) && pip install -r requirements.txt
 	@echo "[*] Installing frontend dependencies..."
 	cd $(FRONT_DIR) && $(NPM) install
 	@echo "[OK] Setup complete!"
@@ -51,17 +54,6 @@ run-prod:
 	@echo "[*] Starting project in PRODUCTION mode..."
 	$(DOCKER_COMPOSE) -f docker-compose.prod.yml up --build -d
 
-run-dev-local:
-	@echo "[*] Starting project locally (live reload)..."
-ifeq ($(OS),Windows_NT)
-	@cd $(BACK_DIR) && start "" cmd /c venv\Scripts\python.exe -m uvicorn app.main:app --reload
-else
-	@cd $(BACK_DIR) && $(PYTHON) -m uvicorn app.main:app --reload &
-endif
-	@echo "[*] Starting frontend..."
-	@cd $(FRONT_DIR) && $(NPM) start
-	@echo "[OK] Project running locally!"
-
 # ============================================
 # Start Individual Services
 # ============================================
@@ -72,7 +64,7 @@ start-expo:
 
 start-fastapi:
 	@echo "[*] Starting backend (FastAPI)..."
-	$(DOCKER_COMPOSE) -f docker-compose.dev.yml up back
+	$(DOCKER_COMPOSE) -f docker-compose.dev.yml up api
 
 # ============================================
 # Stop and Clean
@@ -155,7 +147,6 @@ help:
 	@echo "  [*] make run-dev            - Run project in DEV mode"
 	@echo "  [*] make run-test           - Run project in TEST mode"
 	@echo "  [*] make run-prod           - Run project in PRODUCTION mode"
-	@echo "  [*] make run-dev-local      - Run locally with live reload"
 	@echo ""
 	@echo "  [*] make start-expo         - Start only the frontend (Expo)"
 	@echo "  [*] make start-fastapi      - Start only the backend (FastAPI)"
