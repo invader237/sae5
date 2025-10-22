@@ -34,23 +34,23 @@ This command installs all required dependencies for both the frontend and backen
 You can start the project in different modes using:
 
 ```bash
-make run dev
-make run test
-make run prod
+make run-dev
+make run-test
+make run-prod
 ```
 
 These commands launch the corresponding Docker containers.
 
 You can also start only one part of the project:
 ```bash
-make start expo     # Start only the frontend container
-make start fastapi  # Start only the backend container
+make start-expo     # Start only the frontend container
+make start-fastapi  # Start only the backend container
 ```
 
 > ⚠️ Note: The `dev` container does not include live reloading.
 > If you need live reload for local development, use:
 > ```bash 
-> make run dev-local
+> make run-dev-local
 > ```
 
 To stop all running containers:
@@ -70,8 +70,8 @@ This command runs tests, lint, and build for both the frontend and backend.
 You can also run them independently:
 
 ```bash
-make test front    # Test the frontend
-make test back     # Test the backend
+make test-front    # Test the frontend
+make test-back     # Test the backend
 ```
 
 ---
@@ -79,11 +79,4 @@ make test back     # Test the backend
 Run linting checks with:
 ```bash
 make lint
-```
-
-You can also lint the frontend and backend separately:
-
-```bash
-make lint front    # Lint the frontend code
-make lint back     # Lint the backend code
 ```
