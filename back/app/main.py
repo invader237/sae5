@@ -2,11 +2,14 @@
 from fastapi import FastAPI
 from app.config import settings
 from app.database import engine, Base
-from app import user  
 from app.scripts.seed_dev import load_fixtures
 from sqlalchemy import text
 
+# router import
+from app.user.infra.rest.user_router import router as user_router
+
 app = FastAPI()
+
 
 def refresh_db():
     with engine.begin() as connection:
@@ -16,6 +19,7 @@ def refresh_db():
     Base.metadata.create_all(bind=engine)
     load_fixtures()
 
+
 @app.on_event("startup")
 def on_startup():
     if settings.APP_PROFILE.startswith("dev"):
@@ -23,9 +27,11 @@ def on_startup():
     else:
         pass
 
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the FastAPI application!"}
 
-from app.user.infra.rest.user_router import router as user_router
+
+# router include
 app.include_router(user_router)

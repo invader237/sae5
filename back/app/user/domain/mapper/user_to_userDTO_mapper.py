@@ -1,6 +1,7 @@
 from app.dto.generated import UserDTO
 from app.user.domain.entity.user import User
 
+
 class UserToUserDTOMapper:
     @staticmethod
     def apply(user: User) -> UserDTO:

@@ -1,6 +1,7 @@
 from typing import Protocol, Collection
 from app.user.domain.entity.user import User
 
+
 class UserCatalog(Protocol):
     def find_all(self) -> Collection[User]: ...
     def save(self, user: User) -> None: ...
