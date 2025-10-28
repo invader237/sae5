@@ -6,8 +6,12 @@ info:
 paths:
   /users:
     $ref: './users/users.yml'
+  /pictures:
+    $ref: './pictures/pictures.yml'
 
 components:
   schemas:
     UserDTO:
       $ref: './users/DTO/userDTO.yml'
+    PictureDTO:
+      $ref: './pictures/DTO/pictureDTO.yml'
