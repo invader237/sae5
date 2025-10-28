@@ -57,6 +57,13 @@ jobs:
     name: 🧪 Run Tests (Frontend + Backend)
     runs-on: ubuntu-latest
     needs: build
+    env:
+      APP_NAME: ${{ secrets.APP_NAME }}
+      APP_PROFILE: ${{ secrets.APP_PROFILE }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
     steps:
       - name: Checkout repository
