@@ -1,0 +1,1 @@
+"""Mappers for picture domain"""
