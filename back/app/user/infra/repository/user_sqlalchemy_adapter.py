@@ -1,6 +1,6 @@
 from app.user.domain.catalog.user_catalog import UserCatalog
 from app.user.infra.repository.user_repository import UserRepository
-from app.user.domain.entity.user import User
+
 
 class UserSQLAlchemyAdapter(UserCatalog):
     def __init__(self, repository: UserRepository):
