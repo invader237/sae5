@@ -10,4 +10,4 @@ class UserSQLAlchemyAdapter(UserCatalog):
         return self.repository.find_all()
 
     def save(self, user_in: dict):
-        return self.repository.create(user_in)
+        return self.repository.save(user_in)

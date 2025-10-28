@@ -9,7 +9,9 @@ class UserRepository:
         return self.db.query(UserModel).all()
 
     def save(self, user_in: dict) -> UserModel:
-        user = UserModel(**user_in)
+        # Avoid overriding DB server_default for created_at when caller passes None
+        data = {k: v for k, v in user_in.items() if not (k == "created_at" and v is None)}
+        user = UserModel(**data)
         self.db.add(user)
         self.db.commit()
         self.db.refresh(user)
