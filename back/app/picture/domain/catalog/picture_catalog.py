@@ -1,0 +1,7 @@
+from typing import Protocol, Collection
+from app.picture.domain.entity.picture import Picture
+
+
+class PictureCatalog(Protocol):
+    def find_all(self) -> Collection[Picture]: ...
+    def save(self, picture: Picture) -> None: ...
