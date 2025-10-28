@@ -5,9 +5,11 @@ class UserToUserDTOMapper:
     @staticmethod
     def apply(user: User) -> UserDTO:
         return UserDTO(
-            id=str(user.id),
-            name=user.name,
-            email=user.email
+            id=user.user_id,
+            name=user.username,
+            email=user.email,
+            created_at=user.created_at
         )
+
 
 user_to_userDTO_mapper = UserToUserDTOMapper()
