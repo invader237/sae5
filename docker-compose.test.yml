@@ -5,7 +5,7 @@ services:
       context: ./front
       dockerfile: Dockerfile.test
     ports:
-      - "8080:8080"
+      - "8080:80"
   api:
     container_name: api-prod
     build:
