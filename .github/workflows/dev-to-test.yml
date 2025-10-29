@@ -1,8 +1,6 @@
 name: Dev → Test CI
 
 on:
-  # Temp just for testing purpose
-  workflow_dispatch:
   pull_request:
     branches:
       - test

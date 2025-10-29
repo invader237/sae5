@@ -1,8 +1,6 @@
 name: Test → Prod CI
 
 on:
-  # Temp just for testing purpose
-  workflow_dispatch:
   pull_request:
     branches:
       - prod
