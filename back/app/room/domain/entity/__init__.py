@@ -1,1 +1,0 @@
-"""Entities for room domain"""
