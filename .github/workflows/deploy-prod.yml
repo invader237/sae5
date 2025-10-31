@@ -1,10 +1,10 @@
-name: deploy prod
+name: Deploy Prod
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - feature/ci-cd
 
 jobs:
   build-test-deploy:
