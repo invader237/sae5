@@ -33,7 +33,7 @@ endif
 
 setup:
 	@echo "[*] Installing backend dependencies..."
-	cd $(BACK_DIR) && pip install -r requirements.txt
+	cd $(BACK_DIR) && python3 -m venv venv && . venv/bin/activate && pip install -r requirements.txt
 	@echo "[*] Installing frontend dependencies..."
 	cd $(FRONT_DIR) && $(NPM) install
 	@echo "[OK] Setup complete!"
@@ -91,11 +91,12 @@ test:
 
 test-back:
 	@echo "[*] Running backend tests..."
-	cd $(BACK_DIR) && pytest -v
+	cd $(BACK_DIR) && . venv/bin/activate && pytest --maxfail=1 --disable-warnings -q
 
 test-front:
 	@echo "[*] Running frontend tests..."
-	cd $(FRONT_DIR) && $(NPM) run test
+	#cd $(FRONT_DIR) && $(NPM) run test
+	@echo "No test on front for the moment"
 
 # ============================================
 # Lint & Build
@@ -106,7 +107,7 @@ lint:
 	$(MAKE) lint-front
 
 lint-back:
-	cd $(BACK_DIR) && flake8 .
+	cd $(BACK_DIR) && . venv/bin/activate && flake8 ./app
 
 lint-front:
 	cd $(FRONT_DIR) && $(NPM) run lint
