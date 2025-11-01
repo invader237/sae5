@@ -1,11 +1,11 @@
-from app.dto.generated import UserDTO  # placeholder import to match pattern; generated DTOs are not modified per instruction
 from app.room.domain.entity.room import Room
 
 
 class RoomToRoomDTOMapper:
     @staticmethod
     def apply(room: Room) -> dict:
-        # Return a plain dict representing the DTO to avoid editing generated.py
+        # Return a plain dict representing the DTO to avoid editing
+        # generated.py
         return {
             "id": room.room_id,
             "name": room.name,

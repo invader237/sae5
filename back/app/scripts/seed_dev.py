@@ -1,8 +1,8 @@
 from app.database import SessionLocal
 from app.user.infra.repository.user_repository import UserRepository
-from app.user.infra.repository.user_sqlalchemy_adapter import (
-    UserSQLAlchemyAdapter,
-)
+from app.picture.infra.repository.picture_repository import PictureRepository
+from app.room.infra.repository.room_repository import RoomRepository
+from app.role.infra.repository.role_repository import RoleRepository
 
 
 def load_fixtures():
