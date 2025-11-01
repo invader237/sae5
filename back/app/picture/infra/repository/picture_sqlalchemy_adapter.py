@@ -1,6 +1,5 @@
 from app.picture.domain.catalog.picture_catalog import PictureCatalog
 from app.picture.infra.repository.picture_repository import PictureRepository
-from app.picture.domain.entity.picture import Picture
 
 
 class PictureSQLAlchemyAdapter(PictureCatalog):
