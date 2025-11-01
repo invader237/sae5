@@ -47,8 +47,6 @@ Each transition (`feature/<name → dev`, `dev → test`, `test → main`) trigg
 
 ### 🔁 Workflow Diagrams
 
-#### ✅ ASCII Version (terminal-friendly)
-
     ┌──────────────┐
     │ feature/*    │
     └──────┬───────┘
@@ -67,29 +65,6 @@ Each transition (`feature/<name → dev`, `dev → test`, `test → main`) trigg
     ┌──────────────┐
     │     main     │  (CI + auto deploy to Prod VPS)
     └──────────────┘
-
-#### ✅ Mermaid Diagram (rendered visually on GitHub)
-
-```mermaid
-flowchart TD
-
-  subgraph Development Flow
-    A[feature/* branch] -->|Pull Request| B[dev branch]
-    B -->|Pull Request| C[test branch]
-    C -->|Pull Request| D[main branch]
-  end
-
-  subgraph CI Workflows
-    B -->|CI: Lint + Build + Test| CI1
-    C -->|CI: Lint + Build + Test| CI2
-    D -->|CI: Lint + Build + Test| CI3
-  end
-
-  subgraph Deployment
-    C -->|Auto Deploy via SSH + Docker Compose| VPS1[Test VPS]
-    D -->|Auto Deploy via SSH + Docker Compose| VPS2[Prod VPS]
-  end
-```
 
 ## ✅ 4. CI Workflow (Pull Requests)
 
