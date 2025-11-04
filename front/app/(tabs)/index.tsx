@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useIsFocused } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -19,6 +20,32 @@ export default function HomeScreen() {
   const [zoom, setZoom] = useState(0.1);
 
   const FAST_API_ENDPOINT = 'http://<VOTRE_IP_OU_DNS>:8000/upload';
+
+  const pickImage = async () => {
+    // Demander la permission d'accès à la galerie
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (!permissionResult.granted) {
+      alert('Permission refusée pour accéder à la galerie');
+      return;
+    }
+
+    // Ouvrir le sélecteur d'images
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets[0]?.uri) {
+      try {
+        await uploadFrame(FAST_API_ENDPOINT, result.assets[0].uri);
+        alert('Image envoyée avec succès !');
+      } catch (error) {
+        alert('Erreur lors de l\'envoi de l\'image');
+      }
+    }
+  };
 
   useEffect(() => {
     if (!permission && !hasAsked) {
@@ -77,18 +104,33 @@ export default function HomeScreen() {
       </View>
 
       {isGranted && (
-        <Pressable
-          onPress={() => setIsStreaming((s) => !s)}
-          style={({ pressed }) => [
-            styles.button,
-            isStreaming ? styles.buttonDanger : styles.buttonPrimary,
-            pressed && styles.buttonPressed,
-          ]}
-        >
-          <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-            {isStreaming ? 'Arrêter l\'envoi' : 'Démarrer l\'envoi'}
-          </ThemedText>
-        </Pressable>
+        <>
+          <Pressable
+            onPress={() => setIsStreaming((s) => !s)}
+            style={({ pressed }) => [
+              styles.button,
+              isStreaming ? styles.buttonDanger : styles.buttonPrimary,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <ThemedText type="defaultSemiBold" style={styles.buttonText}>
+              {isStreaming ? 'Arrêter l\'envoi' : 'Démarrer l\'envoi'}
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            onPress={pickImage}
+            style={({ pressed }) => [
+              styles.button,
+              styles.buttonSecondary,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <ThemedText type="defaultSemiBold" style={styles.buttonText}>
+              📷 Sélectionner une photo
+            </ThemedText>
+          </Pressable>
+        </>
       )}
     </ThemedView>
   );
@@ -151,6 +193,9 @@ const styles = StyleSheet.create({
   },
   buttonPrimary: {
     backgroundColor: '#0A84FF', // Bleu primaire
+  },
+  buttonSecondary: {
+    backgroundColor: '#5856D6', // Violet pour la galerie
   },
   buttonDanger: {
     backgroundColor: '#FF3B30', // Rouge pour arrêter
