@@ -1,23 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useIsFocused } from '@react-navigation/native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as ImagePicker from 'expo-image-picker';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+// Themed components non utilisés sur cet écran aligné avec History/Profile
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
+  const tabBarHeight = useBottomTabBarHeight();
   const [permission, requestPermission] = useCameraPermissions();
   const [hasAsked, setHasAsked] = useState(false);
   const cameraRef = useRef<any>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const isUploadingRef = useRef(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [zoom, setZoom] = useState(0.1);
+  const [zoom] = useState(0.1);
 
   const FAST_API_ENDPOINT = 'http://<VOTRE_IP_OU_DNS>:8000/upload';
 
@@ -41,7 +42,7 @@ export default function HomeScreen() {
       try {
         await uploadFrame(FAST_API_ENDPOINT, result.assets[0].uri);
         alert('Image envoyée avec succès !');
-      } catch (error) {
+      } catch {
         alert('Erreur lors de l\'envoi de l\'image');
       }
     }
@@ -73,8 +74,8 @@ export default function HomeScreen() {
         if (picture?.uri) {
           await uploadFrame(FAST_API_ENDPOINT, picture.uri);
         }
-      } catch (e) {
-      } finally {
+  } catch {
+  } finally {
         isUploadingRef.current = false;
       }
     }, 1000);
@@ -83,23 +84,26 @@ export default function HomeScreen() {
   }, [isFocused, isGranted, cameraReady, isStreaming]);
 
   return (
-    <ThemedView style={[styles.container, { paddingTop: insets.top + 5, paddingBottom: insets.bottom + 5 }]}>
-      <ThemedText type="title" style={styles.title}>Caméra</ThemedText>
+    <View
+      className="flex-1 bg-white px-6 pt-4"
+      style={{ paddingBottom: insets.bottom + tabBarHeight + 12 }}
+    >
+      <Text className="text-[24px] font-bold text-[#007bff] mb-2">Caméra</Text>
 
-      <View style={styles.cameraBox}>
+      <View className="flex-1 rounded-xl overflow-hidden border border-neutral-200/50">
         {isGranted ? (
           <CameraView
             ref={cameraRef}
-            style={StyleSheet.absoluteFill}
+            className="absolute inset-0"
             zoom={zoom}
             onCameraReady={() => setCameraReady(true)}
           />
         ) : (
-          <ThemedView style={styles.permissionBox}>
-            <ThemedText style={styles.permissionText}>
-              Autorisez l'accès à la caméra pour afficher l'aperçu.
-            </ThemedText>
-          </ThemedView>
+          <View className="flex-1 items-center justify-center p-4 gap-3">
+            <Text className="text-center text-[#555]">
+              Autorisez l&apos;accès à la caméra pour afficher l&apos;aperçu.
+            </Text>
+          </View>
         )}
       </View>
 
@@ -107,32 +111,28 @@ export default function HomeScreen() {
         <>
           <Pressable
             onPress={() => setIsStreaming((s) => !s)}
-            style={({ pressed }) => [
-              styles.button,
-              isStreaming ? styles.buttonDanger : styles.buttonPrimary,
-              pressed && styles.buttonPressed,
-            ]}
+            className={`mt-5 h-12 px-5 rounded-xl items-center justify-center ${
+              isStreaming ? 'bg-[#FF3B30]' : 'bg-[#007bff]'
+            }`}
+            style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
           >
-            <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-              {isStreaming ? 'Arrêter l\'envoi' : 'Démarrer l\'envoi'}
-            </ThemedText>
+            <Text className="text-white text-lg font-semibold">
+              {isStreaming ? "Arrêter l'envoi" : "Démarrer l'envoi"}
+            </Text>
           </Pressable>
 
           <Pressable
             onPress={pickImage}
-            style={({ pressed }) => [
-              styles.button,
-              styles.buttonSecondary,
-              pressed && styles.buttonPressed,
-            ]}
+            className="mt-3 h-12 px-5 rounded-xl items-center justify-center bg-[#5856D6]"
+            style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
           >
-            <ThemedText type="defaultSemiBold" style={styles.buttonText}>
+            <Text className="text-white text-lg font-semibold">
               📷 Sélectionner une photo
-            </ThemedText>
+            </Text>
           </Pressable>
         </>
       )}
-    </ThemedView>
+    </View>
   );
 }
 
@@ -158,52 +158,3 @@ async function uploadFrame(endpoint: string, uri: string) {
     throw new Error(`Upload échoué (${res.status}): ${text}`);
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    gap: 12,
-  },
-  title: {
-    marginTop: Platform.select({ ios: 8, android: 8, web: 0 }),
-  },
-  cameraBox: {
-    flex: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  permissionBox: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  permissionText: {
-    textAlign: 'center',
-  },
-  button: {
-    marginTop: 12,
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonPrimary: {
-    backgroundColor: '#0A84FF', // Bleu primaire
-  },
-  buttonSecondary: {
-    backgroundColor: '#5856D6', // Violet pour la galerie
-  },
-  buttonDanger: {
-    backgroundColor: '#FF3B30', // Rouge pour arrêter
-  },
-  buttonPressed: {
-    opacity: 0.85,
-  },
-  buttonText: {
-    color: '#fff',
-  },
-});
