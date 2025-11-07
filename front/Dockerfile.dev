@@ -12,4 +12,4 @@ EXPOSE 19000 19001 19002 8081
 ENV EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
 ENV CHOKIDAR_USEPOLLING=true
 
-CMD ["npx", "expo", "start", "--lan"]
+CMD ["sh", "-c", "npm install && npx expo start --lan"]

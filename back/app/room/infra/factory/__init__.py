@@ -1,0 +1,1 @@
+"""Factory for room infra"""
