@@ -1,0 +1,15 @@
+get:
+  summary: Retrieve a list of roles
+  description: Fetches a list of all roles in the system.
+  operationId: getRoles
+  tags:
+    - Roles
+  responses:
+    '200':
+      description: A list of roles
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: './DTO/roleDTO.yml'

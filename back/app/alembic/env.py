@@ -10,6 +10,18 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 from alembic import context
+from sqlalchemy import MetaData
+
+
+# --- 4️⃣ Importer la configuration applicative ---
+from app.config import settings
+
+# --- 5️⃣ Importer les modèles SQLAlchemy ---
+# ⚠️ Tu dois importer toutes les entités ici pour qu’Alembic les voie.
+# Exemple avec une entité User :
+# Si tu as plusieurs entités dans d’autres modules, ajoute-les :
+# from app.clothing.domain.entity.clothing import Base as ClothingBase
+from app.user.domain.entity.user import Base as UserBase
 
 # --- 1️⃣ Charger la config Alembic standard ---
 config = context.config
@@ -22,18 +34,8 @@ if config.config_file_name is not None:
 # (pour pouvoir importer les modules app.*)
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
-# --- 4️⃣ Importer la configuration applicative ---
-from app.config import settings
-
-# --- 5️⃣ Importer les modèles SQLAlchemy ---
-# ⚠️ Tu dois importer toutes les entités ici pour qu’Alembic les voie.
-# Exemple avec une entité User :
-from app.user.domain.entity.user import Base as UserBase
-# Si tu as plusieurs entités dans d’autres modules, ajoute-les :
-# from app.clothing.domain.entity.clothing import Base as ClothingBase
 
 # Tu peux fusionner les métadonnées si plusieurs Base existent :
-from sqlalchemy import MetaData
 target_metadata = MetaData()
 target_metadata.reflect(bind=None)
 target_metadata = UserBase.metadata  # ← pour l’instant, un seul modèle
@@ -42,6 +44,7 @@ target_metadata = UserBase.metadata  # ← pour l’instant, un seul modèle
 # Elle provient directement du profil chargé dans app/config.py
 database_url = settings.database_url
 config.set_main_option("sqlalchemy.url", database_url)
+
 
 # --- 7️⃣ Mode OFFLINE ---
 def run_migrations_offline() -> None:
@@ -55,6 +58,7 @@ def run_migrations_offline() -> None:
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 # --- 8️⃣ Mode ONLINE ---
 def run_migrations_online() -> None:
@@ -74,6 +78,7 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 # --- 9️⃣ Lancer les migrations ---
 if context.is_offline_mode():

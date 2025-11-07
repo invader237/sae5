@@ -6,8 +6,20 @@ info:
 paths:
   /users:
     $ref: './users/users.yml'
+  /pictures:
+    $ref: './pictures/pictures.yml'
+  /rooms:
+    $ref: './rooms/rooms.yml'
+  /roles:
+    $ref: './roles/roles.yml'
 
 components:
   schemas:
     UserDTO:
       $ref: './users/DTO/userDTO.yml'
+    PictureDTO:
+      $ref: './pictures/DTO/pictureDTO.yml'
+    RoomDTO:
+      $ref: './rooms/DTO/roomDTO.yml'
+    RoleDTO:
+      $ref: './roles/DTO/roleDTO.yml'

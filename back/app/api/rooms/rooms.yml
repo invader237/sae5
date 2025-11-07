@@ -1,0 +1,15 @@
+get:
+  summary: Retrieve a list of rooms
+  description: Fetches a list of all rooms in the system.
+  operationId: getRooms
+  tags:
+    - Rooms
+  responses:
+    '200':
+      description: A list of rooms
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: './DTO/roomDTO.yml'
