@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:80"
   api:
-    container_name: api-prod
+    container_name: api-test
     build:
       context: ./back
       dockerfile: Dockerfile.test
