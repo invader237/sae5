@@ -5,7 +5,7 @@ services:
       context: ./front
       dockerfile: Dockerfile.dev
     ports:
-      - "8081:8081"
+      - "8082:8081"
       - "19000:19000"
       - "19001:19001"
       - "19002:19002"
@@ -21,7 +21,7 @@ services:
       context: ./back
       dockerfile: Dockerfile.dev
     ports:
-      - "8000:8000"
+      - "8002:8000"
     environment:
       - APP_NAME=${APP_NAME}
       - APP_PROFILE=${APP_PROFILE}

@@ -5,14 +5,14 @@ services:
       context: ./front
       dockerfile: Dockerfile.test
     ports:
-      - "8080:80"
+      - "8081:80"
   api:
     container_name: api-test
     build:
       context: ./back
       dockerfile: Dockerfile.test
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       - APP_NAME=${APP_NAME}
       - APP_PROFILE=${APP_PROFILE}
