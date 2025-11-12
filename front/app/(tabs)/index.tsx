@@ -105,30 +105,28 @@ export default function HomeScreen() {
       </View>
 
       {isGranted && (
-        <>
-          <Pressable
-            onPress={() => setIsStreaming((s) => !s)}
-            className={`mt-5 h-12 px-5 rounded-xl items-center justify-center ${
-              isStreaming ? 'bg-[#FF3B30]' : 'bg-[#007bff]'
-            }`}
-            style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
-          >
-            <Text className="text-white text-lg font-semibold">
-              {isStreaming ? "Arrêter l'envoi" : "Démarrer l'envoi"}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={pickImage}
-            className="mt-3 h-12 px-5 rounded-xl items-center justify-center bg-[#5856D6]"
-            style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
-          >
-            <Text className="text-white text-lg font-semibold">
-              📷 Sélectionner une photo
-            </Text>
-          </Pressable>
-        </>
+        <Pressable
+          onPress={() => setIsStreaming((s) => !s)}
+          className={`mt-5 h-12 px-5 rounded-xl items-center justify-center ${
+            isStreaming ? 'bg-[#FF3B30]' : 'bg-[#007bff]'
+          }`}
+          style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+        >
+          <Text className="text-white text-lg font-semibold">
+            {isStreaming ? "Arrêter l'envoi" : "Démarrer l'envoi"}
+          </Text>
+        </Pressable>
       )}
+
+      <Pressable
+        onPress={pickImage}
+        className={`${isGranted ? 'mt-3' : 'mt-5'} h-12 px-5 rounded-xl items-center justify-center bg-[#5856D6]`}
+        style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+      >
+        <Text className="text-white text-lg font-semibold">
+          📷 Sélectionner une photo
+        </Text>
+      </Pressable>
     </View>
   );
 }
