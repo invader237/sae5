@@ -8,7 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # router import
 from app.user.infra.rest.user_router import router as user_router
+<<<<<<< HEAD
 from app.model.infra.rest.model_router import router as model_router
+=======
+from app.picture.infra.rest.picture_router import router as picture_router
+>>>>>>> 71da760 (:sparkles:(upload): Add API endpoint / post method for picture)
 
 app = FastAPI()
 
@@ -46,3 +50,4 @@ def read_root():
 # router include
 app.include_router(user_router)
 app.include_router(model_router)
+app.include_router(picture_router)
