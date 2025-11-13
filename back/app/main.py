@@ -7,6 +7,7 @@ from sqlalchemy import text
 
 # router import
 from app.user.infra.rest.user_router import router as user_router
+from app.model.infra.rest.model_router import router as model_router
 
 app = FastAPI()
 
@@ -35,3 +36,4 @@ def read_root():
 
 # router include
 app.include_router(user_router)
+app.include_router(model_router)
