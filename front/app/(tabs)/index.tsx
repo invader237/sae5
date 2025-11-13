@@ -18,7 +18,7 @@ export default function HomeScreen() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [zoom] = useState(0.1);
 
-  const FAST_API_ENDPOINT = 'http://<VOTRE_IP_OU_DNS>:8000/upload';
+  const FAST_API_ENDPOINT = 'http://localhost:8000/pictures/import?type=analyse';
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
