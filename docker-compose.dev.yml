@@ -23,6 +23,9 @@ services:
       dockerfile: Dockerfile.dev
     ports:
       - "8000:8000"
+    volumes:
+      - ./back:/app
+      - ./back/uploads:/app/uploads
     environment:
       - APP_NAME=${APP_NAME}
       - APP_PROFILE=${APP_PROFILE}
