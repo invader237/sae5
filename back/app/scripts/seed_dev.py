@@ -1,5 +1,4 @@
 from app.database import SessionLocal
-from app.user.infra.repository.user_repository import UserRepository
 from app.picture.infra.repository.picture_repository import PictureRepository
 from app.room.infra.repository.room_repository import RoomRepository
 from app.role.infra.repository.role_repository import RoleRepository
@@ -16,10 +15,6 @@ def load_fixtures():
         room_repo = RoomRepository(db)
         role_repo = RoleRepository(db)
         model_repo = ModelRepository(db)
-
-        # Users
-        # user_repo.save({"username": "dev", "email": "dev@example.com"})
-        # user_repo.save({"username": "dev2", "email": "dev2@example.com"})
 
         # Pictures
         picture_repo.save({"path": "/images/sample1.png"})
