@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import Constants from "expo-constants";
 import { API_BASE_URL } from "@/constants/api";
 
 type Mode = "login" | "register";
