@@ -25,6 +25,10 @@ class User(Base):
         unique=True,
         nullable=False,
     )
+    password_hash = Column(          # 👈 AJOUT
+        String(255),
+        nullable=False,
+    )
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),

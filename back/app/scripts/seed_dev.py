@@ -11,15 +11,15 @@ from app.model.domain.entity.model import Model
 def load_fixtures():
     db = SessionLocal()
     try:
-        user_repo = UserRepository(db)
+        # user_repo = UserRepository(db)
         picture_repo = PictureRepository(db)
         room_repo = RoomRepository(db)
         role_repo = RoleRepository(db)
         model_repo = ModelRepository(db)
 
         # Users
-        user_repo.save({"username": "dev", "email": "dev@example.com"})
-        user_repo.save({"username": "dev2", "email": "dev2@example.com"})
+        # user_repo.save({"username": "dev", "email": "dev@example.com"})
+        # user_repo.save({"username": "dev2", "email": "dev2@example.com"})
 
         # Pictures
         picture_repo.save({"path": "/images/sample1.png"})
