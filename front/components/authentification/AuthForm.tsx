@@ -122,7 +122,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
         {mode === "register" && (
           <View className="mb-3">
             <Text className="mb-1 text-gray-700 text-sm">
-              Nom d'utilisateur
+              <Text className="mb-1 text-gray-700 text-sm">
+                Nom d{"'"}utilisateur
+              </Text>
             </Text>
             <TextInput
               className="bg-gray-100 border border-gray-300 rounded-xl px-3 py-2 text-base"
