@@ -4,7 +4,7 @@ from urllib.parse import quote_plus
 
 
 class Settings(BaseSettings):
-    APP_PROFILE: str = "dev-dtrivino"
+    APP_PROFILE: str = "dev-akesseler"
     DB_USER: str = "sae5"
     DB_PASSWORD: str = "93biUy4H5QXHh8D27pcv"
     DB_HOST: str = "51.91.10.125"
