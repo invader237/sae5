@@ -1,4 +1,4 @@
 .env
 
 #url api
-/front/constants/api.ts
+# /front/constants/api.ts
