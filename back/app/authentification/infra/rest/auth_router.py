@@ -10,7 +10,12 @@ from app.authentification.auth_utils import (
     hash_password,
     verify_password,
 )
-from app.authentification.schemas import TokenOut, UserCreate, UserLogin, UserOut
+from app.authentification.schemas import (
+    TokenOut,
+    UserCreate,
+    UserLogin,
+    UserOut,
+)
 from app.database import get_session
 from app.user.domain.entity.user import User
 
@@ -18,7 +23,11 @@ from app.user.domain.entity.user import User
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=UserOut,
+    status_code=status.HTTP_201_CREATED,
+)
 def register(payload: UserCreate, db: Session = Depends(get_session)):
     """
     Crée un nouvel utilisateur.

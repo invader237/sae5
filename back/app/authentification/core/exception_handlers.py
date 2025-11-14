@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 
 async def validation_exception_handler(
-        request: Request, 
+        request: Request,
         exc: RequestValidationError):
     errors = exc.errors()
 
