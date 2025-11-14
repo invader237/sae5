@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     DB_HOST: str = "51.91.10.125"
     DB_PORT: int = 5432
 
-
     @property
     def database_url(self):
         password_encoded = quote_plus(self.DB_PASSWORD)
@@ -25,6 +24,5 @@ class Settings(BaseSettings):
         env_file="back/.env",
         env_file_encoding="utf-8",
     )
-
 
 settings = Settings()
