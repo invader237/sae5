@@ -1,15 +1,21 @@
 # app/main.py
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.config import settings
 from app.database import engine, Base
 from app.scripts.seed_dev import load_fixtures
 from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
+from app.authentification.core.exception_handlers import validation_exception_handler
+from fastapi.exceptions import RequestValidationError
+
 
 # router import
 from app.user.infra.rest.user_router import router as user_router
 from app.model.infra.rest.model_router import router as model_router
 from app.picture.infra.rest.picture_router import router as picture_router
+from app.authentification.infra.rest.auth_router import router as auth_router
 
 app = FastAPI()
 
@@ -20,6 +26,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+
+Base.metadata.create_all(bind=engine)
 
 
 def refresh_db():
@@ -39,6 +49,16 @@ def on_startup():
         pass
 
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the FastAPI application!"}
@@ -48,3 +68,4 @@ def read_root():
 app.include_router(user_router)
 app.include_router(model_router)
 app.include_router(picture_router)
+app.include_router(auth_router)
