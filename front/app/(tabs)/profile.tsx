@@ -97,7 +97,7 @@ export default function ProfileScreen() {
       contentContainerStyle={{ flexGrow: 1 }}
     >
       <View className="flex-1 items-center justify-center px-6 py-10">
-        {user ? (
+        {user && token ? (
           // Affichage après connexion
           <View className="w-full items-center justify-center mt-2">
             <Text className="text-3xl font-extrabold text-blue-500 mb-4">
@@ -112,6 +112,7 @@ export default function ProfileScreen() {
                 Username : {user.username}
               </Text>
               <Text className="text-gray-700">email : {user.email}</Text>
+              {/* Au choix de le mettre ou pas */}
               {/* <Text className="text-gray-400 text-xs mt-2">
                 ID: {user.user_id}
               </Text> */}
@@ -125,7 +126,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          // ❌ Pas connecté → on affiche le formulaire
+          // Pas connecté → on affiche le formulaire
           <AuthForm onAuthenticated={handleAuthenticated} />
         )}
       </View>
