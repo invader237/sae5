@@ -5,6 +5,8 @@ from app.room.infra.repository.room_repository import RoomRepository
 from app.role.infra.repository.role_repository import RoleRepository
 from app.model.infra.repository.model_repository import ModelRepository
 
+from app.model.domain.entity.model import Model
+
 
 def load_fixtures():
     db = SessionLocal()
@@ -42,10 +44,13 @@ def load_fixtures():
         role_repo.save({"type": "client"})
 
         # Models
-        model_repo.save({
-            "name": "Model X",
-            "path": "/models/model_x.obj",
-        })
+        model_repo.save(
+            Model(
+                name="Mon modèle",
+                path="/models/test",
+                is_active=False
+            )
+        )
 
     finally:
         db.close()
