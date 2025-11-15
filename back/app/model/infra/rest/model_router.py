@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.model.domain.catalog.model_catalog import ModelCatalog
+from app.model.domain.DTO.modelDTO import ModelDTO
 from app.model.infra.factory.model_factory import get_model_catalog
 from app.model.infra.factory.model_factory import get_model_loader
 from app.model.domain.service.model_loader import ModelLoader
@@ -23,6 +24,13 @@ class ModelController:
         )
 
         self.router.add_api_route(
+            "/",
+            self.set_active_model,
+            response_model=dict,
+            methods=["POST"],
+        )
+
+        self.router.add_api_route(
             "/scan",
             self.scan_models,
             response_model=dict,
@@ -35,6 +43,33 @@ class ModelController:
     ):
         models = model_catalog.find_all()
         return [model_to_modelDTO_mapper.apply(m).dict() for m in models]
+
+
+    def set_active_model(
+        self,
+        model_to_activate: ModelDTO,
+        model_catalog: ModelCatalog = Depends(get_model_catalog),
+    ):
+        try:
+            # Désactiver l'ancien modèle actif
+            active_model = model_catalog.find_active_model()
+            if active_model:
+                active_model.is_active = False
+                model_catalog.save(active_model)
+
+            # Activer le nouveau modèle
+            model = model_catalog.find_by_id(model_to_activate.id)
+            model.is_active = True
+            model_catalog.save(model)
+
+            return {"message": "Modèle activé", "id": str(model_to_activate.id)}
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(e),
+            )
+
 
     def scan_models(
         self,
