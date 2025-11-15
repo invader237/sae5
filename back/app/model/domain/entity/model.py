@@ -1,8 +1,8 @@
 import uuid
 from sqlalchemy import Column, String, Boolean
 from sqlalchemy.dialects.postgresql import UUID
-
 from app.database import Base
+
 
 class Model(Base):
     __tablename__ = "models"

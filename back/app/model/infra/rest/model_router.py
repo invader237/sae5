@@ -44,7 +44,6 @@ class ModelController:
         models = model_catalog.find_all()
         return [model_to_modelDTO_mapper.apply(m).dict() for m in models]
 
-
     def set_active_model(
         self,
         model_to_activate: ModelDTO,
@@ -62,14 +61,15 @@ class ModelController:
             model.is_active = True
             model_catalog.save(model)
 
-            return {"message": "Modèle activé", "id": str(model_to_activate.id)}
+            return {
+                "message": "Modèle activé", "id": str(model_to_activate.id)
+            }
 
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(e),
             )
-
 
     def scan_models(
         self,
