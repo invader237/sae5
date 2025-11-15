@@ -8,7 +8,8 @@ class ModelToModelDTOMapper:
         return ModelDTO(
             id=model.model_id,
             name=model.name,
-            path=model.path
+            path=model.path,
+            is_active=model.is_active,
         )
 
 
