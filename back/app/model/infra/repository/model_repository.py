@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.model.domain.entity.model import Model as ModelEntity
 from app.model.domain.entity.model import Model
 
@@ -10,17 +11,17 @@ class ModelRepository:
     def find_all(self):
         return self.db.query(ModelEntity).all()
 
-    def find_by_id(self, model_id: str) -> ModelEntity | None:
+    def find_by_id(self, model_id: str) -> Optional[ModelEntity]:
         return (
             self.db.query(ModelEntity)
             .filter(ModelEntity.model_id == model_id)
             .first()
         )
 
-    def find_active_model(self) -> ModelEntity | None:
+    def find_active_model(self) -> Optional[ModelEntity]:
         return (
             self.db.query(ModelEntity)
-            .filter(ModelEntity.is_active == True)
+            .filter(ModelEntity.is_active)  # True si is_active est True
             .first()
         )
 

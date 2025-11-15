@@ -14,5 +14,8 @@ def get_model_catalog(db: Session = Depends(get_session)) -> ModelCatalog:
     repo = ModelRepository(db)
     return ModelSQLAlchemyAdapter(repo)
 
-def get_model_loader(model_catalog: ModelCatalog = Depends(get_model_catalog)) -> ModelLoader:
+
+def get_model_loader(
+        model_catalog: ModelCatalog = Depends(get_model_catalog)
+        ) -> ModelLoader:
     return ModelLoader(model_catalog=model_catalog)
