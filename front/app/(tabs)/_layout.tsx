@@ -61,6 +61,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="admin-panel"
+        options={{
+          title: "Admin",
+          tabBarIcon: ({ color }) => (
+            <TabIcon name="shield.lefthalf.fill" color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
