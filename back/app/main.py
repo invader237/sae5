@@ -4,12 +4,21 @@ from app.config import settings
 from app.database import engine, Base
 from app.scripts.seed_dev import load_fixtures
 from sqlalchemy import text
+from fastapi.middleware.cors import CORSMiddleware
 
 # router import
 from app.user.infra.rest.user_router import router as user_router
 from app.model.infra.rest.model_router import router as model_router
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8081"],       # Liste des domaines autorisés
+    allow_credentials=True,
+    allow_methods=["*"],         # GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],         # Autoriser tous les headers
+)
 
 
 def refresh_db():
