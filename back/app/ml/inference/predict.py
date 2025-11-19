@@ -138,7 +138,7 @@ def predict_image(image_bytes: bytes,
         pc.update(preprocess_config)
 
     # default preprocess params
-    size = pc.get("size", 224)
+    size = pc.get("size", 384)
     mean = pc.get("mean", None)
     std = pc.get("std", None)
 
