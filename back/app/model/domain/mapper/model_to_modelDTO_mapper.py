@@ -10,6 +10,7 @@ class ModelToModelDTOMapper:
             name=model.name,
             path=model.path,
             is_active=model.is_active,
+            input_size=model.input_size,
         )
 
 

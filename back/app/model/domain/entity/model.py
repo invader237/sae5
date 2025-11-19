@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Column, String, Boolean, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 
@@ -25,5 +25,10 @@ class Model(Base):
     is_active = Column(
         Boolean,
         default=False,
+        nullable=False,
+    )
+    input_size = Column(
+        Integer,
+        default=384,
         nullable=False,
     )
