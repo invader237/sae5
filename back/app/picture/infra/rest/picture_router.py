@@ -1,5 +1,13 @@
 # app/picture/api/picture_controller.py
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query, Form
+from fastapi import (
+    APIRouter,
+    Depends,
+    UploadFile,
+    File,
+    HTTPException,
+    Query,
+    Form,
+)
 from pathlib import Path
 from typing import Literal
 import uuid
@@ -12,6 +20,7 @@ from app.picture.domain.catalog.picture_catalog import PictureCatalog
 from app.picture.infra.factory.picture_factory import get_picture_catalog
 
 UPLOAD_DIR = Path("uploads")
+
 
 class PictureController:
     def __init__(self):
@@ -39,10 +48,14 @@ class PictureController:
     async def import_picture(
         self,
         type: Literal["analyse", "database"] | None = Query(
-            None, alias="type", description="Type d'import"
+            None,
+            alias="type",
+            description="Type d'import",
         ),
         type_form: Literal["analyse", "database"] | None = Form(
-            None, alias="type", description="Type d'import (form)"
+            None,
+            alias="type",
+            description="Type d'import (form)",
         ),
         file: UploadFile | None = File(None),
         image: UploadFile | None = File(None),
@@ -51,15 +64,28 @@ class PictureController:
         # Supporte file ou image comme clé multipart
         upload_file = file or image
         if upload_file is None:
-            raise HTTPException(status_code=422, detail="Champ 'file' manquant (ou 'image')")
+            raise HTTPException(
+                status_code=422,
+                detail="Champ 'file' manquant (ou 'image')",
+            )
 
         # Accepte le type via query ou form
         import_type = type or type_form
         if import_type is None:
-            raise HTTPException(status_code=422, detail="Paramètre 'type' requis (analyse|database)")
+            raise HTTPException(
+                status_code=422,
+                detail="Paramètre 'type' requis (analyse|database)",
+            )
 
-        if upload_file.content_type not in {"image/jpeg", "image/png", "image/jpg"}:
-            raise HTTPException(status_code=400, detail="Type de fichier non supporté")
+        if upload_file.content_type not in {
+            "image/jpeg",
+            "image/png",
+            "image/jpg",
+        }:
+            raise HTTPException(
+                status_code=400,
+                detail="Type de fichier non supporté",
+            )
 
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
