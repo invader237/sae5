@@ -23,7 +23,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import torch
 
-from app.ml.preprocessing.transforms import open_image_from_bytes, default_preprocess
+from back.app.model.domain.service.transforms import open_image_from_bytes, default_preprocess
 
 MODEL_CACHE: Dict[str, torch.nn.Module] = {}
 LABELS_CACHE: Dict[str, List[str]] = {}
