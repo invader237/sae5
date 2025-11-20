@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View, Text } from 'react-native';
+import { Pressable, View, Text, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as ImagePicker from 'expo-image-picker';
+import axios from 'axios';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -22,7 +23,7 @@ export default function HomeScreen() {
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (!permissionResult.granted) {
       alert('Permission refusée pour accéder à la galerie');
       return;
@@ -54,7 +55,7 @@ export default function HomeScreen() {
 
   const isGranted = permission?.granted;
 
-  // Capture et envoi 1 image par seconde
+  // Capture et envoi 1 image par seconde (l'image doit aussi respecter les conditions de focus, camera ready et analyse actif)
   useEffect(() => {
     if (!isFocused || !isGranted || !cameraReady || !isStreaming) return;
 
@@ -131,25 +132,38 @@ export default function HomeScreen() {
   );
 }
 
-// Envoi d’une image au serveur (multipart/form-data)
-async function uploadFrame(endpoint: string, uri: string) {
+type UploadOptions = {
+  mimeType?: string | null;
+  filename?: string | null;
+};
+
+// Envoi d’une image au serveur avec axios (multipart/form-data)
+async function uploadFrame(endpoint: string, uri: string, _options?: UploadOptions) {
   const form = new FormData();
-  form.append(
-    'file',
-    {
+  form.append('type', 'analyse');
+
+  if (Platform.OS === 'web') {
+    // Upload depuis navigateur -> convertir l'URI en Blob pour l'envoyer via FormData
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    form.append('file', blob);
+  } else {
+    // Upload depuis mobile (React Native), on passe un objet { uri, type, name }
+    form.append('file', {
       uri,
       type: 'image/jpeg',
       name: `frame-${Date.now()}.jpg`,
-    } as any 
-  );
+    } as any);
+  }
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    body: form,
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`Upload échoué (${res.status}): ${text}`);
+  try {
+    await axios.post(endpoint, form, {
+      timeout: 20000,
+    });
+  } catch (e: any) {
+    const status = e?.response?.status;
+    const data = e?.response?.data;
+    const msg = typeof data === 'string' ? data : JSON.stringify(data ?? {});
+    throw new Error(`Upload échoué (${status ?? 'ERR'}): ${msg}`);
   }
 }

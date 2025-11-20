@@ -1,5 +1,6 @@
 # app/main.py
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
 from app.scripts.seed_dev import load_fixtures
@@ -8,20 +9,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # router import
 from app.user.infra.rest.user_router import router as user_router
-<<<<<<< HEAD
 from app.model.infra.rest.model_router import router as model_router
-=======
 from app.picture.infra.rest.picture_router import router as picture_router
->>>>>>> 71da760 (:sparkles:(upload): Add API endpoint / post method for picture)
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8081"],  # Liste des domaines autorisés
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # GET, POST, PUT, DELETE, etc.
-    allow_headers=["*"],  # Autoriser tous les headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
