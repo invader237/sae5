@@ -15,7 +15,8 @@ import uuid
 from app.picture.domain.mapper.picture_to_pictureDTO_mapper import (
     picture_to_pictureDTO_mapper,
 )
-from app.dto.generated import PictureDTO
+from app.picture.domain.DTO.pictureDTO import PictureDTO
+from app.picture.domain.DTO.pictureImportDTO import PictureImportDTO
 from app.picture.domain.catalog.picture_catalog import PictureCatalog
 from app.picture.infra.factory.picture_factory import get_picture_catalog
 
@@ -70,12 +71,15 @@ class PictureController:
             )
 
         # Accepte le type via query ou form
-        import_type = type or type_form
-        if import_type is None:
+        import_type_value = type or type_form
+        if import_type_value is None:
             raise HTTPException(
                 status_code=422,
                 detail="Paramètre 'type' requis (analyse|database)",
             )
+
+        # Créer l'instance du DTO
+        import_dto = PictureImportDTO(sendType=import_type_value)
 
         if upload_file.content_type not in {
             "image/jpeg",

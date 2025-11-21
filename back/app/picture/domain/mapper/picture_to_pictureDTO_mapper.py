@@ -1,4 +1,4 @@
-from app.dto.generated import PictureDTO
+from app.picture.domain.DTO.pictureDTO import PictureDTO
 from app.picture.domain.entity.picture import Picture
 
 
