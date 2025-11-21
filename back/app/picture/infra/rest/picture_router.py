@@ -78,9 +78,6 @@ class PictureController:
                 detail="Paramètre 'type' requis (analyse|database)",
             )
 
-        # Créer l'instance du DTO
-        import_dto = PictureImportDTO(sendType=import_type_value)
-
         if upload_file.content_type not in {
             "image/jpeg",
             "image/png",

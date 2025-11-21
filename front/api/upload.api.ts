@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import axios from 'axios';
+import axiosInstance from './axiosConfig';
 
 type UploadOptions = {
   mimeType?: string | null;
@@ -28,7 +28,7 @@ export async function uploadFrame(endpoint: string, uri: string, _options?: Uplo
   }
 
   try {
-    await axios.post(endpoint, form, {
+    await axiosInstance.post(endpoint, form, {
       timeout: 20000,
     });
   } catch (e: any) {

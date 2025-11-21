@@ -15,6 +15,3 @@ class UserDTO(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     contacts: Optional[List[str]] = None
-
-
-
