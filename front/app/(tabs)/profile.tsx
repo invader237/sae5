@@ -11,33 +11,31 @@ import { AuthForm } from "@/components/authentification/AuthForm";
 import { API_BASE_URL } from "@/constants/api";
 
 type User = {
-  user_id: string;
-  username: string;
+  id: string;
+  name: string;
   email: string;
   created_at: string;
 };
 
 export default function ProfileScreen() {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
 
-  // Au lancement : on regarde si un token existe déjà
   useEffect(() => {
     const bootstrap = async () => {
       try {
         const storedToken = await AsyncStorage.getItem("authToken");
         if (storedToken) {
-          setToken(storedToken);
           await fetchMe(storedToken);
         }
-      } catch (e) {
-        console.log("Error loading token", e);
+      } catch (error) {
+        console.log("Error loading token", error);
       } finally {
         setInitializing(false);
       }
     };
-    bootstrap();
+
+    void bootstrap();
   }, []);
 
   const fetchMe = async (accessToken: string) => {
@@ -51,34 +49,27 @@ export default function ProfileScreen() {
       });
 
       if (!res.ok) {
-        console.log("Erreur /auth/me", res.status);
+        // 401 → token invalide ou expiré : on déconnecte proprement
         if (res.status === 401) {
-          await AsyncStorage.removeItem("authToken");
-          setToken(null);
-          setUser(null);
+          await handleLogout();
         }
         return;
       }
 
       const data: User = await res.json();
-      console.log("USER RECUPERE:", data);
       setUser(data);
-    } catch (err) {
-      console.log("FETCH ME ERROR", err);
+    } catch (error) {
+      console.log("FETCH /auth/me error:", error);
     }
   };
 
-  // Appelé par AuthForm quand login/register réussit
   const handleAuthenticated = async (accessToken: string) => {
-    console.log("handleAuthenticated, token:", accessToken);
     await AsyncStorage.setItem("authToken", accessToken);
-    setToken(accessToken);
     await fetchMe(accessToken);
   };
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("authToken");
-    setToken(null);
     setUser(null);
   };
 
@@ -97,8 +88,7 @@ export default function ProfileScreen() {
       contentContainerStyle={{ flexGrow: 1 }}
     >
       <View className="flex-1 items-center justify-center px-6 py-10">
-        {user && token ? (
-          // Affichage après connexion
+        {user ? (
           <View className="w-full items-center justify-center mt-2">
             <Text className="text-3xl font-extrabold text-blue-500 mb-4">
               Profil
@@ -109,13 +99,9 @@ export default function ProfileScreen() {
 
             <View className="bg-white rounded-2xl px-4 py-4 mb-6 shadow border border-gray-100">
               <Text className="text-blue-500 text-lg font-semibold mb-1">
-                Username : {user.username}
+                Username : {user.name}
               </Text>
               <Text className="text-gray-700">email : {user.email}</Text>
-              {/* Au choix de le mettre ou pas */}
-              {/* <Text className="text-gray-400 text-xs mt-2">
-                ID: {user.user_id}
-              </Text> */}
             </View>
 
             <TouchableOpacity
@@ -126,7 +112,6 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          // Pas connecté → on affiche le formulaire
           <AuthForm onAuthenticated={handleAuthenticated} />
         )}
       </View>

@@ -1,5 +1,5 @@
-from sqlalchemy.orm import session
 from fastapi import Depends
+from sqlalchemy.orm import Session
 
 from app.database import get_session
 from app.user.domain.catalog.user_catalog import UserCatalog
@@ -9,6 +9,6 @@ from app.user.infra.repository.user_sqlalchemy_adapter import (
 )
 
 
-def get_user_catalog(db: session = Depends(get_session)) -> UserCatalog:
+def get_user_catalog(db: Session = Depends(get_session)) -> UserCatalog:
     repo = UserRepository(db)
     return UserSQLAlchemyAdapter(repo)

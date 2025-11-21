@@ -25,7 +25,7 @@ class User(Base):
         unique=True,
         nullable=False,
     )
-    password_hash = Column(          # 👈 AJOUT
+    password = Column(
         String(255),
         nullable=False,
     )
