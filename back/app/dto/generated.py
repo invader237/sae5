@@ -17,6 +17,4 @@ class UserDTO(BaseModel):
     contacts: Optional[List[str]] = None
 
 
-class PictureDTO(BaseModel):
-    id: Optional[UUID] = None
-    path: Optional[str] = None
+

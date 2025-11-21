@@ -5,7 +5,6 @@ class RoomToRoomDTOMapper:
     @staticmethod
     def apply(room: Room) -> dict:
         # Return a plain dict representing the DTO to avoid editing
-        # generated.py
         return {
             "id": room.room_id,
             "name": room.name,
