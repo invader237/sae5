@@ -5,4 +5,3 @@ from uuid import UUID
 class PictureDTO(BaseModel):
     id: Optional[UUID] = None
     path: Optional[str] = None
-
