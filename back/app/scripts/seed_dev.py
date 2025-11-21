@@ -3,24 +3,25 @@ from app.picture.infra.repository.picture_repository import PictureRepository
 from app.room.infra.repository.room_repository import RoomRepository
 from app.role.infra.repository.role_repository import RoleRepository
 from app.model.infra.repository.model_repository import ModelRepository
-
 from app.model.domain.entity.model import Model
+from app.user.domain.entity.user import User
+from app.authentification.auth_utils import hash_password
 
 
-def load_fixtures():
+def load_fixtures() -> None:
     db = SessionLocal()
+
     try:
-        # user_repo = UserRepository(db)
         picture_repo = PictureRepository(db)
         room_repo = RoomRepository(db)
         role_repo = RoleRepository(db)
         model_repo = ModelRepository(db)
 
-        # Pictures
+        # ---------- PICTURES ----------
         picture_repo.save({"path": "/images/sample1.png"})
         picture_repo.save({"path": "/images/sample2.png"})
 
-        # Rooms
+        # ---------- ROOMS ----------
         room_repo.save({
             "name": "F36",
             "floor": 3,
@@ -34,7 +35,7 @@ def load_fixtures():
             "type": "normal",
         })
 
-        # Roles
+        # ---------- ROLES ----------
         role_repo.save({"type": "admin"})
         role_repo.save({"type": "client"})
 
@@ -48,5 +49,22 @@ def load_fixtures():
             )
         )
 
+        # ---------- USERS ----------
+        test_user = User(
+            username="dev1",
+            email="dev@example.com",
+            password=hash_password("password"),
+        )
+
+        another_user = User(
+            username="dev2",
+            email="dev2@example.com",
+            password=hash_password("password2"),
+        )
+
+        db.add(test_user)
+        db.add(another_user)
+
+        db.commit()
     finally:
         db.close()

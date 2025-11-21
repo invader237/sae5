@@ -1,3 +1,4 @@
+// components/authentification/AuthForm.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -13,6 +14,8 @@ type Mode = "login" | "register";
 type AuthFormProps = {
   onAuthenticated: (token: string) => Promise<void> | void;
 };
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
   const [mode, setMode] = useState<Mode>("login");
@@ -34,9 +37,56 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
     resetFields();
   };
 
+  /**
+   * Transforme la réponse d'erreur du backend en message lisible.
+   */
+  const buildErrorMessage = (
+    status: number,
+    body: any,
+    defaultMsg: string
+  ): string => {
+    // Si le back renvoie directement une string dans "detail"
+    if (typeof body?.detail === "string") {
+      return body.detail;
+    }
+
+    // Cas typique des 422 FastAPI (erreurs de validation)
+    if (Array.isArray(body?.detail) && body.detail.length > 0) {
+      const first = body.detail[0];
+      const loc = (first.loc || []).join(".");
+      const type = first.type || "";
+
+      if (loc.includes("email") && type.includes("email")) {
+        return "Merci de saisir une adresse e-mail valide.";
+      }
+      if (loc.includes("password")) {
+        return "Le mot de passe saisi n'est pas valide.";
+      }
+      return "Certaines informations sont invalides, merci de vérifier le formulaire.";
+    }
+
+    // Status connus
+    if (status === 401) {
+      return "Email ou mot de passe incorrect.";
+    }
+    if (status === 500) {
+      return "Email ou mot de passe incorrect.";
+    }
+    if (status === 400) {
+      return defaultMsg;
+    }
+
+    return "Une erreur est survenue. Merci de réessayer.";
+  };
+
   const handleRegister = async () => {
     if (!username || !email || !password) {
       setErrorMessage("Merci de remplir tous les champs.");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      setErrorMessage("Merci de saisir une adresse e-mail valide.");
       return;
     }
 
@@ -50,17 +100,28 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
         body: JSON.stringify({ username, email, password }),
       });
 
-      const body = await res.json().catch(() => null);
+      let body: any = null;
+      try {
+        body = await res.json();
+      } catch {
+        body = null;
+      }
 
       if (!res.ok) {
-        setErrorMessage(body?.detail || "Erreur lors de l'inscription.");
+        const msg = buildErrorMessage(
+          res.status,
+          body,
+          "Erreur lors de l'inscription."
+        );
+        setErrorMessage(msg);
         setLoading(false);
         return;
       }
 
       // Connexion automatique après inscription
       await handleLogin(true);
-    } catch {
+    } catch (err) {
+      console.log("REGISTER fetch error", err);
       setErrorMessage("Erreur réseau : impossible de contacter le serveur.");
     } finally {
       setLoading(false);
@@ -70,6 +131,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
   const handleLogin = async (fromRegister = false) => {
     if (!email || !password) {
       setErrorMessage("Merci de renseigner email et mot de passe.");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      setErrorMessage("Merci de saisir une adresse e-mail valide.");
       return;
     }
 
@@ -83,10 +149,22 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
         body: JSON.stringify({ email, password }),
       });
 
-      const body = await res.json().catch(() => null);
+      let body: any = null;
+      try {
+        body = await res.json();
+      } catch {
+        body = null;
+      }
 
       if (!res.ok) {
-        setErrorMessage(body?.detail || "Erreur lors de la connexion.");
+        // 👉 ICI : si le back renvoie 401, on retournera
+        // "Email ou mot de passe incorrect."
+        const msg = buildErrorMessage(
+          res.status,
+          body,
+          "Erreur lors de la connexion."
+        );
+        setErrorMessage(msg);
         if (!fromRegister) setLoading(false);
         return;
       }
@@ -95,7 +173,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
       await onAuthenticated(token);
 
       resetFields();
-    } catch {
+    } catch (err) {
+      console.log("LOGIN fetch error", err);
       if (!fromRegister) {
         setErrorMessage("Erreur réseau : impossible de contacter le serveur.");
       }
@@ -111,20 +190,17 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
           {mode === "login" ? "Connexion" : "Création de compte"}
         </Text>
 
+        {/* 🟥 Petite bannière d'erreur */}
         {errorMessage && (
-          <View className="mb-3">
-            <Text className="text-red-500 text-sm text-center">
-              {errorMessage}
-            </Text>
+          <View className="mb-4 rounded-xl bg-red-100 border border-red-300 px-3 py-2 flex-row">
+            <Text className="text-red-700 text-sm flex-1">{errorMessage}</Text>
           </View>
         )}
 
         {mode === "register" && (
           <View className="mb-3">
             <Text className="mb-1 text-gray-700 text-sm">
-              <Text className="mb-1 text-gray-700 text-sm">
-                Nom d{"'"}utilisateur
-              </Text>
+              Nom d&apos;utilisateur
             </Text>
             <TextInput
               className="bg-gray-100 border border-gray-300 rounded-xl px-3 py-2 text-base"
