@@ -60,4 +60,3 @@ Model version using **semantic versioning**:
 
   * **Major** → architecture change
   * **Minor** → training or hyperparameter updates
-  * **Patch** → minor fixes
