@@ -5,10 +5,7 @@ services:
       context: ./front
       dockerfile: Dockerfile.dev
     ports:
-      - "8082:8081"
-      - "19000:19000"
-      - "19001:19001"
-      - "19002:19002"
+      - "8081:8081"
     volumes:
       - ./front:/app
       - ./front:/recognition_model
@@ -27,6 +24,7 @@ services:
     volumes:
       - ./back:/app
       - ./back/uploads:/app/uploads
+      - /Users/diego/it/sae5-model:/app/models
     environment:
       - APP_NAME=${APP_NAME}
       - APP_PROFILE=${APP_PROFILE}

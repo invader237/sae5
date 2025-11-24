@@ -1,0 +1,34 @@
+name: Deploy Models
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - model
+
+jobs:
+  deploy-models:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Pull latest models on server + trigger scan API
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          SERVER_USER_DEPLOYER: ${{ secrets.SERVER_USER_DEPLOYER }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+
+        run: |
+          mkdir -p ~/.ssh
+          echo "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $SERVER_USER_DEPLOYER@$SERVER_IP << 'EOF'
+            cd /srv/sae5/sae5-model || exit
+
+            git pull origin model
+          EOF
+
+          curl -X POST "http://${SERVER_IP}/models/scan"
