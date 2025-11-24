@@ -21,21 +21,20 @@ class Picture(Base):
         nullable=False,
     )
 
-    # Metadata added after analysis / admin validation
-    analyse_by = Column(
+    analyzed_by = Column(
         String(255),
         nullable=True,
     )
-    pourcentage = Column(
+    recognition_percentage = Column(
         Float,
         nullable=True,
     )
-    date_detection = Column(
+    analyse_date = Column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
-    date_validation = Column(
+    validation_date = Column(
         DateTime(timezone=True),
         nullable=True,
     )
