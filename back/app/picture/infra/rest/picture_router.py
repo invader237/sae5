@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from app.picture.domain.mapper.picture_to_pictureDTO_mapper import (
     picture_to_pictureDTO_mapper,
 )
-from app.dto.generated import PictureDTO
+from app.picture.domain.DTO.pictureDTO import PictureDTO
 from app.picture.domain.catalog.picture_catalog import PictureCatalog
 from app.picture.infra.factory.picture_factory import get_picture_catalog
 
