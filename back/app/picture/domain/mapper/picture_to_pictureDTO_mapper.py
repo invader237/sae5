@@ -8,10 +8,10 @@ class PictureToPictureDTOMapper:
         return PictureDTO(
             id=picture.image_id,
             path=picture.path,
-            analyse_by=getattr(picture, "analyse_by", None),
-            pourcentage=getattr(picture, "pourcentage", None),
-            date_detection=getattr(picture, "date_detection", None),
-            date_validation=getattr(picture, "date_validation", None),
+            analyzed_by=getattr(picture, "analyzed_by", None),
+            recognition_percentage=getattr(picture, "recognition_percentage", None),
+            analyse_date=getattr(picture, "analyse_date", None),
+            validation_date=getattr(picture, "validation_date", None),
         )
 
 
