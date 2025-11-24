@@ -10,7 +10,7 @@ from pydantic import BaseModel
 class PictureDTO(BaseModel):
     id: Optional[UUID] = None
     path: Optional[str] = None
-    analyse_by: Optional[str] = None
-    pourcentage: Optional[float] = None
-    date_detection: Optional[datetime] = None
-    date_validation: Optional[datetime] = None
+    analyzed_by: Optional[str] = None
+    recognition_percentage: Optional[float] = None
+    analyse_date: Optional[datetime] = None
+    validation_date: Optional[datetime] = None
