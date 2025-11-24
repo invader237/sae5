@@ -31,4 +31,4 @@ jobs:
             git pull origin model
           EOF
 
-          curl -X POST "http://${SERVER_IP}/models/scan"
+          curl -X POST "http://${SERVER_IP}:8000/models/scan"
