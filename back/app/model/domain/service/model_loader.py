@@ -12,7 +12,7 @@ class ModelLoader:
 
     def __init__(self, model_catalog: ModelCatalog):
         self.catalog = model_catalog
-        self.models_dir = r"/app/recognition_model"
+        self.models_dir = r"/app/models"
 
     def _compute_hash(self, file_path: str) -> str:
         sha256 = hashlib.sha256()
