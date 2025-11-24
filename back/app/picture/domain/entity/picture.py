@@ -1,5 +1,6 @@
 import uuid
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, Float, DateTime
+from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
@@ -18,4 +19,23 @@ class Picture(Base):
     path = Column(
         String(255),
         nullable=False,
+    )
+
+    # Metadata added after analysis / admin validation
+    analyse_by = Column(
+        String(255),
+        nullable=True,
+    )
+    pourcentage = Column(
+        Float,
+        nullable=True,
+    )
+    date_detection = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    date_validation = Column(
+        DateTime(timezone=True),
+        nullable=True,
     )
