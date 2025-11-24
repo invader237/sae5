@@ -16,8 +16,12 @@ services:
     ports:
       - "8000:8000"
     volumes:
+<<<<<<< HEAD
       - ./back:/app
       - ./back/uploads:/app/uploads
+=======
+      - ../sae5-model:/app/models
+>>>>>>> aac8415 (:sparkles:(Docker): add automatic model deployment support for docker)
     environment:
       - APP_NAME=${APP_NAME}
       - APP_PROFILE=${APP_PROFILE}
