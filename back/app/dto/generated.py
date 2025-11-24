@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 from uuid import UUID
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -15,3 +16,12 @@ class UserDTO(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     contacts: Optional[List[str]] = None
+
+
+class PictureDTO(BaseModel):
+    id: Optional[UUID] = None
+    path: Optional[str] = None
+    analyse_by: Optional[str] = None
+    pourcentage: Optional[float] = None
+    date_detection: Optional[datetime] = None
+    date_validation: Optional[datetime] = None
