@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile.prod
     ports:
       - "80:80"
+    environment:
+      - BACKEND_API_ADDRESS=${BACKEND_API_ADDRESS}
   api:
     container_name: api-prod
     build:
