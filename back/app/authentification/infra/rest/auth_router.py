@@ -6,8 +6,11 @@ from app.authentification.auth_utils import (
     create_access_token,
     decode_token,
     verify_password,
+    hash_password,
 )
-from app.authentification.schemas import TokenOut, UserCreate, UserLogin
+from app.authentification.schemas import (
+    TokenOut, UserCreate, UserLogin, PasswordUpdate
+)
 from app.dto.generated import UserDTO
 from app.user.domain.catalog.user_catalog import UserCatalog
 from app.user.domain.mapper.userCreateDTO_to_user_mapper import (
@@ -109,6 +112,40 @@ def me(
         )
 
     return user_to_userDTO_mapper.apply(user)
+
+
+@router.put(
+    "/password",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def change_password(
+    payload: PasswordUpdate,
+    user_id: UUID = Depends(get_current_user_id),
+    user_catalog: UserCatalog = Depends(get_user_catalog),
+) -> None:
+    """
+    Permet à un utilisateur authentifié de modifier son mot de passe.
+
+    Erreurs possibles :
+    - 401 : ancien mot de passe incorrect
+    - 404 : utilisateur introuvable
+    """
+    user = user_catalog.find_by_id(user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Utilisateur introuvable.",
+        )
+
+    if not verify_password(payload.old_password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Ancien mot de passe incorrect.",
+        )
+
+    user.password = hash_password(payload.new_password)
+    user_catalog.save(user)
 
 
 @router.get("/debug/users")
