@@ -1,15 +1,21 @@
 import { Platform } from 'react-native';
-import axiosInstance from './axiosConfig';
+import axiosInstance, { baseURL } from './axiosConfig';
 
 type UploadOptions = {
   mimeType?: string | null;
   filename?: string | null;
 };
 
+export const FAST_API_ENDPOINT = `${baseURL}/pictures/import?type=analyse`;
+
 /**
  * Envoi d'une image au serveur avec axios (multipart/form-data)
  */
-export async function uploadFrame(endpoint: string, uri: string, _options?: UploadOptions) {
+export async function uploadFrame(
+  endpoint: string = FAST_API_ENDPOINT,
+  uri: string,
+  _options?: UploadOptions,
+) {
   const form = new FormData();
   form.append('type', 'analyse');
 
