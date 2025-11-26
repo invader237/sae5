@@ -5,8 +5,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as ImagePicker from 'expo-image-picker';
-import { uploadFrame } from '@/api/upload.api';
-import Constants from 'expo-constants';
+import { uploadFrame, FAST_API_ENDPOINT } from '@/api/upload.api';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -19,9 +18,6 @@ export default function HomeScreen() {
   const isUploadingRef = useRef(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [zoom] = useState(0.1);
-
-  const API_BASE = Constants.expoConfig?.extra?.backendApiAddress || process.env.EXPO_PUBLIC_BACKEND_API_ADDRESS ; //|| 'http://localhost:8000'
-  const FAST_API_ENDPOINT = `${API_BASE}/pictures/import?type=analyse`;
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
