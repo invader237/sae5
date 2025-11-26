@@ -50,20 +50,20 @@ def load_fixtures() -> None:
         )
 
         # ---------- USERS ----------
-        test_user = User(
+        user1 = User(
             username="dev1",
             email="dev@example.com",
             password=hash_password("password"),
         )
 
-        another_user = User(
+        user2 = User(
             username="dev2",
             email="dev2@example.com",
             password=hash_password("password2"),
         )
 
-        db.add(test_user)
-        db.add(another_user)
+        db.add(user1)
+        db.add(user2)
 
         db.commit()
     finally:

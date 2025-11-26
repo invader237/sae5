@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Modal } from "react-native";
 import {
   View,
   Text,
@@ -8,6 +9,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthForm } from "@/components/authentification/AuthForm";
+import { ChangePasswordForm } from "@/components/authentification/ChangePasswordForm";
 import { API_BASE_URL } from "@/constants/api";
 
 type User = {
@@ -19,13 +21,17 @@ type User = {
 
 export default function ProfileScreen() {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useEffect(() => {
     const bootstrap = async () => {
       try {
         const storedToken = await AsyncStorage.getItem("authToken");
         if (storedToken) {
+          setToken(storedToken);
           await fetchMe(storedToken);
         }
       } catch (error) {
@@ -65,12 +71,14 @@ export default function ProfileScreen() {
 
   const handleAuthenticated = async (accessToken: string) => {
     await AsyncStorage.setItem("authToken", accessToken);
+    setToken(accessToken);
     await fetchMe(accessToken);
   };
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("authToken");
     setUser(null);
+    setToken(null);
   };
 
   if (initializing) {
@@ -83,38 +91,68 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-gray-50"
-      contentContainerStyle={{ flexGrow: 1 }}
-    >
-      <View className="flex-1 items-center justify-center px-6 py-10">
-        {user ? (
-          <View className="w-full items-center justify-center mt-2">
-            <Text className="text-3xl font-extrabold text-blue-500 mb-4">
-              Profil
-            </Text>
-            <Text className="text-base text-gray-600 mb-4 text-center">
-              Connecté en tant que :
-            </Text>
-
-            <View className="bg-white rounded-2xl px-4 py-4 mb-6 shadow border border-gray-100">
-              <Text className="text-blue-500 text-lg font-semibold mb-1">
-                Username : {user.name}
+    <>
+      <ScrollView
+        className="flex-1 bg-gray-50"
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        <View className="flex-1 items-center justify-center px-6 py-10">
+          {user && token ? (
+            <View className="w-full items-center justify-center mt-2">
+              <Text className="text-3xl font-extrabold text-blue-500 mb-4">
+                Profil
               </Text>
-              <Text className="text-gray-700">email : {user.email}</Text>
-            </View>
+              <Text className="text-base text-gray-600 mb-4 text-center">
+                Connecté en tant que :
+              </Text>
 
-            <TouchableOpacity
-              className="bg-red-500 rounded-xl py-2 px-4 items-center w-[150px] mx-auto"
-              onPress={handleLogout}
-            >
-              <Text className="text-white font-semibold">Se déconnecter</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <AuthForm onAuthenticated={handleAuthenticated} />
-        )}
-      </View>
-    </ScrollView>
+              <View className="bg-white rounded-2xl px-4 py-4 mb-6 shadow border border-gray-100">
+                <Text className="text-blue-500 text-lg font-semibold mb-1">
+                  Username : {user.name}
+                </Text>
+                <Text className="text-gray-700">email : {user.email}</Text>
+              </View>
+
+              <TouchableOpacity
+                className="bg-blue-500 rounded-xl py-2 px-4 items-center w-[150px] mx-auto mt-6"
+                onPress={() => setIsPasswordModalOpen(true)}
+              >
+                <Text className="text-white font-semibold">Modifier mdp</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="bg-red-500 rounded-xl py-2 px-4 items-center w-[150px] mx-auto mt-6"
+                onPress={handleLogout}
+              >
+                <Text className="text-white font-semibold">Se déconnecter</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <AuthForm onAuthenticated={handleAuthenticated} />
+          )}
+        </View>
+      </ScrollView>
+
+      <Modal
+        visible={isPasswordModalOpen}
+        animationType="slide"
+        transparent={false}
+      >
+        <View className="flex-1 bg-white px-6 py-10">
+          <TouchableOpacity
+            className="mb-4"
+            onPress={() => setIsPasswordModalOpen(false)}
+          >
+            <Text className="text-blue-500 text-lg font-semibold">Fermer</Text>
+          </TouchableOpacity>
+
+          <Text className="text-2xl font-bold text-gray-800 mb-4">
+            Changement du mot de passe
+          </Text>
+
+          <ChangePasswordForm token={token!} />
+        </View>
+      </Modal>
+    </>
   );
 }
