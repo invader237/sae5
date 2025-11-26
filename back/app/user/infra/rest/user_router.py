@@ -1,7 +1,7 @@
 # app/user/api/user_controller.py
 from fastapi import APIRouter, Depends
 
-from app.dto.generated import UserDTO
+from app.user.domain.DTO.userDTO import UserDTO
 from app.user.domain.catalog.user_catalog import UserCatalog
 from app.user.domain.mapper.user_to_userDTO_mapper import (
     user_to_userDTO_mapper,

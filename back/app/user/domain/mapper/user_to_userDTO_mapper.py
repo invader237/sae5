@@ -1,4 +1,4 @@
-from app.dto.generated import UserDTO
+from app.user.domain.DTO.userDTO import UserDTO
 from app.user.domain.entity.user import User
 
 
