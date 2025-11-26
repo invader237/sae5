@@ -5,10 +5,7 @@ from app.config import settings
 from app.database import engine, Base
 from app.scripts.seed_dev import load_fixtures
 from sqlalchemy import text
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
 from app.authentification.core.exception_handlers import (
     validation_exception_handler,
 )
