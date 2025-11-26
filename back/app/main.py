@@ -9,15 +9,16 @@ from fastapi.middleware.cors import CORSMiddleware
 # router import
 from app.user.infra.rest.user_router import router as user_router
 from app.model.infra.rest.model_router import router as model_router
+from app.picture.infra.rest.picture_router import router as picture_router
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8081"],  # Liste des domaines autorisés
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # GET, POST, PUT, DELETE, etc.
-    allow_headers=["*"],  # Autoriser tous les headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -46,3 +47,4 @@ def read_root():
 # router include
 app.include_router(user_router)
 app.include_router(model_router)
+app.include_router(picture_router)

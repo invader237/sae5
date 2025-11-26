@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View, Text } from 'react-native';
+import { Pressable, View, Text, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as ImagePicker from 'expo-image-picker';
+import { uploadFrame, FAST_API_ENDPOINT } from '@/api/upload.api';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -18,11 +19,9 @@ export default function HomeScreen() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [zoom] = useState(0.1);
 
-  const FAST_API_ENDPOINT = 'http://<VOTRE_IP_OU_DNS>:8000/upload';
-
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (!permissionResult.granted) {
       alert('Permission refusée pour accéder à la galerie');
       return;
@@ -54,7 +53,7 @@ export default function HomeScreen() {
 
   const isGranted = permission?.granted;
 
-  // Capture et envoi 1 image par seconde
+  // Capture et envoi 1 image par seconde (l'image doit aussi respecter les conditions de focus, camera ready et analyse actif)
   useEffect(() => {
     if (!isFocused || !isGranted || !cameraReady || !isStreaming) return;
 
@@ -129,27 +128,4 @@ export default function HomeScreen() {
       </Pressable>
     </View>
   );
-}
-
-// Envoi d’une image au serveur (multipart/form-data)
-async function uploadFrame(endpoint: string, uri: string) {
-  const form = new FormData();
-  form.append(
-    'file',
-    {
-      uri,
-      type: 'image/jpeg',
-      name: `frame-${Date.now()}.jpg`,
-    } as any 
-  );
-
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    body: form,
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`Upload échoué (${res.status}): ${text}`);
-  }
 }

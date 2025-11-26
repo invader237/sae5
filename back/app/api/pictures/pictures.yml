@@ -13,3 +13,38 @@ get:
             type: array
             items:
               $ref: './DTO/pictureDTO.yml'
+post:
+  summary: Import a picture
+  description: "Upload a picture file and register it. Supports two import types: analyse or database."
+  operationId: importPicture
+  tags:
+    - Pictures
+  parameters:
+    - in: query
+      name: type
+      required: true
+      schema:
+        type: string
+        enum: [analyse, database]
+      description: "Type d'import (analyse ou database)"
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          properties:
+            file:
+              type: string
+              format: binary
+          required:
+            - file
+  responses:
+    '200':
+      description: "Imported picture metadata"
+      content:
+        application/json:
+          schema:
+            $ref: './DTO/pictureDTO.yml'
+    '400':
+      description: "Invalid input or unsupported file type"
