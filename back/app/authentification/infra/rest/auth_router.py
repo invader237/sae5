@@ -11,7 +11,7 @@ from app.authentification.auth_utils import (
 from app.authentification.schemas import (
     TokenOut, UserCreate, UserLogin, PasswordUpdate
 )
-from app.dto.generated import UserDTO
+from app.user.domain.DTO.userDTO import UserDTO
 from app.user.domain.catalog.user_catalog import UserCatalog
 from app.user.domain.mapper.userCreateDTO_to_user_mapper import (
     user_createDTO_to_user_mapper,
