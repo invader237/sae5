@@ -11,6 +11,7 @@ from fastapi import (
 from pathlib import Path
 from typing import Literal
 import uuid
+from datetime import datetime, timezone
 
 from app.picture.domain.mapper.picture_to_pictureDTO_mapper import (
     picture_to_pictureDTO_mapper,
@@ -18,6 +19,8 @@ from app.picture.domain.mapper.picture_to_pictureDTO_mapper import (
 from app.picture.domain.DTO.pictureDTO import PictureDTO
 from app.picture.domain.catalog.picture_catalog import PictureCatalog
 from app.picture.infra.factory.picture_factory import get_picture_catalog
+from app.model.domain.service.predict import predict_image
+from app.model.infra.factory.model_factory import get_model_loader
 
 UPLOAD_DIR = Path("uploads")
 
@@ -60,6 +63,7 @@ class PictureController:
         file: UploadFile | None = File(None),
         image: UploadFile | None = File(None),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        model_loader=Depends(get_model_loader),
     ):
         # Supporte file ou image comme clé multipart
         upload_file = file or image
@@ -96,7 +100,43 @@ class PictureController:
         contents = await upload_file.read()
         dest_path.write_bytes(contents)
 
-        picture = picture_catalog.save({"path": str(dest_path)})
+        # Inference synchrone avant sauvegarde
+        try:
+            inference_result = predict_image(
+                contents,
+                model_version=None,
+                top_k=5,
+                confidence_threshold=0.0,
+                model_loader=model_loader,
+                labels=None,
+                preprocess_config=None,
+                save_callback=None,
+                device=None,
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Inference failed: {e}")
+
+        # Extraction défensive du score/top prediction
+        recognition_percentage = None
+        try:
+            preds = inference_result.get("predictions") or []
+            if len(preds) > 0:
+                top = preds[0]
+                for k in ("probability", "score", "confidence", "prob"):
+                    if k in top:
+                        recognition_percentage = float(top[k])
+                        break
+        except Exception:
+            recognition_percentage = None
+
+        picture_payload = {
+            "path": str(dest_path),
+            "analyzed_by": inference_result.get("model_version") or inference_result.get("model") or None,
+            "recognition_percentage": recognition_percentage,
+            "analyse_date": datetime.now(timezone.utc),
+        }
+
+        picture = picture_catalog.save(picture_payload)
         return picture_to_pictureDTO_mapper.apply(picture)
 
 
