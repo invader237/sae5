@@ -122,21 +122,27 @@ class PictureController:
                 device=None,
             )
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Inference failed: {e}")
+            raise HTTPException(
+                status_code=500, detail=f"Inference failed: {e}"
+                )
 
         # Affichage console du résultat d'inférence (formaté)
         try:
             print("[INFERENCE RESULT]")
-            print(json.dumps(inference_result, default=str, indent=2, ensure_ascii=False))
+            print(json.dumps(inference_result, default=str,
+                             indent=2, ensure_ascii=False))
         except Exception:
-            print("[INFERENCE RESULT] (failed to pretty-print)", inference_result)
+            print("[INFERENCE RESULT] (failed to pretty-print)",
+                  inference_result)
 
         # Extraction : privilégie le champ canonique 'top_score' si présent,
         # sinon tombe back sur le parsing défensif de la première prédiction.
         recognition_percentage = None
         try:
             if inference_result.get("top_score") is not None:
-                recognition_percentage = float(inference_result.get("top_score"))
+                recognition_percentage = float(
+                    inference_result.get("top_score")
+                    )
             else:
                 preds = inference_result.get("predictions") or []
                 if len(preds) > 0:
@@ -150,7 +156,8 @@ class PictureController:
 
         picture_payload = {
             "path": str(dest_path),
-            "analyzed_by": inference_result.get("model_version") or inference_result.get("model") or None,
+            "analyzed_by": inference_result.get("model_version")
+            or inference_result.get("model") or None,
             "recognition_percentage": recognition_percentage,
             "analyse_date": datetime.now(timezone.utc),
         }
@@ -160,12 +167,16 @@ class PictureController:
 
     async def validate_picture(
         self,
-        picture_id: int = FastAPIPath(..., description="ID de la picture à valider"),
+        picture_id: int = FastAPIPath(
+            ..., description="ID de la picture à valider"
+            ),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
     ):
         validation_date = datetime.now(timezone.utc)
         try:
-            updated = picture_catalog.update(picture_id, {"validation_date": validation_date})
+            updated = picture_catalog.update(
+                picture_id, {"validation_date": validation_date}
+                )
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
         return picture_to_pictureDTO_mapper.apply(updated)
