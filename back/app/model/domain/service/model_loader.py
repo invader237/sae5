@@ -17,7 +17,9 @@ class ModelLoader(ABC):
     def __init__(self, model_catalog: ModelCatalog):
         self.catalog = model_catalog
 
-    def __call__(self, model_version: Optional[str] = None) -> Union[str, tuple]:
+    def __call__(
+        self, model_version: Optional[str] = None
+    ) -> Union[str, tuple]:
         """Resolve a logical model_version to a loader return value.
 
         Returns either:
@@ -47,7 +49,9 @@ class ModelLoader(ABC):
                         break
 
         if model is None:
-            raise FileNotFoundError(f"Model not found for version/name: {model_version}")
+            raise FileNotFoundError(
+                f"Model not found for version/name: {model_version}"
+                )
 
         # build preprocess config from model entity
         preprocess_config = {"size": getattr(model, "input_size", 384)}
@@ -58,7 +62,9 @@ class ModelLoader(ABC):
             try:
                 state = torch.load(path, map_location="cpu")
             except Exception as e:
-                raise FileNotFoundError(f"Cannot load state dict at {path}: {e}")
+                raise FileNotFoundError(
+                    f"Cannot load state dict at {path}: {e}"
+                    )
 
             # unwrap common checkpoint dict wrappers
             if isinstance(state, dict):
@@ -82,23 +88,25 @@ class ModelLoader(ABC):
             # try to infer number of output classes from classifier layer
             num_classes = None
             for k, v in new_state.items():
-                if k.endswith("fc.weight") or "classifier.weight" in k or "head.weight" in k:
+                if (k.endswith("fc.weight")
+                        or "classifier.weight" in k
+                        or "head.weight" in k):
                     try:
                         num_classes = v.shape[0]
                         break
                     except Exception:
                         continue
 
-            # Simple heuristic: if model name or path mentions resnet, build resnet50
+            # if model name or path mentions resnet, build resnet50
             module = None
             lname = (model.name or "").lower()
             lpath = (path or "").lower()
             if "resnet" in lname or "resnet" in lpath:
                 try:
-                    # import here to avoid hard dependency at module import time
+                    # import to avoid hard dependency at module import time
                     from torchvision import models as tv_models
 
-                    # instantiate resnet50 and replace final fc if we detected classes
+                    # instantiate resnet50
                     try:
                         base = tv_models.resnet50(weights=None)
                     except Exception:
@@ -111,7 +119,9 @@ class ModelLoader(ABC):
                     base.load_state_dict(new_state, strict=False)
                     module = base
                 except Exception as e:
-                    raise RuntimeError(f"Failed to build ResNet50 and load state_dict: {e}")
+                    raise RuntimeError(
+                        f"Failed to build ResNet50 and load state_dict: {e}"
+                        )
 
             if module is not None:
                 return (module, None, preprocess_config)
