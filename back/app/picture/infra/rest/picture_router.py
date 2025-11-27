@@ -117,16 +117,20 @@ class PictureController:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Inference failed: {e}")
 
-        # Extraction défensive du score/top prediction
+        # Extraction : privilégie le champ canonique 'top_score' si présent,
+        # sinon tombe back sur le parsing défensif de la première prédiction.
         recognition_percentage = None
         try:
-            preds = inference_result.get("predictions") or []
-            if len(preds) > 0:
-                top = preds[0]
-                for k in ("probability", "score", "confidence", "prob"):
-                    if k in top:
-                        recognition_percentage = float(top[k])
-                        break
+            if inference_result.get("top_score") is not None:
+                recognition_percentage = float(inference_result.get("top_score"))
+            else:
+                preds = inference_result.get("predictions") or []
+                if len(preds) > 0:
+                    top = preds[0]
+                    for k in ("probability", "score", "confidence", "prob"):
+                        if k in top:
+                            recognition_percentage = float(top[k])
+                            break
         except Exception:
             recognition_percentage = None
 

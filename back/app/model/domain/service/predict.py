@@ -191,4 +191,23 @@ def predict_image(image_bytes: bytes,
             result["save_callback_ok"] = False
             result["save_callback_error"] = str(e)
 
+    # Canonical top-* fields to simplify consumers (router / UI)
+    top_prediction = preds[0] if preds else None
+    result["top_prediction"] = top_prediction
+    if top_prediction is not None:
+        if "score" in top_prediction:
+            result["top_score"] = float(top_prediction["score"])
+        elif "probability" in top_prediction:
+            result["top_score"] = float(top_prediction["probability"])
+        elif "confidence" in top_prediction:
+            result["top_score"] = float(top_prediction["confidence"])
+        elif "prob" in top_prediction:
+            result["top_score"] = float(top_prediction["prob"])
+        else:
+            result["top_score"] = float(top_score)
+        result["top_label"] = top_prediction.get("label")
+    else:
+        result["top_score"] = 0.0
+        result["top_label"] = None
+
     return result
