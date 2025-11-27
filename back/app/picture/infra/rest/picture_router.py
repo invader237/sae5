@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Literal
 import uuid
 from datetime import datetime, timezone
+import json
 
 from app.picture.domain.mapper.picture_to_pictureDTO_mapper import (
     picture_to_pictureDTO_mapper,
@@ -122,6 +123,13 @@ class PictureController:
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Inference failed: {e}")
+
+        # Affichage console du résultat d'inférence (formaté)
+        try:
+            print("[INFERENCE RESULT]")
+            print(json.dumps(inference_result, default=str, indent=2, ensure_ascii=False))
+        except Exception:
+            print("[INFERENCE RESULT] (failed to pretty-print)", inference_result)
 
         # Extraction : privilégie le champ canonique 'top_score' si présent,
         # sinon tombe back sur le parsing défensif de la première prédiction.
