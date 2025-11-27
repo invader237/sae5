@@ -41,6 +41,12 @@ class PictureController:
             response_model=PictureDTO,
             methods=["POST"],
         )
+        self.router.add_api_route(
+            "/{picture_id}/validate",
+            self.validate_picture,
+            response_model=PictureDTO,
+            methods=["PATCH"],
+        )
 
     def get_pictures(
         self,
