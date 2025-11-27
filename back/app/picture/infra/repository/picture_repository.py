@@ -15,3 +15,15 @@ class PictureRepository:
         self.db.commit()
         self.db.refresh(picture)
         return picture
+
+    def update(self, picture_id: int, updates: dict) -> PictureModel:
+        picture = self.db.query(PictureModel).get(picture_id)
+        if picture is None:
+            raise Exception("Picture not found")
+
+        for k, v in updates.items():
+            if hasattr(picture, k):
+                setattr(picture, k, v)
+        self.db.commit()
+        self.db.refresh(picture)
+        return picture
