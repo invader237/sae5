@@ -11,3 +11,6 @@ class PictureSQLAlchemyAdapter(PictureCatalog):
 
     def save(self, picture_in: dict):
         return self.repository.save(picture_in)
+
+    def update(self, picture_id: int, updates: dict):
+        return self.repository.update(picture_id, updates)
