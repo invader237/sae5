@@ -16,24 +16,30 @@ Design goals:
 
 from __future__ import annotations
 
-import io
 import time
 import uuid
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import torch
 
-from app.model.domain.service.transforms import open_image_from_bytes, default_preprocess
+from app.model.domain.service.transforms import (
+    open_image_from_bytes,
+    default_preprocess,
+)
 
 MODEL_CACHE: Dict[str, torch.nn.Module] = {}
 LABELS_CACHE: Dict[str, List[str]] = {}
 PREPROCESS_CACHE: Dict[str, Dict[str, Any]] = {}
 
 
-def load_model(model_version: str,
-               model_loader: Optional[Callable[[str], Union[torch.nn.Module, str, Tuple[Any, Any, Any]]]] = None,
-               device: Optional[torch.device] = None) -> torch.nn.Module:
-    
+def load_model(
+    model_version: str,
+    model_loader: Optional[
+        Callable[[str], Union[torch.nn.Module, str, Tuple[Any, Any, Any]]]
+    ] = None,
+    device: Optional[torch.device] = None,
+) -> torch.nn.Module:
+
     if device is None:
         device = torch.device("cpu")
 
@@ -41,7 +47,9 @@ def load_model(model_version: str,
         return MODEL_CACHE[model_version]
 
     if model_loader is None:
-        raise ValueError("No model_loader provided; cannot resolve model path/version")
+        raise ValueError(
+            "No model_loader provided; cannot resolve model path/version"
+            )
 
     loaded = model_loader(model_version)
 
@@ -74,7 +82,10 @@ def load_model(model_version: str,
         if preprocess_config is not None:
             PREPROCESS_CACHE[model_version] = dict(preprocess_config)
     else:
-        raise ValueError("model_loader returned unsupported type; must be nn.Module, path str, or tuple")
+        raise ValueError(
+            "model_loader returned unsupported type; must be "
+            "nn.Module, path str, or tuple"
+        )
 
     if module is None:
         raise ValueError("Unable to load model for version %s" % model_version)
@@ -86,7 +97,10 @@ def load_model(model_version: str,
     return module
 
 
-def _postprocess_logits(logits: torch.Tensor, top_k: int = 3) -> Tuple[List[int], List[float]]:
+def _postprocess_logits(
+    logits: torch.Tensor,
+    top_k: int = 3,
+) -> Tuple[List[int], List[float]]:
     # logits expected shape (1, num_classes)
     probs = torch.softmax(logits, dim=1)
     topk = torch.topk(probs, k=min(top_k, probs.shape[1]), dim=1)
@@ -102,7 +116,8 @@ def predict_image(image_bytes: bytes,
                   model_loader: Optional[Callable[[str], Any]] = None,
                   labels: Optional[Iterable[str]] = None,
                   preprocess_config: Optional[Dict[str, Any]] = None,
-                  save_callback: Optional[Callable[[bytes, Dict[str, Any]], None]] = None,
+                  save_callback: Optional[Callable[[bytes, Dict[str, Any]],
+                                                   None]] = None,
                   device: Optional[torch.device] = None) -> Dict[str, Any]:
     """Run inference on image bytes and return structured result.
 
