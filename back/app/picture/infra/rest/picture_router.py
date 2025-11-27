@@ -7,6 +7,7 @@ from fastapi import (
     HTTPException,
     Query,
     Form,
+    Path as FastAPIPath,
 )
 from pathlib import Path
 from typing import Literal
@@ -138,6 +139,18 @@ class PictureController:
 
         picture = picture_catalog.save(picture_payload)
         return picture_to_pictureDTO_mapper.apply(picture)
+
+    async def validate_picture(
+        self,
+        picture_id: int = FastAPIPath(..., description="ID de la picture à valider"),
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+    ):
+        validation_date = datetime.now(timezone.utc)
+        try:
+            updated = picture_catalog.update(picture_id, {"validation_date": validation_date})
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        return picture_to_pictureDTO_mapper.apply(updated)
 
 
 picture_controller = PictureController()
