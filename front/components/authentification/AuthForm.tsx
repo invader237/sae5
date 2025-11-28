@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { API_BASE_URL } from "@/constants/api";
+import { login, register } from "@/api/auth.api";
 
 type Mode = "login" | "register";
 
@@ -94,35 +94,22 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
     setErrorMessage(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      let body: any = null;
-      try {
-        body = await res.json();
-      } catch {
-        body = null;
-      }
-
-      if (!res.ok) {
-        const msg = buildErrorMessage(
-          res.status,
-          body,
-          "Erreur lors de l'inscription."
-        );
-        setErrorMessage(msg);
-        setLoading(false);
-        return;
-      }
+      // Appel API d'inscription
+      await register({ username, email, password });
 
       // Connexion automatique après inscription
       await handleLogin(true);
-    } catch (err) {
-      console.log("REGISTER fetch error", err);
-      setErrorMessage("Erreur réseau : impossible de contacter le serveur.");
+    } catch (err: any) {
+      console.log("REGISTER error", err);
+      const status = err?.response?.status ?? 0;
+      const body = err?.response?.data ?? null;
+
+      const msg = buildErrorMessage(
+        status,
+        body,
+        "Erreur lors de l'inscription."
+      );
+      setErrorMessage(msg);
     } finally {
       setLoading(false);
     }
@@ -143,43 +130,26 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
     setErrorMessage(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await login({ email, password });
+      const token = res.access_token;
 
-      let body: any = null;
-      try {
-        body = await res.json();
-      } catch {
-        body = null;
-      }
-
-      if (!res.ok) {
-        // 👉 ICI : si le back renvoie 401, on retournera
-        // "Email ou mot de passe incorrect."
-        const msg = buildErrorMessage(
-          res.status,
-          body,
-          "Erreur lors de la connexion."
-        );
-        setErrorMessage(msg);
-        if (!fromRegister) setLoading(false);
-        return;
-      }
-
-      const token = body.access_token;
       await onAuthenticated(token);
-
       resetFields();
-    } catch (err) {
-      console.log("LOGIN fetch error", err);
-      if (!fromRegister) {
-        setErrorMessage("Erreur réseau : impossible de contacter le serveur.");
-      }
+    } catch (err: any) {
+      console.log("LOGIN error", err);
+      const status = err?.response?.status ?? 0;
+      const body = err?.response?.data ?? null;
+
+      const msg = buildErrorMessage(
+        status,
+        body,
+        "Erreur lors de la connexion."
+      );
+      setErrorMessage(msg);
     } finally {
-      if (!fromRegister) setLoading(false);
+      if (!fromRegister) {
+        setLoading(false);
+      }
     }
   };
 
