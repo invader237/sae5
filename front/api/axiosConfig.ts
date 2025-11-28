@@ -1,5 +1,5 @@
-import axios from 'axios';
-import Constants from 'expo-constants';
+import axios from "axios";
+import Constants from "expo-constants";
 
 // Prefer explicit runtime env (process.env) when available (web/dev bundlers),
 // then fall back to Expo `extra` (app.config.js). Final fallback uses the
