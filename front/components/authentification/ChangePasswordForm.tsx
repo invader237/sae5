@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { API_BASE_URL } from "@/constants/api";
+import { changePassword } from "@/api/auth.api";
 
 type ChangePasswordFormProps = {
   token: string;
@@ -46,41 +46,22 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
     setErrorMsg(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/password`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          old_password: oldPassword,
-          new_password: newPassword,
-        }),
+      await changePassword(token, {
+        old_password: oldPassword,
+        new_password: newPassword,
       });
-
-      if (!res.ok) {
-        let body: any = null;
-        try {
-          body = await res.json();
-        } catch {
-          body = null;
-        }
-
-        const detail =
-          typeof body?.detail === "string"
-            ? body.detail
-            : "Impossible de modifier le mot de passe.";
-        setErrorMsg(detail);
-        return;
-      }
 
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setErrorMsg(null);
       setSuccessMsg("Mot de passe mis à jour avec succès.");
-    } catch {
-      setErrorMsg("Erreur réseau : impossible de contacter le serveur.");
+    } catch (error: any) {
+      const detail =
+        typeof error?.response?.data?.detail === "string"
+          ? error.response.data.detail
+          : "Impossible de modifier le mot de passe.";
+
+      setErrorMsg(detail);
     } finally {
       setLoading(false);
     }

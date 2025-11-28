@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal } from "react-native";
 import {
+  Modal,
   View,
   Text,
   ActivityIndicator,
@@ -10,20 +10,12 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthForm } from "@/components/authentification/AuthForm";
 import { ChangePasswordForm } from "@/components/authentification/ChangePasswordForm";
-import { API_BASE_URL } from "@/constants/api";
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  created_at: string;
-};
+import { fetchMe, UserDTO } from "@/api/auth.api";
 
 export default function ProfileScreen() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserDTO | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
-  const [showChangePassword, setShowChangePassword] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useEffect(() => {
@@ -32,7 +24,7 @@ export default function ProfileScreen() {
         const storedToken = await AsyncStorage.getItem("authToken");
         if (storedToken) {
           setToken(storedToken);
-          await fetchMe(storedToken);
+          await fetchAndSetUser(storedToken);
         }
       } catch (error) {
         console.log("Error loading token", error);
@@ -44,41 +36,32 @@ export default function ProfileScreen() {
     void bootstrap();
   }, []);
 
-  const fetchMe = async (accessToken: string) => {
+  const fetchAndSetUser = async (accessToken: string) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/me`, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!res.ok) {
-        // 401 → token invalide ou expiré : on déconnecte proprement
-        if (res.status === 401) {
-          await handleLogout();
-        }
-        return;
-      }
-
-      const data: User = await res.json();
+      const data = await fetchMe(accessToken);
       setUser(data);
-    } catch (error) {
-      console.log("FETCH /auth/me error:", error);
+    } catch (error: any) {
+      const status = error?.response?.status;
+      // 401 → token invalide ou expiré : on déconnecte proprement
+      if (status === 401) {
+        await handleLogout();
+      } else {
+        console.log("FETCH /auth/me error:", error);
+      }
     }
   };
 
   const handleAuthenticated = async (accessToken: string) => {
     await AsyncStorage.setItem("authToken", accessToken);
     setToken(accessToken);
-    await fetchMe(accessToken);
+    await fetchAndSetUser(accessToken);
   };
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("authToken");
     setUser(null);
     setToken(null);
+    setIsPasswordModalOpen(false);
   };
 
   if (initializing) {
@@ -150,7 +133,7 @@ export default function ProfileScreen() {
             Changement du mot de passe
           </Text>
 
-          <ChangePasswordForm token={token!} />
+          {token && <ChangePasswordForm token={token} />}
         </View>
       </Modal>
     </>
