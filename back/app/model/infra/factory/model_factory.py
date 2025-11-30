@@ -20,4 +20,6 @@ def get_model_loader(
         model_catalog: ModelCatalog = Depends(get_model_catalog)
         ) -> ModelLoader:
     # Return the concrete GitModelLoaderImpl (typed as ModelLoader)
-    return GitModelLoaderImpl(model_catalog=model_catalog, models_dir="/app/models")
+    return GitModelLoaderImpl(
+        model_catalog=model_catalog, models_dir="/app/models"
+        )

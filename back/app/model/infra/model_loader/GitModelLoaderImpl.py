@@ -11,9 +11,14 @@ class GitModelLoaderImpl(ModelLoader):
     Réutilise la logique métier pour scanner un répertoire local de modèles.
     """
 
-    def __init__(self, model_catalog: ModelCatalog, models_dir: str = r"/app/models"):
+    def __init__(
+        self,
+        model_catalog: ModelCatalog,
+        models_dir: str = r"/app/models",
+    ):
         super().__init__(model_catalog)
-        self.models_dir = models_dir  # Répertoire à scanner pour les fichiers .pth
+        # Répertoire à scanner pour les fichiers .pth
+        self.models_dir = models_dir
 
     def scan_and_load(self) -> None:
         """
@@ -24,7 +29,9 @@ class GitModelLoaderImpl(ModelLoader):
         existing_models_dict = {m.name: m for m in existing_models}
 
         if not os.path.isdir(self.models_dir):
-            print(f"[WARN] Dossier des modèles introuvable : {self.models_dir}")
+            print(
+                f"[WARN] Dossier des modèles introuvable : {self.models_dir}"
+            )
             return
 
         for filename in os.listdir(self.models_dir):
