@@ -1,4 +1,4 @@
-from app.model.domain.service.model_loader import ModelLoader
+from app.model.infra.model_loader.GitModelLoaderImpl import GitModelLoaderImpl
 from app.model.domain.entity.model import Model
 from unittest.mock import MagicMock
 import os
@@ -14,8 +14,8 @@ def test_adds_new_pth_model(tmp_path):
     catalog = MagicMock()
     catalog.find_all.return_value = []
 
-    # Monkeypatch dossier utilisé par ModelLoader
-    ml = ModelLoader(catalog)
+    # Monkeypatch dossier utilisé par l'implémentation concrète
+    ml = GitModelLoaderImpl(catalog)
     ml.models_dir = str(models_dir)
 
     # Act --------------------------------------------------------
@@ -38,7 +38,7 @@ def test_skip_existing_model(tmp_path):
     catalog = MagicMock()
     catalog.find_all.return_value = existing
 
-    ml = ModelLoader(catalog)
+    ml = GitModelLoaderImpl(catalog)
     ml.models_dir = str(models_dir)
 
     ml.scan_and_load()
@@ -54,7 +54,7 @@ def test_ignore_non_pth_files(tmp_path):
 
     catalog = MagicMock()
     catalog.find_all.return_value = []
-    ml = ModelLoader(catalog)
+    ml = GitModelLoaderImpl(catalog)
     ml.models_dir = str(models_dir)
 
     ml.scan_and_load()
