@@ -45,12 +45,21 @@ jobs:
   build:
     name: 🏗️ Build Docker Images
     runs-on: ubuntu-latest
+    env:
+      APP_NAME: ${{ secrets.APP_NAME }}
+      APP_PROFILE: ${{ secrets.APP_PROFILE }}
+      BACKEND_API_ADDRESS: ${{ secrets.BACKEND_API_ADDRESS }}
+      MODEL_DIR: ${{ secrets.MODEL_DIR }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Docker images (dev)
+      - name: Build Docker images (test)
         run: docker compose -f docker-compose.test.yml build
 
   test:
@@ -60,6 +69,8 @@ jobs:
     env:
       APP_NAME: ${{ secrets.APP_NAME }}
       APP_PROFILE: ${{ secrets.APP_PROFILE }}
+      BACKEND_API_ADDRESS: ${{ secrets.BACKEND_API_ADDRESS }}
+      MODEL_DIR: ${{ secrets.MODEL_DIR }}
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
       DB_USER: ${{ secrets.DB_USER }}

@@ -89,6 +89,16 @@ test:
 	$(MAKE) test-back
 	$(MAKE) test-front
 
+# Quick local test entrypoint (no venv activation required). Exports PYTHONPATH so
+# tests can be run from project root: `make test-local`.
+test-local:
+	@echo "[*] Running backend tests (local, cross-platform)..."
+ifeq ($(OS),Windows_NT)
+	@set PYTHONPATH=$(BACK_DIR) && "$(PYTHON)" -m pytest $(BACK_DIR)/tests --maxfail=1 --disable-warnings -q
+else
+	@PYTHONPATH=$(BACK_DIR) $(PYTHON) -m pytest $(BACK_DIR)/tests --maxfail=1 --disable-warnings -q
+endif
+
 test-back:
 	@echo "[*] Running backend tests..."
 	cd $(BACK_DIR) && . venv/bin/activate && pytest --maxfail=1 --disable-warnings -q

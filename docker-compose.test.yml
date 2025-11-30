@@ -18,6 +18,7 @@ services:
     volumes:
       - ./back:/app
       - ./back/uploads:/app/uploads  
+      - ${MODEL_DIR}:/app/models
     environment:
       - APP_NAME=${APP_NAME}
       - APP_PROFILE=${APP_PROFILE}
