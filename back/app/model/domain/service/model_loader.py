@@ -29,4 +29,4 @@ class ModelLoader(ABC):
         """
         Scanner la source de modèles et synchroniser la couche applicative.
         """
-        raise NotImplementedError()
+        pass
