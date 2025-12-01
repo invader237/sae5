@@ -167,7 +167,7 @@ class PictureController:
 
     async def validate_picture(
         self,
-        picture_id: int = FastAPIPath(
+        picture_id: uuid.UUID = FastAPIPath(
             ..., description="ID de la picture à valider"
             ),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
