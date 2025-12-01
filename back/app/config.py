@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from urllib.parse import quote_plus
 
 
@@ -18,9 +19,11 @@ class Settings(BaseSettings):
             "?client_encoding=utf8"
         )
 
-    class Config:
-        env_file = "D:/it/BUT3/sae5/back/.env"
-        env_file_encoding = "utf-8"
+    # Pydantic v2: use `model_config` with `ConfigDict`
+    model_config = ConfigDict(
+        env_file="back/.env",
+        env_file_encoding="utf-8",
+    )
 
 
 settings = Settings()

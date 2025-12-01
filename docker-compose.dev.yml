@@ -5,23 +5,26 @@ services:
       context: ./front
       dockerfile: Dockerfile.dev
     ports:
-      - "8082:8081"
-      - "19000:19000"
-      - "19001:19001"
-      - "19002:19002"
+      - "8081:8081"
     volumes:
       - ./front:/app
+      - ./front:/recognition_model
       - /app/node_modules
     environment:
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
       - CHOKIDAR_USEPOLLING=true
+      - BACKEND_API_ADDRESS=${BACKEND_API_ADDRESS}
   api:
     container_name: api-dev
     build:
       context: ./back
       dockerfile: Dockerfile.dev
     ports:
-      - "8002:8000"
+      - "8000:8000"
+    volumes:
+      - ./back:/app
+      - ./back/uploads:/app/uploads
+      - ${MODEL_DIR}:/app/models
     environment:
       - APP_NAME=${APP_NAME}
       - APP_PROFILE=${APP_PROFILE}

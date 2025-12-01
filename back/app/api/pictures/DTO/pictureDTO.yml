@@ -6,3 +6,17 @@ properties:
     format: uuid
   path:
     type: string
+  analyzed_by:
+    type: string
+    nullable: true
+  recognition_percentage:
+    type: number
+    format: float
+    nullable: true
+  analyse_date:
+    type: string
+    format: date-time
+  validation_date:
+    type: string
+    format: date-time
+    nullable: true

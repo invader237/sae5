@@ -12,6 +12,8 @@ paths:
     $ref: './rooms/rooms.yml'
   /roles:
     $ref: './roles/roles.yml'
+  /models:
+    $ref: './model/models.yml'
 
 components:
   schemas:
@@ -23,3 +25,5 @@ components:
       $ref: './rooms/DTO/roomDTO.yml'
     RoleDTO:
       $ref: './roles/DTO/roleDTO.yml'
+    ModelDTO:
+      $ref: './model/DTO/modelDTO.yml'

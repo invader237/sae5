@@ -5,7 +5,9 @@ services:
       context: ./front
       dockerfile: Dockerfile.test
     ports:
-      - "8081:80"
+      - "8080:80"
+    environment:
+      - BACKEND_API_ADDRESS=${BACKEND_API_ADDRESS}
   api:
     container_name: api-test
     build:
@@ -13,6 +15,10 @@ services:
       dockerfile: Dockerfile.test
     ports:
       - "8001:8000"
+    volumes:
+      - ./back:/app
+      - ./back/uploads:/app/uploads  
+      - ${MODEL_DIR}:/app/models
     environment:
       - APP_NAME=${APP_NAME}
       - APP_PROFILE=${APP_PROFILE}
@@ -20,3 +26,4 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      

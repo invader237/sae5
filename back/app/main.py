@@ -4,11 +4,22 @@ from app.config import settings
 from app.database import engine, Base
 from app.scripts.seed_dev import load_fixtures
 from sqlalchemy import text
+from fastapi.middleware.cors import CORSMiddleware
 
 # router import
 from app.user.infra.rest.user_router import router as user_router
+from app.model.infra.rest.model_router import router as model_router
+from app.picture.infra.rest.picture_router import router as picture_router
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def refresh_db():
@@ -35,3 +46,5 @@ def read_root():
 
 # router include
 app.include_router(user_router)
+app.include_router(model_router)
+app.include_router(picture_router)
