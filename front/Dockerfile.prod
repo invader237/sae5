@@ -4,6 +4,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+ARG EXPO_PUBLIC_BACKEND_API_ADDRESS
+# Make the EXPO_PUBLIC_BACKEND_API_ADDRESS available during the build
+ENV EXPO_PUBLIC_BACKEND_API_ADDRESS=${EXPO_PUBLIC_BACKEND_API_ADDRESS}
 RUN npx expo export --platform web
 
 FROM nginx:alpine
