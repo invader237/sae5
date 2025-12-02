@@ -4,10 +4,12 @@ services:
     build:
       context: ./front
       dockerfile: Dockerfile.test
+      args:
+        - EXPO_PUBLIC_BACKEND_API_ADDRESS=${BACKEND_API_ADDRESS}
     ports:
       - "8080:80"
     environment:
-      - BACKEND_API_ADDRESS=${BACKEND_API_ADDRESS}
+      - EXPO_PUBLIC_BACKEND_API_ADDRESS=${BACKEND_API_ADDRESS}
   api:
     container_name: api-test
     build:

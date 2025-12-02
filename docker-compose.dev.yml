@@ -13,7 +13,7 @@ services:
     environment:
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
       - CHOKIDAR_USEPOLLING=true
-      - BACKEND_API_ADDRESS=${BACKEND_API_ADDRESS}
+      - EXPO_PUBLIC_BACKEND_API_ADDRESS=${BACKEND_API_ADDRESS}
   api:
     container_name: api-dev
     build:
