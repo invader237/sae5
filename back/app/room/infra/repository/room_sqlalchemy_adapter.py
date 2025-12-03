@@ -11,3 +11,6 @@ class RoomSQLAlchemyAdapter(RoomCatalog):
 
     def save(self, room_in: dict):
         return self.repository.save(room_in)
+
+    def find_by_name(self, name: str):
+        return self.repository.find_by_name(name)

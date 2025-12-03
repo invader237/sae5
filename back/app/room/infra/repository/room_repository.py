@@ -15,3 +15,6 @@ class RoomRepository:
         self.db.commit()
         self.db.refresh(room)
         return room
+
+    def find_by_name(self, name: str) -> RoomModel:
+        return self.db.query(RoomModel).filter(RoomModel.name == name).first()

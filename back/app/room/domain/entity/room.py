@@ -1,6 +1,7 @@
 import uuid
 from sqlalchemy import Column, String, Integer
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -31,3 +32,5 @@ class Room(Base):
         String(50),
         nullable=True,
     )
+
+    pictures = relationship("Picture", back_populates="room")
