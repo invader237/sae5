@@ -1,0 +1,13 @@
+get:
+  summary: Liste l'historique des scans
+  tags:
+    - histories
+  responses:
+    '200':
+      description: Historique des scans
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: './DTO/historyDTO.yml'
