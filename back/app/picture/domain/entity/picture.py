@@ -1,5 +1,7 @@
 import uuid
-from sqlalchemy import Column, String, Float, DateTime
+from sqlalchemy import Column, String, Float, DateTime, Boolean
+from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -38,3 +40,15 @@ class Picture(Base):
         DateTime(timezone=True),
         nullable=True,
     )
+    is_validated = Column(
+        Boolean,
+        nullable=True,
+        default=False,
+    )
+    room_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("rooms.room_id"),
+        nullable=True
+    )
+
+    room = relationship("Room", back_populates="pictures")
