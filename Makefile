@@ -33,7 +33,11 @@ endif
 
 setup:
 	@echo "[*] Installing backend dependencies..."
+<<<<<<< HEAD
 	cd $(BACK_DIR) && python3 -m venv venv && . venv/bin/activate && pip install -r requirements.txt
+=======
+	cd $(BACK_DIR) && pip install -r requirements.txt
+>>>>>>> main
 	@echo "[*] Installing frontend dependencies..."
 	cd $(FRONT_DIR) && $(NPM) install
 	@echo "[OK] Setup complete!"

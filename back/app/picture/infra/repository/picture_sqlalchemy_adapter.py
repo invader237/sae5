@@ -1,3 +1,5 @@
+from typing import Union
+from uuid import UUID
 from app.picture.domain.catalog.picture_catalog import PictureCatalog
 from app.picture.infra.repository.picture_repository import PictureRepository
 
@@ -11,3 +13,6 @@ class PictureSQLAlchemyAdapter(PictureCatalog):
 
     def save(self, picture_in: dict):
         return self.repository.save(picture_in)
+
+    def update(self, picture_id: Union[str, UUID], updates: dict):
+        return self.repository.update(picture_id, updates)

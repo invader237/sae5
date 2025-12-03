@@ -48,7 +48,8 @@ def load_fixtures():
             Model(
                 name="Mon modèle",
                 path="/models/test",
-                is_active=False
+                is_active=False,
+                input_size=384,
             )
         )
 

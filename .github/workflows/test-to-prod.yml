@@ -3,7 +3,7 @@ name: Test → Prod CI
 on:
   pull_request:
     branches:
-      - prod
+      - main
     types: [opened, synchronize, reopened]
 
 jobs:
