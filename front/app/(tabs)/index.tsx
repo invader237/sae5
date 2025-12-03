@@ -5,7 +5,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as ImagePicker from 'expo-image-picker';
-import { uploadFrame, FAST_API_ENDPOINT } from '@/api/upload.api';
+import { uploadFrame } from '@/api/picture.api';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -36,7 +36,7 @@ export default function HomeScreen() {
 
     if (!result.canceled && result.assets[0]?.uri) {
       try {
-        await uploadFrame(FAST_API_ENDPOINT, result.assets[0].uri);
+        await uploadFrame(result.assets[0].uri);
         alert('Image envoyée avec succès !');
       } catch {
         alert('Erreur lors de l\'envoi de l\'image');
