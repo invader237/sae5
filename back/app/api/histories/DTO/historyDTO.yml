@@ -1,0 +1,17 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  image_path:
+    type: string
+  room_name:
+    type: string
+    nullable: true
+  scanned_at:
+    type: string
+    format: date-time
+required:
+  - id
+  - image_path
+  - scanned_at
