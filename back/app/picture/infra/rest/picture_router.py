@@ -208,7 +208,6 @@ class PictureController:
         room_catalog: RoomCatalog = Depends(get_room_catalog),
     ):
         pictures = picture_catalog.find_by_not_validated()
-        print(pictures[1].room)
         return [picture_to_picturePvaDTO_mapper.apply(picture) for picture in pictures]
 
     async def validate_picture(
