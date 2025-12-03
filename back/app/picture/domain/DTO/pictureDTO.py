@@ -12,3 +12,4 @@ class PictureDTO(BaseModel):
     recognition_percentage: Optional[float] = None
     analyse_date: Optional[datetime] = None
     validation_date: Optional[datetime] = None
+    is_validated: Optional[bool] = None
