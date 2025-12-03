@@ -31,13 +31,37 @@ def load_fixtures() -> None:
             "type": "IT",
         })
         room_repo.save({
-            "name": "E23",
-            "floor": 2,
-            "departement": "GEA",
+            "name": "A321",
+            "floor": 3,
+            "departement": "INFO",
             "type": "normal",
         })
         room_repo.save({
-            "name": "A321",
+            "name": "A324",
+            "floor": 3,
+            "departement": "INFO",
+            "type": "normal",
+        })
+        room_repo.save({
+            "name": "E35",
+            "floor": 3,
+            "departement": "INFO",
+            "type": "normal",
+        })
+        room_repo.save({
+            "name": "E36",
+            "floor": 3,
+            "departement": "INFO",
+            "type": "normal",
+        })
+        room_repo.save({
+            "name": "E37",
+            "floor": 3,
+            "departement": "INFO",
+            "type": "normal",
+        })
+        room_repo.save({
+            "name": "F33",
             "floor": 3,
             "departement": "INFO",
             "type": "normal",
@@ -64,7 +88,7 @@ def load_fixtures() -> None:
                 analyse_date=datetime(2024, 1, 16, 11, 30, 0),
                 validation_date=None,
                 is_validated=False,
-                room=room_repo.find_by_name("E23"),
+                room=room_repo.find_by_name("F33"),
             )
         )
 
