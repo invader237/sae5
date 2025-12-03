@@ -11,8 +11,7 @@ class PictureRepository:
     def find_all(self):
         return self.db.query(PictureModel).all()
 
-    def save(self, picture_in: dict) -> PictureModel:
-        picture = PictureModel(**picture_in)
+    def save(self, picture: PictureModel) -> PictureModel:
         self.db.add(picture)
         self.db.commit()
         self.db.refresh(picture)
@@ -56,3 +55,8 @@ class PictureRepository:
         if picture is None:
             raise Exception("Picture not found")
         return picture
+
+    def find_by_not_validated(self):
+        return self.db.query(PictureModel).filter(
+            PictureModel.is_validated.is_(False)
+        ).all()
