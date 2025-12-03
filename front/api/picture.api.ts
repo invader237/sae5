@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import axiosInstance from './axiosConfig';
+import PicturePvaDTO from './DTO/picturePva.dto';
 
 type UploadOptions = {
   mimeType?: string | null;
@@ -38,3 +39,14 @@ export async function uploadFrame(uri: string, _options?: UploadOptions) {
     throw new Error(`Upload échoué (${status ?? 'ERR'}): ${msg}`);
   }
 }
+
+export async function fetchToValidatePictures() {
+  try {
+    const response = await axiosInstance.get<PicturePvaDTO[]>('/pictures/to-validate');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching pictures to validate:', error);
+    throw error;
+  }
+}
+
