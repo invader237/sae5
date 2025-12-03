@@ -21,9 +21,16 @@ import json
 from app.picture.domain.mapper.picture_to_pictureDTO_mapper import (
     picture_to_pictureDTO_mapper,
 )
+from app.picture.domain.mapper.picture_to_picturePvaDTO_mapper import (
+    picture_to_picturePvaDTO_mapper,
+)
+from app.picture.domain.entity.picture import Picture
 from app.picture.domain.DTO.pictureDTO import PictureDTO
+from app.picture.domain.DTO.picturePvaDTO import PicturePvaDTO
 from app.picture.domain.catalog.picture_catalog import PictureCatalog
 from app.picture.infra.factory.picture_factory import get_picture_catalog
+from app.room.infra.factory.room_factory import get_room_catalog
+from app.room.domain.catalog.room_catalog import RoomCatalog
 from app.model.domain.service.predict import predict_image
 from app.model.infra.factory.model_factory import get_model_loader
 
@@ -44,6 +51,12 @@ class PictureController:
             self.import_picture,
             response_model=PictureDTO,
             methods=["POST"],
+        )
+        self.router.add_api_route(
+            "/to-validate",
+            self.find_picture_to_validate,
+            response_model=list[PicturePvaDTO],
+            methods=["GET"],
         )
         self.router.add_api_route(
             "/{picture_id}/validate",
@@ -80,6 +93,7 @@ class PictureController:
         file: UploadFile | None = File(None),
         image: UploadFile | None = File(None),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        room_catalog: RoomCatalog = Depends(get_room_catalog),
         model_loader=Depends(get_model_loader),
     ):
         # Supporte file ou image comme clé multipart
@@ -163,16 +177,39 @@ class PictureController:
         except Exception:
             recognition_percentage = None
 
+        print(inference_result.get("top_label"))
+        print(room_catalog.find_by_name(
+            inference_result.get("top_label")
+        ))
+
+        room_obj = room_catalog.find_by_name(
+            inference_result.get("top_label")
+        )
         picture_payload = {
             "path": str(dest_path),
             "analyzed_by": inference_result.get("model_version")
-            or inference_result.get("model") or None,
+                or inference_result.get("model") or None,
+            "room": room_obj,  # passer l'objet Room
             "recognition_percentage": recognition_percentage,
             "analyse_date": datetime.now(timezone.utc),
+            "validation_date": None,
+            "is_validated": False,
+            "room_id": room_obj.room_id if room_obj else None,  # facultatif mais ok
         }
 
-        picture = picture_catalog.save(picture_payload)
+        picture = Picture(**picture_payload)
+
+        picture = picture_catalog.save(picture)
         return picture_to_pictureDTO_mapper.apply(picture)
+
+    async def find_picture_to_validate(
+        self,
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        room_catalog: RoomCatalog = Depends(get_room_catalog),
+    ):
+        pictures = picture_catalog.find_by_not_validated()
+        print(pictures[1].room)
+        return [picture_to_picturePvaDTO_mapper.apply(picture) for picture in pictures]
 
     async def validate_picture(
         self,
