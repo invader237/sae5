@@ -29,13 +29,20 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 # --- Merge metadata ---
 target_metadata = MetaData()
 
-for meta in [UserBase.metadata, ModelBase.metadata, PictureBase.metadata, RoleBase.metadata, RoomBase.metadata]:
+for meta in [
+    UserBase.metadata,
+    ModelBase.metadata,
+    PictureBase.metadata,
+    RoleBase.metadata,
+    RoomBase.metadata,
+]:
     for table in meta.tables.values():
         target_metadata._add_table(table.name, table.schema, table)
 
 # --- DB URI depending on profile ---
 database_url = settings.database_url
 config.set_main_option("sqlalchemy.url", database_url)
+
 
 def run_migrations_offline():
     context.configure(
@@ -46,6 +53,7 @@ def run_migrations_offline():
     )
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online():
     connectable = engine_from_config(
@@ -63,6 +71,7 @@ def run_migrations_online():
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()
