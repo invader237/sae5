@@ -7,7 +7,11 @@ class HistoryRepository:
         self.db = db
 
     def find_all(self):
-        return self.db.query(HistoryModel).order_by(HistoryModel.scanned_at.desc()).all()
+        return (
+            self.db.query(HistoryModel)
+            .order_by(HistoryModel.scanned_at.desc())
+            .all()
+        )
 
     def save(self, history_in: dict) -> HistoryModel:
         h = HistoryModel(**history_in)
