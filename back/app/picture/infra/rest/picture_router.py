@@ -39,7 +39,6 @@ class PictureController:
         self.router.add_api_route(
             "/import",
             self.import_picture,
-            response_model=PictureDTO,
             methods=["POST"],
         )
         self.router.add_api_route(
@@ -162,8 +161,9 @@ class PictureController:
             "analyse_date": datetime.now(timezone.utc),
         }
 
+        # Sauvegarde en base de données
         picture = picture_catalog.save(picture_payload)
-        return picture_to_pictureDTO_mapper.apply(picture)
+        return inference_result
 
     async def validate_picture(
         self,
