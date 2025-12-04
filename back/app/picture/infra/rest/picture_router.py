@@ -53,9 +53,9 @@ class PictureController:
         )
         self.router.add_api_route(
             "/{picture_id}/recover",
-            self.recover_pictures,
+            self.recover_picture,
             response_model=bytes,
-            methods=["Get"],
+            methods=["GET"],
         )
 
     def get_pictures(
@@ -190,7 +190,7 @@ class PictureController:
             raise HTTPException(status_code=400, detail=str(e))
         return picture_to_pictureDTO_mapper.apply(updated)
 
-    async def recover_pictures(
+    async def recover_picture(
         self,
         picture_id: uuid.UUID = FastAPIPath(
             ..., description="ID de la picture à récupérer"
@@ -201,22 +201,16 @@ class PictureController:
         ),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
     ):
-        pictures = picture_catalog.find_by_id(picture_id)
+        picture = picture_catalog.find_by_id(picture_id)
 
-        image = Image.open(pictures.path)
+        image = Image.open(picture.path)
 
+        # A supprimer après que le resizing soit en place partout
         if image.size != (384, 384):
             image = image.resize((384, 384))
 
         if type == "thumbnail":
             image.thumbnail((150, 150))
-        elif type == "full":
-            pass
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail="Type d'image inconnu. Utilisez 'thumbnail' ou 'full'.",
-            )
 
         buffer = io.BytesIO()
         image.save(buffer, format="JPEG", quality=100)
