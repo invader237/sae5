@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, Modal } from 'react-native'; 
-import { fetchToValidatePictures } from '@/api/picture.api';
+import { fetchToValidatePictures, fetchPicture } from '@/api/picture.api';
 import PicturePvaDTO from '@/api/DTO/picturePva.dto';
 
 const PvaModal = ({ visible, onClose, picturesData }) => {
@@ -21,14 +21,17 @@ const PvaModal = ({ visible, onClose, picturesData }) => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView className="flex-1">
-          <View className="flex-col gap-4">
+        <ScrollView className="flex-1 px-4">
+          <View className="flex-row flex-wrap justify-between gap-3">
             {picturesData.map((picture, index) => (
               <Image
                 key={index}
-                source={{ uri: `https://placehold.co/300x300?text=PVA+${index + 1}` }}
-                style={{ width: '100%', height: 180, borderRadius: 8 }}
+                source={{ uri: `http://localhost:8000/pictures/${picture.id}/recover?type=full` }}
+                className="w-[48%] h-40 rounded-lg"
                 resizeMode="cover"
+                onError={(e) => {
+                  e.nativeEvent.target.setNativeProps({ src: [{ uri: `https://placehold.co/300x300?text=PVA+${index + 1}` }] });
+                }}
               />
             ))}
 
@@ -65,9 +68,12 @@ function PvaPanel() {
     <View className="relative w-[150] h-[150] mr-2.5">
         <Image
             key={picture.id || index} 
-            source={{ uri: `https://placehold.co/150x150?text=PVA+${index+1}` }} 
+            source={{ uri: `http://localhost:8000/pictures/${picture.id}/recover?type=thumbnail` }}
             style={{ width: 150, height: 150, borderRadius: 8, marginRight: 8 }}
             resizeMode="cover"
+            onError={(e) => {
+              e.nativeEvent.target.setNativeProps({ src: [{ uri: `https://placehold.co/150x150?text=PVA+${index+1}` }] });
+            }}
         />
         
         <View className="absolute inset-0 flex justify-center items-center bg-with bg-opacity-1"> 
