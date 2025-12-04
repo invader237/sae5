@@ -42,7 +42,9 @@ export default function HomeScreen() {
         const inference = await uploadFrame(result.assets[0].uri)
         alert('Image envoyée avec succès !');
         setInferenceResult(inference);
-        setModalVisible(true);
+        if (inference?.predictions && inference.predictions.length > 0) {
+          setModalVisible(true);
+        }
       } catch {
         alert('Erreur lors de l\'envoi de l\'image');
       }
