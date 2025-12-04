@@ -50,7 +50,6 @@ class PictureController:
         self.router.add_api_route(
             "/import",
             self.import_picture,
-            response_model=PictureDTO,
             methods=["POST"],
         )
         self.router.add_api_route(
@@ -217,7 +216,7 @@ class PictureController:
         picture = Picture(**picture_payload)
 
         picture = picture_catalog.save(picture)
-        return picture_to_pictureDTO_mapper.apply(picture)
+        return inference_result
 
     async def find_picture_to_validate(
         self,
