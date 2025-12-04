@@ -9,6 +9,9 @@ from fastapi import (
     Form,
     Path as FastAPIPath,
 )
+from PIL import Image
+import io
+from fastapi.responses import StreamingResponse
 from pathlib import Path
 from typing import Literal
 import uuid
@@ -47,6 +50,12 @@ class PictureController:
             self.validate_picture,
             response_model=PictureDTO,
             methods=["PATCH"],
+        )
+        self.router.add_api_route(
+            "/{picture_id}/recover",
+            self.recover_pictures,
+            response_model=bytes,
+            methods=["Get"],
         )
 
     def get_pictures(
@@ -180,6 +189,24 @@ class PictureController:
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
         return picture_to_pictureDTO_mapper.apply(updated)
+
+    async def recover_pictures(
+        self,
+        picture_id: uuid.UUID = FastAPIPath(
+            ..., description="ID de la picture à récupérer"
+        ),
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+    ):
+        pictures = picture_catalog.find_by_id(picture_id)
+
+        image = Image.open(pictures.path)
+        image.thumbnail((200, 200))
+
+        buffer = io.BytesIO()
+        image.save(buffer, format="JPEG", quality=100)
+        buffer.seek(0)
+
+        return StreamingResponse(buffer, media_type="image/jpeg")
 
 
 picture_controller = PictureController()
