@@ -2,21 +2,7 @@ import React from 'react';
 import { Modal, View, TouchableOpacity, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-
-interface Prediction {
-  label: string;
-  score: number;
-}
-
-interface InferenceResult {
-  predictions: Prediction[];
-  model_version: string;
-  accepted: boolean;
-  time_ms: number;
-  top_prediction?: Prediction;
-  top_score?: number;
-  top_label?: string;
-}
+import { InferenceResult } from '@/api/DTO/inference.dto';
 
 interface InferenceResultModalProps {
   visible: boolean;
