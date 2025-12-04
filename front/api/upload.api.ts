@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import axiosInstance, { baseURL } from './axiosConfig';
+import { InferenceResult } from './DTO/inference.dto';
 
 type UploadOptions = {
   mimeType?: string | null;
@@ -15,7 +16,7 @@ export async function uploadFrame(
   endpoint: string = FAST_API_ENDPOINT,
   uri: string,
   _options?: UploadOptions,
-) {
+): Promise<InferenceResult> {
   const form = new FormData();
   form.append('type', 'analyse');
 
@@ -34,9 +35,10 @@ export async function uploadFrame(
   }
 
   try {
-    await axiosInstance.post(endpoint, form, {
+    const response = await axiosInstance.post<InferenceResult>(endpoint, form, {
       timeout: 20000,
     });
+    return response.data;
   } catch (e: any) {
     const status = e?.response?.status;
     const data = e?.response?.data;
