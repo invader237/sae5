@@ -37,6 +37,7 @@ from app.authentification.core.admin_required import (
     require_role,
     AuthenticatedUser,
 )
+from app.history.infra.factory.history_factory import get_history_catalog
 
 UPLOAD_DIR = Path("uploads")
 
@@ -110,6 +111,7 @@ class PictureController:
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
         room_catalog: RoomCatalog = Depends(get_room_catalog),
         model_loader=Depends(get_model_loader),
+        history_catalog=Depends(get_history_catalog),
     ):
         # Supporte file ou image comme clé multipart
         upload_file = file or image
