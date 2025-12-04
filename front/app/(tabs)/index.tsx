@@ -6,6 +6,8 @@ import { useIsFocused } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadFrame } from '@/api/picture.api';
+import { InferenceResultModal } from '@/components/InferenceResultModal';
+import { InferenceResult } from '@/api/DTO/inference.dto';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -18,6 +20,8 @@ export default function HomeScreen() {
   const isUploadingRef = useRef(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [zoom] = useState(0.1);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [inferenceResult, setInferenceResult] = useState<InferenceResult | null>(null);
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -27,7 +31,6 @@ export default function HomeScreen() {
       return;
     }
 
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
@@ -36,8 +39,10 @@ export default function HomeScreen() {
 
     if (!result.canceled && result.assets[0]?.uri) {
       try {
-        await uploadFrame(result.assets[0].uri);
+        const inference = await uploadFrame(result.assets[0].uri)
         alert('Image envoyée avec succès !');
+        setInferenceResult(inference);
+        setModalVisible(true);
       } catch {
         alert('Erreur lors de l\'envoi de l\'image');
       }
@@ -126,6 +131,12 @@ export default function HomeScreen() {
           📷 Sélectionner une photo
         </Text>
       </Pressable>
+
+      <InferenceResultModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        inferenceResult={inferenceResult}
+      />
     </View>
   );
 }
