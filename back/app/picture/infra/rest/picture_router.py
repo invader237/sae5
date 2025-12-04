@@ -195,12 +195,28 @@ class PictureController:
         picture_id: uuid.UUID = FastAPIPath(
             ..., description="ID de la picture à récupérer"
         ),
+        type: Literal["thumbnail", "full"] = Query(
+            "full",
+            description="Type d'image à récupérer",
+        ),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
     ):
         pictures = picture_catalog.find_by_id(picture_id)
 
         image = Image.open(pictures.path)
-        image.thumbnail((200, 200))
+
+        if image.size != (384, 384):
+            image = image.resize((384, 384))
+
+        if type == "thumbnail":
+            image.thumbnail((150, 150))
+        elif type == "full":
+            pass
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Type d'image inconnu. Utilisez 'thumbnail' ou 'full'.",
+            )
 
         buffer = io.BytesIO()
         image.save(buffer, format="JPEG", quality=100)
