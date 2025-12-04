@@ -125,14 +125,6 @@ class PictureController:
                 status_code=500, detail=f"Inference failed: {e}"
                 )
 
-        # Affichage console du résultat d'inférence (formaté)
-        try:
-            print("[INFERENCE RESULT]")
-            print(json.dumps(inference_result, default=str,
-                             indent=2, ensure_ascii=False))
-        except Exception:
-            print("[INFERENCE RESULT] (failed to pretty-print)",
-                  inference_result)
 
         # Extraction : privilégie le champ canonique 'top_score' si présent,
         # sinon tombe back sur le parsing défensif de la première prédiction.
