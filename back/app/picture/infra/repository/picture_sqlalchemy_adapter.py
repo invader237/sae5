@@ -16,3 +16,6 @@ class PictureSQLAlchemyAdapter(PictureCatalog):
 
     def update(self, picture_id: Union[str, UUID], updates: dict):
         return self.repository.update(picture_id, updates)
+
+    def find_by_id(self, picture_id: Union[str, UUID]):
+        return self.repository.find_by_id(picture_id)
