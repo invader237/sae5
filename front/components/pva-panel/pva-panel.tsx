@@ -2,6 +2,7 @@ import React, { useEffect, useState, memo } from "react";
 import { View, Text, Image, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { fetchToValidatePictures, validatePictures } from "@/api/picture.api";
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 /* ---------------------------------------------------------------------- */
 /*  Composant Image avec sélection                                        */
@@ -130,11 +131,23 @@ const PvaModal = ({ visible, onClose, picturesData, onValidated }) => {
 function PvaPanel() {
   const [picturesPvaData, setPicturesPvaData] = useState<PicturePvaDTO[]>([]);
   const [pvaModalIsVisible, setPvaModalIsVisible] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false); // état de chargement
+
+  const fetchPictures = async () => {
+    setIsRefreshing(true);
+    try {
+      const pics = await fetchToValidatePictures();
+      setPicturesPvaData(pics);
+    } catch (e) {
+      console.error("Erreur rafraîchissement PVA :", e);
+      alert("Impossible de récupérer les images. Veuillez réessayer plus tard.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    fetchToValidatePictures()
-      .then(setPicturesPvaData)
-      .catch((e) => console.error("Erreur récupération PVA :", e));
+    fetchPictures();
   }, []);
 
   const previewPictures = picturesPvaData.slice(0, 5);
@@ -145,7 +158,21 @@ function PvaPanel() {
 
   return (
     <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
-      <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
+      <View className="flex-row items-center justify-between">
+        <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
+
+        <TouchableOpacity
+          onPress={fetchPictures}
+          disabled={isRefreshing}
+          className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2"
+        >
+          <MaterialIcons 
+            name="refresh" 
+            size={20} 
+            color="white" 
+          />
+        </TouchableOpacity>
+      </View>
 
       {/* Preview horizontal */}
       <ScrollView
