@@ -205,6 +205,18 @@ class PictureController:
         picture = Picture(**picture_payload)
 
         picture = picture_catalog.save(picture)
+        try:
+            history_catalog.save(
+                {
+                    "image_path": str(dest_path),
+                    "room_name": top_room_name,
+                    "picture_id": getattr(picture, "image_id", None),
+                }
+            )
+        except Exception:
+            # Ne pas bloquer l'import si l'historisation échoue
+            pass
+
         return inference_result
 
     async def find_picture_to_validate(
