@@ -43,12 +43,6 @@ export function InferenceResultModal({
             <ThemedText type="title" className="text-lg">
               Résultat d'analyse
             </ThemedText>
-            <TouchableOpacity
-              onPress={onClose}
-              className="w-8 h-8 rounded-full bg-gray-200 justify-center items-center"
-            >
-              <ThemedText className="text-lg font-bold">×</ThemedText>
-            </TouchableOpacity>
           </View>
 
           {/* Loading state: show spinner and a small message */}
