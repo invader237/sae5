@@ -4,8 +4,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
+import Spinner from '@/components/Spinner';
 import { changePassword } from "@/api/auth.api";
 
 type ChangePasswordFormProps = {
@@ -129,7 +129,7 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
         onPress={handleSubmit}
       >
         {loading ? (
-          <ActivityIndicator color="#fff" />
+          <Spinner color="#fff" />
         ) : (
           <Text className="text-white font-semibold text-base">
             Mettre à jour le mot de passe
