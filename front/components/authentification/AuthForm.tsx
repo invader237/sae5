@@ -5,8 +5,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
+import Spinner from '@/components/Spinner';
 import { login, register } from "@/api/auth.api";
 
 type Mode = "login" | "register";
@@ -214,7 +214,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
           onPress={mode === "login" ? () => handleLogin() : handleRegister}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <Spinner color="#fff" />
           ) : (
             <Text className="text-white font-semibold text-base">
               {mode === "login" ? "Se connecter" : "Créer un compte"}

@@ -3,10 +3,10 @@ import {
   Modal,
   View,
   Text,
-  ActivityIndicator,
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import Spinner from '@/components/Spinner';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthForm } from "@/components/authentification/AuthForm";
 import { ChangePasswordForm } from "@/components/authentification/ChangePasswordForm";
@@ -67,7 +67,7 @@ export default function ProfileScreen() {
   if (initializing) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator />
+        <Spinner />
         <Text className="mt-2 text-gray-500">Chargement du profil…</Text>
       </View>
     );
