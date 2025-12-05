@@ -33,7 +33,7 @@ export function InferenceResultModal({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-black/50 justify-center items-center p-4">
-        <ThemedView className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[80%]">
+        <ThemedView className="bg-white rounded-lg p-6 w-full max-w-md max-h-[80%]">
           {/* Header */}
           <View className="flex-row justify-between items-center mb-4">
             <ThemedText type="title" className="text-lg">
@@ -41,7 +41,7 @@ export function InferenceResultModal({
             </ThemedText>
             <TouchableOpacity
               onPress={onClose}
-              className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 justify-center items-center"
+              className="w-8 h-8 rounded-full bg-gray-200 justify-center items-center"
             >
               <ThemedText className="text-lg font-bold">×</ThemedText>
             </TouchableOpacity>
@@ -49,10 +49,10 @@ export function InferenceResultModal({
 
           {/* Model Info */}
           <View className="mb-4">
-            <ThemedText className="text-sm text-gray-600 dark:text-gray-400">
+            <ThemedText className="text-sm text-gray-600">
               Modèle: {inferenceResult.model_version}
             </ThemedText>
-            <ThemedText className="text-sm text-gray-600 dark:text-gray-400">
+            <ThemedText className="text-sm text-gray-600">
               Temps: {inferenceResult.time_ms.toFixed(0)}ms
             </ThemedText>
           </View>
@@ -75,7 +75,7 @@ export function InferenceResultModal({
                 </View>
 
                 {/* Progress Bar */}
-                <View className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <View className="h-2 bg-gray-200 rounded-full overflow-hidden">
                   <View
                     className={`h-full ${getScoreColor(pred.score)}`}
                     style={{ width: `${pred.score * 100}%` }}
@@ -86,7 +86,7 @@ export function InferenceResultModal({
           </ScrollView>
 
           {/* Footer */}
-          <View className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <View className="mt-4 pt-4 border-t border-gray-200">
             <TouchableOpacity
               onPress={onClose}
               className="bg-blue-500 py-3 rounded-lg"
