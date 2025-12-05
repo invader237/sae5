@@ -1,173 +1,190 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, Modal } from 'react-native'; 
-import { fetchToValidatePictures, fetchPicture } from '@/api/picture.api';
-import PicturePvaDTO from '@/api/DTO/picturePva.dto';
+import React, { useEffect, useState, memo } from "react";
+import { View, Text, Image, ScrollView, TouchableOpacity, Modal } from "react-native";
+import { fetchToValidatePictures, validatePictures } from "@/api/picture.api";
+import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 
-const PvaModal = ({ visible, onClose, picturesData }) => {
+/* ---------------------------------------------------------------------- */
+/*  Composant Image avec sélection                                        */
+/* ---------------------------------------------------------------------- */
+const PictureItem = memo(function PictureItem({ picture, index, size = 150, isSelected, onPress }) {
   return (
-    <Modal
-      animationType="slide"
-      transparent={false}
-      visible={visible}
-      onRequestClose={onClose}
+    <TouchableOpacity
+      onPress={() => onPress?.(picture.id)}
+      activeOpacity={0.8}
+      className={`relative rounded-xl ${isSelected ? "border-4 border-blue-500" : ""}`}
+      style={{ width: size, height: size }}
     >
+      <Image
+        source={{
+          uri: `http://localhost:8000/pictures/${picture.id}/recover?type=thumbnail`,
+        }}
+        className="w-full h-full rounded-lg"
+        resizeMode="cover"
+      />
+
+      {/* Overlay */}
+      <View className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
+        <Text className="text-white font-bold text-center text-base">
+          {picture?.room?.name}
+        </Text>
+        <Text className="text-white text-sm font-semibold mt-1 text-center">
+          {picture.recognition_percentage?.toFixed(2)}%
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+});
+
+/* ---------------------------------------------------------------------- */
+/*  Modal avec sélection multiple                                         */
+/* ---------------------------------------------------------------------- */
+const PvaModal = ({ visible, onClose, picturesData, onValidated }) => {
+  const [selectedPictures, setSelectedPictures] = useState<string[]>([]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedPictures(prev =>
+      prev.includes(id)
+        ? prev.filter(x => x !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleValidate = async () => {
+    try {
+      const picturesToValidate = picturesData.filter(pic => selectedPictures.includes(pic.id));
+      await validatePictures(picturesToValidate);
+      onValidated?.(selectedPictures); // callback vers le parent pour maj UI
+      setSelectedPictures([]); // reset sélection
+      onClose();
+    } catch (error) {
+      console.error("Erreur lors de la validation :", error);
+    }
+  };
+
+  return (
+    <Modal animationType="slide" transparent={false} visible={visible} onRequestClose={onClose}>
       <View className="flex-1 bg-white p-4">
+        {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-2xl font-bold text-[#333]">
-            Toutes les images à valider
-          </Text>
+          <Text className="text-2xl font-bold text-[#333]">Toutes les images à valider</Text>
           <TouchableOpacity onPress={onClose}>
             <Text className="text-blue-500 text-lg">Fermer</Text>
           </TouchableOpacity>
         </View>
 
-        <ScrollView className="flex-1 px-4">
+        {/* Images */}
+        <ScrollView className="flex-1 px-2">
           <View className="flex-row flex-wrap justify-center gap-4 mb-4">
-
-            {picturesData.map((picture, index) => (
-                <View
-                  key={picture.id || index}
-                  className="relative w-[150] h-[150] mb-3"
-                >
-                  <Image
-                    source={{
-                      uri: `http://localhost:8000/pictures/${picture.id}/recover?type=thumbnail`,
-                    }}
-                    style={{ width: "100%", height: "100%", borderRadius: 8 }}
-                    resizeMode="cover"
-                    onError={(e) => {
-                      e.nativeEvent.target.setNativeProps({
-                        src: [{ uri: `https://placehold.co/150x150?text=PVA+${index + 1}` }],
-                      });
-                    }}
-                  />
-
-                  {/* Overlay centré */}
-                  <View className="absolute inset-0 flex justify-center items-center bg-black/40 rounded-lg">
-                    <Text className="text-white font-bold text-center">
-                      {picture.room.name}
-                    </Text>
-                    <Text className="text-white text-sm font-semibold mt-1 text-center">
-                      {picture.recognition_percentage?.toFixed(2)}%
-                    </Text>
-                  </View>
-                </View>
-            ))}
-
-            {picturesData.length === 0 && (
+            {picturesData.length > 0 ? (
+              picturesData.map((pic, i) => (
+                <PictureItem
+                  key={pic.id}
+                  picture={pic}
+                  index={i}
+                  isSelected={selectedPictures.includes(pic.id)}
+                  onPress={toggleSelect}
+                />
+              ))
+            ) : (
               <Text className="text-center text-[#555] mt-10 w-full">
                 Aucune image à valider pour le moment.
               </Text>
             )}
-
           </View>
         </ScrollView>
-        <View className="flex-row items-center justify-between w-full px-4 py-2">
 
+        {/* Boutons */}
+        <View className="flex-row items-center justify-between px-4 py-3">
           <TouchableOpacity
-            onPress={onClose}
-            className="bg-blue-500 px-4 py-2 rounded-lg"
+            onPress={handleValidate}
+            disabled={selectedPictures.length === 0}
+            className={`px-4 py-2 rounded-lg ${selectedPictures.length > 0 ? "bg-blue-500" : "bg-gray-300"}`}
           >
-            <Text className="text-white font-bold text-sm">Valider</Text>
+            <Text className="text-white font-bold text-sm">
+              Valider ({selectedPictures.length})
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={onClose}
+            onPress={() => console.log("Modifier →", selectedPictures)}
             className="bg-blue-500 px-4 py-2 rounded-lg"
           >
             <Text className="text-white font-bold text-sm">Modifier</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={onClose}
+            onPress={() => console.log("Supprimer →", selectedPictures)}
             className="bg-red-500 px-4 py-2 rounded-lg"
           >
             <Text className="text-white font-bold text-sm">Supprimer</Text>
           </TouchableOpacity>
-
         </View>
       </View>
     </Modal>
   );
 };
 
+/* ---------------------------------------------------------------------- */
+/*  Panneau principal                                                     */
+/* ---------------------------------------------------------------------- */
 function PvaPanel() {
   const [picturesPvaData, setPicturesPvaData] = useState<PicturePvaDTO[]>([]);
   const [pvaModalIsVisible, setPvaModalIsVisible] = useState(false);
 
   useEffect(() => {
-    const loadPicturesToValidate = async () => {
-      try {
-        const pictures = await fetchToValidatePictures();
-        setPicturesPvaData(pictures);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des images à valider :", error);
-      }
-    };
-
-    loadPicturesToValidate();
+    fetchToValidatePictures()
+      .then(setPicturesPvaData)
+      .catch((e) => console.error("Erreur récupération PVA :", e));
   }, []);
 
-  const imagesContent = picturesPvaData.slice(0,5).map((picture, index) => (
-    <View className="relative w-[150] h-[150] mr-2.5">
-        <Image
-            key={picture.id || index} 
-            source={{ uri: `http://localhost:8000/pictures/${picture.id}/recover?type=thumbnail` }}
-            style={{ width: 150, height: 150, borderRadius: 8, marginRight: 8 }}
-            resizeMode="cover"
-            onError={(e) => {
-              e.nativeEvent.target.setNativeProps({ src: [{ uri: `https://placehold.co/150x150?text=PVA+${index+1}` }] });
-            }}
-        />
-        
-        <View className="absolute inset-0 flex justify-center items-center bg-with bg-opacity-1"> 
-            <Text className="text-center text-md text-white font-bold">
-                {picture.room.name}
-            </Text>
-            <Text className="text-center text-md text-white font-bold">
-                {picture.recognition_percentage?.toFixed(2)}%
-            </Text>
-        </View>
-    </View>
-  ));
+  const previewPictures = picturesPvaData.slice(0, 5);
 
-  const emptyContent = (
-    <View style={{ width: 150, height: 150, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#ccc', borderRadius: 8, marginRight: 10 }}>
-        <Text style={{ textAlign: 'center' }}>Aucune image à valider</Text>
-    </View>
-  );
+  const handleValidated = (validatedIds: string[]) => {
+    setPicturesPvaData(prev => prev.filter(pic => !validatedIds.includes(pic.id)));
+  };
 
   return (
     <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
-      
-      <View className="flex-row items-center justify-between">
-        <Text className="text-[#333] text-lg font-bold">Près validation</Text>
-      </View>
+      <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
 
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={true}
-        contentContainerStyle={{ paddingHorizontal: 10, flexDirection: 'row' }} 
+      {/* Preview horizontal */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator
+        contentContainerStyle={{ flexDirection: "row" }}
+        className="px-3"
       >
-        {picturesPvaData.length > 0 ? imagesContent : emptyContent}
+        {previewPictures.length > 0 ? (
+          previewPictures.map((pic, i) => (
+            <View key={pic.id} className="mr-3">
+              <PictureItem picture={pic} index={i} />
+            </View>
+          ))
+        ) : (
+          <View className="w-[150px] h-[150px] border border-gray-300 rounded-lg mr-3 flex items-center justify-center">
+            <Text className="text-center">Aucune image à valider</Text>
+          </View>
+        )}
+
+        {/* Bouton voir plus */}
         <TouchableOpacity
           onPress={() => setPvaModalIsVisible(true)}
-          className="justify-center items-center rounded-lg"
-          style={{ width: 150, height: 150 }}
+          className="w-[150px] h-[150px] flex items-center justify-center rounded-lg"
         >
           <Text className="text-blue-500 underline">Voir plus...</Text>
         </TouchableOpacity>
-
       </ScrollView>
 
       <Text className="text-[#555] text-sm">
         Le système de pré-validation administrateur (PVA) est en cours de développement et sera bientôt disponible.
       </Text>
 
+      {/* Modal */}
       <PvaModal
         visible={pvaModalIsVisible}
         onClose={() => setPvaModalIsVisible(false)}
-        picturesData={picturesPvaData} 
+        picturesData={picturesPvaData}
+        onValidated={handleValidated}
       />
     </View>
   );

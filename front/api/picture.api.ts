@@ -50,3 +50,12 @@ export async function fetchToValidatePictures() {
   }
 }
 
+export async function validatePictures(pictures: PicturePvaDTO[]) {
+  try {
+    const response = await axiosInstance.patch('/pictures/validate', pictures);
+    return response.data; 
+  } catch (error: any) {
+    console.error('Error validating pictures:', error);
+    throw error;
+  }
+}
