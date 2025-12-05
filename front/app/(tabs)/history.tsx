@@ -2,11 +2,12 @@ import { Text, View, Image, TouchableOpacity, Modal } from "react-native";
 import { useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
-import axiosInstance from "../../api/axiosConfig";
+import axiosInstance, { baseURL } from "../../api/axiosConfig";
 
 type HistoryItem = {
   id: string;
   image_path: string;
+  picture_id?: string | null;
   room_name?: string | null;
   scanned_at: string;
 };
@@ -64,9 +65,9 @@ export default function HistoryScreen() {
               key={it.id}
               className="flex-row items-center border-b border-[#eee] py-5"
             >
-              <TouchableOpacity onPress={() => setPreview(it.image_path)}>
+              <TouchableOpacity onPress={() => setPreview(toFileUri(it.picture_id, it.image_path))}>
                 <Image
-                  source={{ uri: toFileUri(it.image_path) }}
+                  source={{ uri: toFileUri(it.picture_id, it.image_path) }}
                   style={{ width: 64, height: 64, borderRadius: 8, marginRight: 14 }}
                 />
               </TouchableOpacity>
@@ -87,7 +88,7 @@ export default function HistoryScreen() {
         <View className="flex-1 bg-[rgba(0,0,0,0.8)] items-center justify-center">
           {preview && (
             <Image
-              source={{ uri: toFileUri(preview) }}
+              source={{ uri: preview }}
               style={{ width: "90%", height: "70%", resizeMode: "contain" }}
             />
           )}
@@ -100,7 +101,12 @@ export default function HistoryScreen() {
   );
 }
 
-function toFileUri(p: string) {
-  // Placeholder temporaire en attendant la configuration pour les images réélles
+function toFileUri(pictureId?: string | null, fallbackPath?: string) {
+  if (pictureId) {
+    return `${baseURL}/pictures/${pictureId}/recover?type=full`;
+  }
+  if (fallbackPath && (fallbackPath.startsWith("http://") || fallbackPath.startsWith("https://"))) {
+    return fallbackPath;
+  }
   return "https://placehold.co/400x400/000000/FFFFFF.png";
 }

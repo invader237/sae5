@@ -3,6 +3,10 @@ properties:
   id:
     type: string
     format: uuid
+  picture_id:
+    type: string
+    format: uuid
+    nullable: true
   image_path:
     type: string
   room_name:
