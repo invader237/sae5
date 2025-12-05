@@ -1,6 +1,6 @@
 import React, { useEffect, useState, memo } from "react";
 import { View, Text, Image, ScrollView, TouchableOpacity, Modal } from "react-native";
-import { fetchToValidatePictures, validatePictures } from "@/api/picture.api";
+import { fetchToValidatePictures, validatePictures, deletePicturesPva } from "@/api/picture.api";
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
@@ -39,8 +39,9 @@ const PictureItem = memo(function PictureItem({ picture, index, size = 150, isSe
 /* ---------------------------------------------------------------------- */
 /*  Modal avec sélection multiple                                         */
 /* ---------------------------------------------------------------------- */
-const PvaModal = ({ visible, onClose, picturesData, onValidated }) => {
+const PvaModal = ({ visible, onClose, picturesData, onValidated, onDeleted }) => {
   const [selectedPictures, setSelectedPictures] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const toggleSelect = (id: string) => {
     setSelectedPictures(prev =>
@@ -54,11 +55,36 @@ const PvaModal = ({ visible, onClose, picturesData, onValidated }) => {
     try {
       const picturesToValidate = picturesData.filter(pic => selectedPictures.includes(pic.id));
       await validatePictures(picturesToValidate);
-      onValidated?.(selectedPictures); // callback vers le parent pour maj UI
-      setSelectedPictures([]); // reset sélection
+      onValidated?.(selectedPictures);
+      setSelectedPictures([]);
       onClose();
     } catch (error) {
       console.error("Erreur lors de la validation :", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (selectedPictures.length === 0) return;
+
+    const confirmed = confirm(`Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`);
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const picturesToDelete = picturesData.filter(pic => selectedPictures.includes(pic.id));
+      await deletePicturesPva(picturesToDelete);
+
+      // Mise à jour du parent
+      onDeleted?.(selectedPictures);
+
+      // Réinitialisation de la sélection
+      setSelectedPictures([]);
+      onClose();
+    } catch (error) {
+      console.error("Erreur lors de la suppression :", error);
+      alert("Impossible de supprimer les images.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -114,10 +140,13 @@ const PvaModal = ({ visible, onClose, picturesData, onValidated }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => console.log("Supprimer →", selectedPictures)}
-            className="bg-red-500 px-4 py-2 rounded-lg"
+            onPress={handleDelete}
+            disabled={selectedPictures.length === 0 || isDeleting}
+            className={`px-4 py-2 rounded-lg ${selectedPictures.length > 0 ? "bg-red-500" : "bg-gray-300"}`}
           >
-            <Text className="text-white font-bold text-sm">Supprimer</Text>
+            <Text className="text-white font-bold text-sm">
+              {isDeleting ? "Suppression..." : "Supprimer"}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -207,12 +236,15 @@ function PvaPanel() {
       </Text>
 
       {/* Modal */}
-      <PvaModal
-        visible={pvaModalIsVisible}
-        onClose={() => setPvaModalIsVisible(false)}
-        picturesData={picturesPvaData}
-        onValidated={handleValidated}
-      />
+        <PvaModal
+          visible={pvaModalIsVisible}
+          onClose={() => setPvaModalIsVisible(false)}
+          picturesData={picturesPvaData}
+          onValidated={handleValidated}
+          onDeleted={(deletedIds: string[]) =>
+            setPicturesPvaData(prev => prev.filter(pic => !deletedIds.includes(pic.id)))
+          }
+        />
     </View>
   );
 }
