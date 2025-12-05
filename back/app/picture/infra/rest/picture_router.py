@@ -8,6 +8,7 @@ from fastapi import (
     Query,
     Form,
     Path as FastAPIPath,
+    Body,
 )
 from PIL import Image
 import io
@@ -70,6 +71,12 @@ class PictureController:
             self.recover_picture,
             response_model=bytes,
             methods=["GET"],
+        )
+        self.router.add_api_route(
+            "/pva",
+            self.delete_pictures_pva,
+            response_model=dict,
+            methods=["DELETE"],
         )
 
     def get_pictures(
@@ -266,6 +273,31 @@ class PictureController:
         buffer.seek(0)
 
         return StreamingResponse(buffer, media_type="image/jpeg")
+
+    async def delete_pictures_pva(
+        self,
+        pictures: list[PicturePvaDTO] = Body(...),
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+    ):
+        deleted_pictures = []
+
+        for picture in pictures:
+            try:
+                pic_obj = picture_catalog.find_by_id(picture.id)
+                if pic_obj:
+                    picture_catalog.delete(picture.id)
+                    try:
+                        Path(pic_obj.path).unlink()
+                    except Exception as e:
+                        print(f"Erreur lors de la suppression du fichier {pic_obj.path}: {e}")
+                    deleted_pictures.append(picture.id)
+            except Exception as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Erreur lors de la suppression de {picture.id}: {str(e)}"
+                )
+
+        return {"deleted_pictures": deleted_pictures}
 
 
 picture_controller = PictureController()
