@@ -59,3 +59,15 @@ export async function validatePictures(pictures: PicturePvaDTO[]) {
     throw error;
   }
 }
+
+export async function deletePicturesPva(pictures: PicturePvaDTO[]) {
+  try {
+    const response = await axiosInstance.delete('/pictures/pva', {
+      data: pictures,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error deleting pictures:', error);
+    throw error;
+  }
+}
