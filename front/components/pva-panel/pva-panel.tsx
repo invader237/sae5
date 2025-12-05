@@ -22,17 +22,36 @@ const PvaModal = ({ visible, onClose, picturesData }) => {
         </View>
 
         <ScrollView className="flex-1 px-4">
-          <View className="flex-row flex-wrap justify-between gap-3">
+          <View className="flex-row flex-wrap justify-center gap-4 mb-4">
+
             {picturesData.map((picture, index) => (
-              <Image
-                key={index}
-                source={{ uri: `http://localhost:8000/pictures/${picture.id}/recover?type=full` }}
-                className="w-[48%] h-40 rounded-lg"
-                resizeMode="cover"
-                onError={(e) => {
-                  e.nativeEvent.target.setNativeProps({ src: [{ uri: `https://placehold.co/300x300?text=PVA+${index + 1}` }] });
-                }}
-              />
+                <View
+                  key={picture.id || index}
+                  className="relative w-[150] h-[150] mb-3"
+                >
+                  <Image
+                    source={{
+                      uri: `http://localhost:8000/pictures/${picture.id}/recover?type=thumbnail`,
+                    }}
+                    style={{ width: "100%", height: "100%", borderRadius: 8 }}
+                    resizeMode="cover"
+                    onError={(e) => {
+                      e.nativeEvent.target.setNativeProps({
+                        src: [{ uri: `https://placehold.co/150x150?text=PVA+${index + 1}` }],
+                      });
+                    }}
+                  />
+
+                  {/* Overlay centré */}
+                  <View className="absolute inset-0 flex justify-center items-center bg-black/40 rounded-lg">
+                    <Text className="text-white font-bold text-center">
+                      {picture.room.name}
+                    </Text>
+                    <Text className="text-white text-sm font-semibold mt-1 text-center">
+                      {picture.recognition_percentage?.toFixed(2)}%
+                    </Text>
+                  </View>
+                </View>
             ))}
 
             {picturesData.length === 0 && (
@@ -40,8 +59,33 @@ const PvaModal = ({ visible, onClose, picturesData }) => {
                 Aucune image à valider pour le moment.
               </Text>
             )}
+
           </View>
         </ScrollView>
+        <View className="flex-row items-center justify-between w-full px-4 py-2">
+
+          <TouchableOpacity
+            onPress={onClose}
+            className="bg-blue-500 px-4 py-2 rounded-lg"
+          >
+            <Text className="text-white font-bold text-sm">Valider</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={onClose}
+            className="bg-blue-500 px-4 py-2 rounded-lg"
+          >
+            <Text className="text-white font-bold text-sm">Modifier</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={onClose}
+            className="bg-red-500 px-4 py-2 rounded-lg"
+          >
+            <Text className="text-white font-bold text-sm">Supprimer</Text>
+          </TouchableOpacity>
+
+        </View>
       </View>
     </Modal>
   );
