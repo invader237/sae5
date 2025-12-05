@@ -19,6 +19,7 @@ class History(Base):
 
     image_path = Column(String(255), nullable=False)
     room_name = Column(String(255), nullable=True)
+    picture_id = Column(UUID(as_uuid=True), nullable=True)
 
     scanned_at = Column(
         DateTime(timezone=True),
