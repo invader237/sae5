@@ -22,6 +22,7 @@ export default function HomeScreen() {
   const [zoom] = useState(0.1);
   const [modalVisible, setModalVisible] = useState(false);
   const [inferenceResult, setInferenceResult] = useState<InferenceResult | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -42,11 +43,12 @@ export default function HomeScreen() {
         const inference = await uploadFrame(result.assets[0].uri)
         alert('Image envoyée avec succès !');
         setInferenceResult(inference);
-        if (inference?.predictions && inference.predictions.length > 0) {
-          setModalVisible(true);
-        }
       } catch {
         alert('Erreur lors de l\'envoi de l\'image');
+        // close modal on error
+        setModalVisible(false);
+      } finally {
+        setIsAnalyzing(false);
       }
     }
   };
@@ -138,6 +140,7 @@ export default function HomeScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         inferenceResult={inferenceResult}
+        isLoading={isAnalyzing}
       />
     </View>
   );
