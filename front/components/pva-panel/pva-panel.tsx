@@ -1,166 +1,15 @@
-import React, { useEffect, useState, memo } from "react";
-import { View, Text, Image, ScrollView, TouchableOpacity, Modal } from "react-native";
-import { fetchToValidatePictures, validatePictures, deletePicturesPva } from "@/api/picture.api";
-import PicturePvaDTO from "@/api/DTO/picturePva.dto";
+import React, { useEffect, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { fetchToValidatePictures } from "@/api/picture.api";
+import PicturePvaDTO from "@/api/DTO/picturePva.dto";
+import PvaModal from "@/components/pva-components/PvaModal";
+import PictureItem from "@/components/pva-components/PvaPictureItem";
 
-/* ---------------------------------------------------------------------- */
-/*  Composant Image avec sélection                                        */
-/* ---------------------------------------------------------------------- */
-const PictureItem = memo(function PictureItem({ picture, index, size = 150, isSelected, onPress }) {
-  return (
-    <TouchableOpacity
-      onPress={() => onPress?.(picture.id)}
-      activeOpacity={0.8}
-      className={`relative rounded-xl ${isSelected ? "border-4 border-blue-500" : ""}`}
-      style={{ width: size, height: size }}
-    >
-      <Image
-        source={{
-          uri: `http://localhost:8000/pictures/${picture.id}/recover?type=thumbnail`,
-        }}
-        className="w-full h-full rounded-lg"
-        resizeMode="cover"
-      />
-
-      {/* Overlay */}
-      <View className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
-        <Text className="text-white font-bold text-center text-base">
-          {picture?.room?.name}
-        </Text>
-        <Text className="text-white text-sm font-semibold mt-1 text-center">
-          {picture.recognition_percentage?.toFixed(2)}%
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-});
-
-/* ---------------------------------------------------------------------- */
-/*  Modal avec sélection multiple                                         */
-/* ---------------------------------------------------------------------- */
-const PvaModal = ({ visible, onClose, picturesData, onValidated, onDeleted }) => {
-  const [selectedPictures, setSelectedPictures] = useState<string[]>([]);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const toggleSelect = (id: string) => {
-    setSelectedPictures(prev =>
-      prev.includes(id)
-        ? prev.filter(x => x !== id)
-        : [...prev, id]
-    );
-  };
-
-  const handleValidate = async () => {
-    try {
-      const picturesToValidate = picturesData.filter(pic => selectedPictures.includes(pic.id));
-      await validatePictures(picturesToValidate);
-      onValidated?.(selectedPictures);
-      setSelectedPictures([]);
-      onClose();
-    } catch (error) {
-      console.error("Erreur lors de la validation :", error);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (selectedPictures.length === 0) return;
-
-    const confirmed = confirm(`Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`);
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    try {
-      const picturesToDelete = picturesData.filter(pic => selectedPictures.includes(pic.id));
-      await deletePicturesPva(picturesToDelete);
-
-      // Mise à jour du parent
-      onDeleted?.(selectedPictures);
-
-      // Réinitialisation de la sélection
-      setSelectedPictures([]);
-      onClose();
-    } catch (error) {
-      console.error("Erreur lors de la suppression :", error);
-      alert("Impossible de supprimer les images.");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  return (
-    <Modal animationType="slide" transparent={false} visible={visible} onRequestClose={onClose}>
-      <View className="flex-1 bg-white p-4">
-        {/* Header */}
-        <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-2xl font-bold text-[#333]">Toutes les images à valider</Text>
-          <TouchableOpacity onPress={onClose}>
-            <Text className="text-blue-500 text-lg">Fermer</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Images */}
-        <ScrollView className="flex-1 px-2">
-          <View className="flex-row flex-wrap justify-center gap-4 mb-4">
-            {picturesData.length > 0 ? (
-              picturesData.map((pic, i) => (
-                <PictureItem
-                  key={pic.id}
-                  picture={pic}
-                  index={i}
-                  isSelected={selectedPictures.includes(pic.id)}
-                  onPress={toggleSelect}
-                />
-              ))
-            ) : (
-              <Text className="text-center text-[#555] mt-10 w-full">
-                Aucune image à valider pour le moment.
-              </Text>
-            )}
-          </View>
-        </ScrollView>
-
-        {/* Boutons */}
-        <View className="flex-row items-center justify-between px-4 py-3">
-          <TouchableOpacity
-            onPress={handleValidate}
-            disabled={selectedPictures.length === 0}
-            className={`px-4 py-2 rounded-lg ${selectedPictures.length > 0 ? "bg-blue-500" : "bg-gray-300"}`}
-          >
-            <Text className="text-white font-bold text-sm">
-              Valider ({selectedPictures.length})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => console.log("Modifier →", selectedPictures)}
-            className="bg-blue-500 px-4 py-2 rounded-lg"
-          >
-            <Text className="text-white font-bold text-sm">Modifier</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleDelete}
-            disabled={selectedPictures.length === 0 || isDeleting}
-            className={`px-4 py-2 rounded-lg ${selectedPictures.length > 0 ? "bg-red-500" : "bg-gray-300"}`}
-          >
-            <Text className="text-white font-bold text-sm">
-              {isDeleting ? "Suppression..." : "Supprimer"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-/* ---------------------------------------------------------------------- */
-/*  Panneau principal                                                     */
-/* ---------------------------------------------------------------------- */
-function PvaPanel() {
+const PvaPanel = () => {
   const [picturesPvaData, setPicturesPvaData] = useState<PicturePvaDTO[]>([]);
   const [pvaModalIsVisible, setPvaModalIsVisible] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false); // état de chargement
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchPictures = async () => {
     setIsRefreshing(true);
@@ -175,9 +24,7 @@ function PvaPanel() {
     }
   };
 
-  useEffect(() => {
-    fetchPictures();
-  }, []);
+  useEffect(() => { fetchPictures(); }, []);
 
   const previewPictures = picturesPvaData.slice(0, 5);
 
@@ -189,44 +36,22 @@ function PvaPanel() {
     <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
       <View className="flex-row items-center justify-between">
         <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
-
-        <TouchableOpacity
-          onPress={fetchPictures}
-          disabled={isRefreshing}
-          className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2"
-        >
-          <MaterialIcons 
-            name="refresh" 
-            size={20} 
-            color="white" 
-          />
+        <TouchableOpacity onPress={fetchPictures} disabled={isRefreshing} className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2">
+          <MaterialIcons name="refresh" size={20} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Preview horizontal */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator
-        contentContainerStyle={{ flexDirection: "row" }}
-        className="px-3"
-      >
-        {previewPictures.length > 0 ? (
-          previewPictures.map((pic, i) => (
-            <View key={pic.id} className="mr-3">
-              <PictureItem picture={pic} index={i} />
-            </View>
-          ))
-        ) : (
+      <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={{ flexDirection: "row" }} className="px-3">
+        {previewPictures.length > 0 ? previewPictures.map((pic, i) => (
+          <View key={pic.id} className="mr-3">
+            <PictureItem picture={pic} />
+          </View>
+        )) : (
           <View className="w-[150px] h-[150px] border border-gray-300 rounded-lg mr-3 flex items-center justify-center">
             <Text className="text-center">Aucune image à valider</Text>
           </View>
         )}
-
-        {/* Bouton voir plus */}
-        <TouchableOpacity
-          onPress={() => setPvaModalIsVisible(true)}
-          className="w-[150px] h-[150px] flex items-center justify-center rounded-lg"
-        >
+        <TouchableOpacity onPress={() => setPvaModalIsVisible(true)} className="w-[150px] h-[150px] flex items-center justify-center rounded-lg">
           <Text className="text-blue-500 underline">Voir plus...</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -235,18 +60,15 @@ function PvaPanel() {
         Le système de pré-validation administrateur (PVA) est en cours de développement et sera bientôt disponible.
       </Text>
 
-      {/* Modal */}
-        <PvaModal
-          visible={pvaModalIsVisible}
-          onClose={() => setPvaModalIsVisible(false)}
-          picturesData={picturesPvaData}
-          onValidated={handleValidated}
-          onDeleted={(deletedIds: string[]) =>
-            setPicturesPvaData(prev => prev.filter(pic => !deletedIds.includes(pic.id)))
-          }
-        />
+      <PvaModal
+        visible={pvaModalIsVisible}
+        onClose={() => setPvaModalIsVisible(false)}
+        picturesData={picturesPvaData}
+        onValidated={handleValidated}
+        onDeleted={(deletedIds: string[]) => setPicturesPvaData(prev => prev.filter(pic => !deletedIds.includes(pic.id)))}
+      />
     </View>
   );
-}
+};
 
 export default PvaPanel;
