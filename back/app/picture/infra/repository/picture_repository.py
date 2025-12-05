@@ -60,3 +60,18 @@ class PictureRepository:
         return self.db.query(PictureModel).filter(
             PictureModel.is_validated.is_(False)
         ).all()
+
+    def delete(self, picture_id: Union[str, UUID]) -> None:
+        lookup_id = picture_id
+        if isinstance(picture_id, str):
+            try:
+                lookup_id = UUID(picture_id)
+            except ValueError:
+                lookup_id = picture_id
+
+        picture = self.db.query(PictureModel).get(lookup_id)
+        if picture is None:
+            raise Exception("Picture not found")
+
+        self.db.delete(picture)
+        self.db.commit()
