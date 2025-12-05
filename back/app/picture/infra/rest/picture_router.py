@@ -11,6 +11,7 @@ from fastapi import (
 )
 from PIL import Image
 import io
+from typing import List
 from fastapi.responses import StreamingResponse
 from pathlib import Path
 from typing import Literal
@@ -59,9 +60,9 @@ class PictureController:
             methods=["GET"],
         )
         self.router.add_api_route(
-            "/{picture_id}/validate",
-            self.validate_picture,
-            response_model=PictureDTO,
+            "/validate",
+            self.validate_pictures,
+            response_model=list[PictureDTO],
             methods=["PATCH"],
         )
         self.router.add_api_route(
@@ -210,21 +211,33 @@ class PictureController:
         pictures = picture_catalog.find_by_not_validated()
         return [picture_to_picturePvaDTO_mapper.apply(picture) for picture in pictures]
 
-    async def validate_picture(
+    async def validate_pictures(
         self,
-        picture_id: uuid.UUID = FastAPIPath(
-            ..., description="ID de la picture à valider"
-            ),
+        pictures: list[PicturePvaDTO],
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
     ):
         validation_date = datetime.now(timezone.utc)
-        try:
-            updated = picture_catalog.update(
-                picture_id, {"validation_date": validation_date}
+
+        print(f"Validating {len(pictures)} pictures at {validation_date}")
+
+        updated_pictures = []
+
+        for picture in pictures:
+            try:
+                updated = picture_catalog.update(
+                    picture.id,
+                    {"validation_date": validation_date}
                 )
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
-        return picture_to_pictureDTO_mapper.apply(updated)
+                updated_pictures.append(
+                    picture_to_pictureDTO_mapper.apply(updated)
+                )
+            except Exception as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Erreur lors de la validation de {picture.id}: {str(e)}"
+                )
+
+        return updated_pictures
 
     async def recover_picture(
         self,
