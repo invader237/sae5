@@ -31,9 +31,11 @@ class PictureRepository:
         return picture
 
     def find_by_not_validated(self):
-        return self.db.query(PictureModel).filter(
-            PictureModel.is_validated.is_(False)
-        ).all()
+        return (
+            self.db.query(PictureModel)
+            .filter(PictureModel.is_validated.is_(False))
+            .all()
+        )
 
     def delete(self, picture_id: Union[str, UUID]) -> None:
         lookup_id = picture_id

@@ -11,7 +11,7 @@ class PictureToPictureDTOMapper:
             analyzed_by=getattr(picture, "analyzed_by", None),
             recognition_percentage=getattr(
                 picture, "recognition_percentage", None
-                ),
+            ),
             analyse_date=getattr(picture, "analyse_date", None),
             validation_date=getattr(picture, "validation_date", None),
         )
