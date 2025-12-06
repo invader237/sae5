@@ -35,20 +35,14 @@ class RoomController:
         room_catalog: RoomCatalog = Depends(get_room_catalog),
     ):
         rooms = room_catalog.find_all()
-        return [
-            room_to_roomDTO_mapper.apply(r)
-            for r in rooms
-        ]
+        return [room_to_roomDTO_mapper.apply(r) for r in rooms]
 
     def get_pva_rooms(
         self,
         room_catalog: RoomCatalog = Depends(get_room_catalog),
     ):
         rooms = room_catalog.find_all()
-        return [
-            room_to_roomLightDTO_mapper.apply(r)
-            for r in rooms
-        ]
+        return [room_to_roomLightDTO_mapper.apply(r) for r in rooms]
 
 
 room_controller = RoomController()
