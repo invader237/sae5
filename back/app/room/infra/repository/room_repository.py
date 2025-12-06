@@ -18,3 +18,9 @@ class RoomRepository:
 
     def find_by_name(self, name: str) -> RoomModel:
         return self.db.query(RoomModel).filter(RoomModel.name == name).first()
+
+    def find_by_id(self, room_id: str) -> RoomModel:
+        room = self.db.query(RoomModel).get(room_id)
+        if room is None:
+            raise Exception("Room not found")
+        return room
