@@ -78,6 +78,12 @@ class PictureController:
             response_model=dict,
             methods=["DELETE"],
         )
+        self.router.add_api_route(
+            "/pva/update-room",
+            self.update_room_pva,
+            response_model=list[PicturePvaDTO],
+            methods=["PATCH"],
+        )
 
     def get_pictures(
         self,
@@ -233,7 +239,7 @@ class PictureController:
             try:
                 updated = picture_catalog.update(
                     picture.id,
-                    {"validation_date": validation_date}
+                    {"validation_date": validation_date, "is_validated": True},
                 )
                 updated_pictures.append(
                     picture_to_pictureDTO_mapper.apply(updated)
@@ -299,6 +305,55 @@ class PictureController:
 
         return {"deleted_pictures": deleted_pictures}
 
+    async def update_room_pva(
+        self,
+        pictures: list[PicturePvaDTO],
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        room_catalog: RoomCatalog = Depends(get_room_catalog),
+    ):
+        updated_pictures = []
+        validation_date = datetime.now(timezone.utc)
+
+        for picture in pictures:
+            try:
+                if not picture.room or not picture.room.id:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"room.id manquant pour {picture.id}"
+                    )
+
+                room = room_catalog.find_by_id(picture.room.id)
+                if not room:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Salle '{picture.room.id}' non trouvée"
+                    )
+
+                pic = picture_catalog.find_by_id(picture.id)
+                if not pic:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Image '{picture.id}' non trouvée"
+                    )
+
+                pic.room = room
+
+                pic.validation_date = validation_date
+                pic.is_validated = True
+
+                updated = picture_catalog.save(pic)
+
+                updated_pictures.append(
+                    picture_to_picturePvaDTO_mapper.apply(updated)
+                )
+
+            except Exception as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Erreur lors de la mise à jour de {picture.id}: {str(e)}"
+                )
+
+        return updated_pictures
 
 picture_controller = PictureController()
 router = picture_controller.router
