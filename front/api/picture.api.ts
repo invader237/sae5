@@ -71,3 +71,15 @@ export async function deletePicturesPva(pictures: PicturePvaDTO[]) {
     throw error;
   }
 }
+
+export const updateRoomForPictures = async (
+  pictures: PicturePvaDTO[]
+): Promise<PicturePvaDTO[]> => {
+  try {
+    const response = await axiosInstance.patch('/pictures/pva/update-room', pictures);
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des salles PVA :', error);
+    throw error;
+  }
+};

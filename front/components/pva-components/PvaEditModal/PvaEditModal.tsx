@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Modal, TouchableOpacity } from "react-native";
-import { Picker } from '@react-native-picker/picker';
+import { Picker } from "@react-native-picker/picker";
 import { fetchRoomsForPva } from "@/api/room.api";
+import { updateRoomForPictures } from "@/api/picture.api";
 import RoomLightDTO from "@/api/DTO/roomLight.dto";
+import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  selectedPictures: any[];
-  onConfirm?: (roomId: string | null) => void;
+  selectedPictures: PicturePvaDTO[];
+  onConfirm?: (updatedPictures: PicturePvaDTO[]) => void;
 }
 
 const PvaEditModal = ({ visible, onClose, selectedPictures, onConfirm }: Props) => {
@@ -22,11 +24,32 @@ const PvaEditModal = ({ visible, onClose, selectedPictures, onConfirm }: Props) 
         setRooms(data);
         if (data.length > 0) setSelectedRoomId(data[0].id);
       } catch (e) {
-        console.error('Erreur récupération des salles :', e);
+        console.error("Erreur récupération des salles :", e);
       }
     };
     fetchRooms();
   }, []);
+
+  const handleConfirm = async () => {
+    try {
+      if (!selectedRoomId) return;
+
+      const updatedPayload = selectedPictures.map(pic => ({
+        ...pic,
+        room: {
+          ...pic.room,
+          id: selectedRoomId
+        }
+      }));
+
+      const updatedPictures = await updateRoomForPictures(updatedPayload);
+
+      onConfirm?.(updatedPictures);
+      onClose();
+    } catch (error) {
+      console.error("Erreur mise à jour des salles :", error);
+    }
+  };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -36,18 +59,19 @@ const PvaEditModal = ({ visible, onClose, selectedPictures, onConfirm }: Props) 
           <Text className="text-sm text-gray-600 mb-4">
             {selectedPictures.length} image(s) sélectionnée(s)
           </Text>
+
           <Picker
             selectedValue={selectedRoomId}
             onValueChange={(itemValue) => setSelectedRoomId(itemValue)}
             className="mb-4"
           >
-            {rooms.map((room) => (
+            {rooms.map(room => (
               <Picker.Item key={room.id} label={room.name} value={room.id} />
             ))}
           </Picker>
 
           <TouchableOpacity
-            onPress={() => { onConfirm?.(selectedRoomId); onClose(); }}
+            onPress={handleConfirm}
             className="bg-blue-500 px-4 py-2 rounded-lg"
           >
             <Text className="text-white font-bold text-center">Valider</Text>
