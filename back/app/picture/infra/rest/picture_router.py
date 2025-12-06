@@ -12,7 +12,6 @@ from fastapi import (
 )
 from PIL import Image
 import io
-from typing import List
 from fastapi.responses import StreamingResponse
 from pathlib import Path
 from typing import Literal
@@ -161,16 +160,23 @@ class PictureController:
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Inference failed: {e}"
-                )
+            )
 
         # Affichage console du résultat d'inférence (formaté)
         try:
             print("[INFERENCE RESULT]")
-            print(json.dumps(inference_result, default=str,
-                             indent=2, ensure_ascii=False))
+            print(
+                json.dumps(
+                    inference_result,
+                    default=str, indent=2,
+                    ensure_ascii=False
+                )
+            )
         except Exception:
-            print("[INFERENCE RESULT] (failed to pretty-print)",
-                  inference_result)
+            print(
+                "[INFERENCE RESULT] (failed to pretty-print)",
+                inference_result
+            )
 
         # Extraction : privilégie le champ canonique 'top_score' si présent,
         # sinon tombe back sur le parsing défensif de la première prédiction.
@@ -179,7 +185,7 @@ class PictureController:
             if inference_result.get("top_score") is not None:
                 recognition_percentage = float(
                     inference_result.get("top_score")
-                    )
+                )
             else:
                 preds = inference_result.get("predictions") or []
                 if len(preds) > 0:
@@ -192,23 +198,20 @@ class PictureController:
             recognition_percentage = None
 
         print(inference_result.get("top_label"))
-        print(room_catalog.find_by_name(
-            inference_result.get("top_label")
-        ))
+        print(room_catalog.find_by_name(inference_result.get("top_label")))
 
-        room_obj = room_catalog.find_by_name(
-            inference_result.get("top_label")
-        )
+        room_obj = room_catalog.find_by_name(inference_result.get("top_label"))
         picture_payload = {
             "path": str(dest_path),
             "analyzed_by": inference_result.get("model_version")
-                or inference_result.get("model") or None,
+            or inference_result.get("model")
+            or None,
             "room": room_obj,  # passer l'objet Room
             "recognition_percentage": recognition_percentage,
             "analyse_date": datetime.now(timezone.utc),
             "validation_date": None,
             "is_validated": False,
-            "room_id": room_obj.room_id if room_obj else None,  # facultatif mais ok
+            "room_id": room_obj.room_id if room_obj else None,
         }
 
         picture = Picture(**picture_payload)
@@ -222,7 +225,10 @@ class PictureController:
         room_catalog: RoomCatalog = Depends(get_room_catalog),
     ):
         pictures = picture_catalog.find_by_not_validated()
-        return [picture_to_picturePvaDTO_mapper.apply(picture) for picture in pictures]
+        return [
+            picture_to_picturePvaDTO_mapper.apply(picture)
+            for picture in pictures
+        ]
 
     async def validate_pictures(
         self,
@@ -240,16 +246,17 @@ class PictureController:
                 picture_obj = picture_catalog.find_by_id(picture.id)
                 picture_obj.validation_date = validation_date
                 picture_obj.is_validated = True
-                updated = picture_catalog.save(
-                    picture_obj
-                )
+                updated = picture_catalog.save(picture_obj)
                 updated_pictures.append(
                     picture_to_pictureDTO_mapper.apply(updated)
                 )
             except Exception as e:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Erreur lors de la validation de {picture.id}: {str(e)}"
+                    detail=(
+                        f"Erreur lors de la validation de {picture.id}: "
+                        f"{str(e)}"
+                    ),
                 )
 
         return updated_pictures
@@ -297,12 +304,18 @@ class PictureController:
                     try:
                         Path(pic_obj.path).unlink()
                     except Exception as e:
-                        print(f"Erreur lors de la suppression du fichier {pic_obj.path}: {e}")
+                        print(
+                            f"Erreur lors de la suppression du fichier "
+                            f"{pic_obj.path}: {e}"
+                        )
                     deleted_pictures.append(picture.id)
             except Exception as e:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Erreur lors de la suppression de {picture.id}: {str(e)}"
+                    detail=(
+                        f"Erreur lors de la suppression de {picture.id}: "
+                        f"{str(e)}"
+                    ),
                 )
 
         return {"deleted_pictures": deleted_pictures}
@@ -352,10 +365,14 @@ class PictureController:
             except Exception as e:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Erreur lors de la mise à jour de {picture.id}: {str(e)}"
+                    detail=(
+                        f"Erreur lors de la mise à jour de {picture.id}: "
+                        f"{str(e)}"
+                    ),
                 )
 
         return updated_pictures
+
 
 picture_controller = PictureController()
 router = picture_controller.router

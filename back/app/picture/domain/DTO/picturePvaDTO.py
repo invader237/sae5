@@ -1,9 +1,9 @@
 from typing import Optional
 from uuid import UUID
-from datetime import datetime
-
 from pydantic import BaseModel
-from app.room.domain.DTO.roomLightDTO import RoomLightDTO
+from app.room.domain.DTO.roomLightDTO import (
+    RoomLightDTO,
+)
 
 
 class PicturePvaDTO(BaseModel):
@@ -11,4 +11,3 @@ class PicturePvaDTO(BaseModel):
     path: Optional[str] = None
     recognition_percentage: Optional[float] = None
     room: Optional[RoomLightDTO] = None
-
