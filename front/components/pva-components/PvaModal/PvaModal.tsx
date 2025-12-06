@@ -109,7 +109,11 @@ const PvaModal = ({ visible, onClose, picturesData, onValidated, onDeleted }: Pr
           visible={editModalVisible}
           onClose={() => setEditModalVisible(false)}
           selectedPictures={picturesData.filter(pic => selectedPictures.includes(pic.id))}
-          onConfirm={(roomId) => console.log("Modifier roomId :", roomId)}
+          onConfirm={(updatedPictures) => {
+            console.log("Images mises à jour :", updatedPictures);
+            setSelectedPictures([]);
+            setEditModalVisible(false);
+          }}
         />
       </View>
     </Modal>
