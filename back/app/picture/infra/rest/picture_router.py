@@ -237,9 +237,11 @@ class PictureController:
 
         for picture in pictures:
             try:
-                updated = picture_catalog.update(
-                    picture.id,
-                    {"validation_date": validation_date, "is_validated": True},
+                picture_obj = picture_catalog.find_by_id(picture.id)
+                picture_obj.validation_date = validation_date
+                picture_obj.is_validated = True
+                updated = picture_catalog.save(
+                    picture_obj
                 )
                 updated_pictures.append(
                     picture_to_pictureDTO_mapper.apply(updated)
