@@ -7,6 +7,7 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadFrame } from '@/api/picture.api';
 import { InferenceResultModal } from '@/components/InferenceResultModal';
+import { RealTimeOverlay } from '@/components/RealTimeOverlay';
 import { InferenceResult } from '@/api/DTO/inference.dto';
 
 export default function HomeScreen() {
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [inferenceResult, setInferenceResult] = useState<InferenceResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentInference, setCurrentInference] = useState<InferenceResult | null>(null);
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -77,10 +79,13 @@ export default function HomeScreen() {
         });
 
         if (picture?.uri) {
-          await uploadFrame(FAST_API_ENDPOINT, picture.uri);
+          const res = await uploadFrame(FAST_API_ENDPOINT, picture.uri);
+          setCurrentInference(res);
         }
-  } catch {
-  } finally {
+      } catch (error) {
+        console.warn('Erreur lors de l\'envoi temps réel:', error);
+        // Ne pas arrêter l'interval, continuer
+      } finally {
         isUploadingRef.current = false;
       }
     }, 1000);
@@ -95,7 +100,7 @@ export default function HomeScreen() {
     >
       <Text className="text-[24px] font-bold text-[#007bff] mb-2">Caméra</Text>
 
-      <View className="flex-1 rounded-xl overflow-hidden border border-neutral-200/50">
+      <View className="flex-1 rounded-xl overflow-hidden border border-neutral-200/50 relative">
         {isGranted ? (
           <CameraView
             ref={cameraRef}
@@ -109,6 +114,10 @@ export default function HomeScreen() {
               Autorisez l&apos;accès à la caméra pour afficher l&apos;aperçu.
             </Text>
           </View>
+        )}
+
+        {isGranted && isStreaming && (
+          <RealTimeOverlay inferenceResult={currentInference} isAnalyzing={isAnalyzing} />
         )}
       </View>
 

@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Literal
 import uuid
 from datetime import datetime, timezone
-import json
 
 from app.picture.domain.mapper.picture_to_pictureDTO_mapper import (
     picture_to_pictureDTO_mapper,
