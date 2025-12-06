@@ -1,6 +1,5 @@
 from typing import Optional
 from uuid import UUID
-from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -11,4 +10,3 @@ class RoomDTO(BaseModel):
     floor: Optional[int] = None
     department: Optional[str] = None
     type: Optional[str] = None
-
