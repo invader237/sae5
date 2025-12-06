@@ -17,32 +17,6 @@ class PictureRepository:
         self.db.refresh(picture)
         return picture
 
-    def update(
-        self,
-        picture_id: Union[str, UUID],
-        updates: dict,
-    ) -> PictureModel:
-        # Accept either a UUID instance or its string representation.
-        lookup_id = picture_id
-        if isinstance(picture_id, str):
-            try:
-                lookup_id = UUID(picture_id)
-            except ValueError:
-                # keep as string if it isn't a hex UUID
-                # the ORM may still accept it
-                lookup_id = picture_id
-
-        picture = self.db.query(PictureModel).get(lookup_id)
-        if picture is None:
-            raise Exception("Picture not found")
-
-        for k, v in updates.items():
-            if hasattr(picture, k):
-                setattr(picture, k, v)
-        self.db.commit()
-        self.db.refresh(picture)
-        return picture
-
     def find_by_id(self, picture_id: Union[str, UUID]) -> PictureModel:
         lookup_id = picture_id
         if isinstance(picture_id, str):
