@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     DB_PASSWORD: str
     DB_HOST: str
     DB_PORT: int
+    APP_NAME: str
+    MODEL_DIR: str
+    BACKEND_API_ADDRESS: str
 
     @property
     def database_url(self):
