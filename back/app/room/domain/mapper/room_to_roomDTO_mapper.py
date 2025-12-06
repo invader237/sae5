@@ -8,8 +8,9 @@ class RoomToRoomDTOMapper:
         return RoomDTO(
             id=room.room_id,
             name=room.name,
-            description=room.description,
-            location=room.location,
+            floor=room.floor,
+            departement=room.departement,
+            type=room.type,
         )
 
 
