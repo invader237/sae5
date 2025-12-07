@@ -1,6 +1,7 @@
 import React, { memo, useEffect, useState } from "react";
 import { TouchableOpacity, Image, View, Text } from "react-native";
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
+import { baseURL } from "@/api/axiosConfig";
 
 interface Props {
   picture: PicturePvaDTO;
@@ -35,7 +36,7 @@ const PvaPictureItem = memo(function PictureItem({ picture, size = 150, isSelect
       } else {
         try {
           const response = await fetch(
-            `http://localhost:8000/pictures/${picture.id}/recover?type=thumbnail`
+            `${baseURL}/pictures/${picture.id}/recover?type=thumbnail`
           );
           const blob = await response.blob();
           const reader = new FileReader();
