@@ -19,10 +19,6 @@ def load_fixtures() -> None:
         role_repo = RoleRepository(db)
         model_repo = ModelRepository(db)
 
-        # ---------- PICTURES ----------
-        picture_repo.save({"path": "/images/sample1.png"})
-        picture_repo.save({"path": "/images/sample2.png"})
-
         # ---------- ROOMS ----------
         room_repo.save({
             "name": "F36",
@@ -67,7 +63,7 @@ def load_fixtures() -> None:
             "type": "normal",
         })
 
-        # Pictures
+        # ---------- PICTURES ----------
         picture_repo.save(
             Picture(
                 path="/images/room_f36_view1.png",
