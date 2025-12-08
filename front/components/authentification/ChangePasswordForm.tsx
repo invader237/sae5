@@ -5,7 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
-import Spinner from '@/components/Spinner';
+import { Spinner} from '@/components/Spinner';
 import { changePassword } from "@/api/auth.api";
 
 type ChangePasswordFormProps = {
