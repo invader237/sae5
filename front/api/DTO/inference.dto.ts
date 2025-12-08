@@ -3,7 +3,7 @@ export interface Prediction {
   score: number;
 }
 
-export interface InferenceResult {
+export interface InferenceResultDTO {
   predictions: Prediction[];
   model_version: string;
   accepted: boolean;

@@ -8,7 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { uploadFrame } from '@/api/picture.api';
 import { InferenceResultModal } from '@/components/InferenceResultModal';
 import { RealTimeOverlay } from '@/components/RealTimeOverlay';
-import { InferenceResult } from '@/api/DTO/inference.dto';
+import { InferenceResultDTO } from '@/api/DTO/inference.dto';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -22,9 +22,9 @@ export default function HomeScreen() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [zoom] = useState(0.1);
   const [modalVisible, setModalVisible] = useState(false);
-  const [inferenceResult, setInferenceResult] = useState<InferenceResult | null>(null);
+  const [inferenceResult, setInferenceResult] = useState<InferenceResultDTO | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentInference, setCurrentInference] = useState<InferenceResult | null>(null);
+  const [currentInference, setCurrentInference] = useState<InferenceResultDTO | null>(null);
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -42,10 +42,11 @@ export default function HomeScreen() {
 
     if (!result.canceled && result.assets[0]?.uri) {
       try {
-        const inference = await uploadFrame(result.assets[0].uri);
         setInferenceResult(null);
         setModalVisible(true);
         setIsAnalyzing(true);
+
+        const inference = await uploadFrame(result.assets[0].uri);
         setInferenceResult(inference);
       } catch {
         alert('Erreur lors de l\'envoi de l\'image');
