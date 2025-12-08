@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, FlatList } from "react-native";
 import { validatePictures, deletePicturesPva } from "@/api/picture.api";
 import PictureItem from "@/components/pva-components/PvaPictureItem";

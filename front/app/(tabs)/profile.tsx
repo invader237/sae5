@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Modal,
   View,
@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import Spinner from '@/components/Spinner';
+import { Spinner } from '@/components/Spinner';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthForm } from "@/components/authentification/AuthForm";
 import { ChangePasswordForm } from "@/components/authentification/ChangePasswordForm";
@@ -17,6 +17,34 @@ export default function ProfileScreen() {
   const [token, setToken] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
+  const handleLogout = useCallback(async () => {
+    await AsyncStorage.removeItem("authToken");
+    setUser(null);
+    setToken(null);
+    setIsPasswordModalOpen(false);
+  }, []);
+
+  const fetchAndSetUser = useCallback(async (accessToken: string) => {
+    try {
+      const data = await fetchMe(accessToken);
+      setUser(data);
+    } catch (error: any) {
+      const status = error?.response?.status;
+      // 401 → token invalide ou expiré : on déconnecte proprement
+      if (status === 401) {
+        await handleLogout();
+      } else {
+        console.log("FETCH /auth/me error:", error);
+      }
+    }
+  }, [handleLogout]);
+
+  const handleAuthenticated = useCallback(async (accessToken: string) => {
+    await AsyncStorage.setItem("authToken", accessToken);
+    setToken(accessToken);
+    await fetchAndSetUser(accessToken);
+  }, [fetchAndSetUser]);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -34,35 +62,7 @@ export default function ProfileScreen() {
     };
 
     void bootstrap();
-  }, []);
-
-  const fetchAndSetUser = async (accessToken: string) => {
-    try {
-      const data = await fetchMe(accessToken);
-      setUser(data);
-    } catch (error: any) {
-      const status = error?.response?.status;
-      // 401 → token invalide ou expiré : on déconnecte proprement
-      if (status === 401) {
-        await handleLogout();
-      } else {
-        console.log("FETCH /auth/me error:", error);
-      }
-    }
-  };
-
-  const handleAuthenticated = async (accessToken: string) => {
-    await AsyncStorage.setItem("authToken", accessToken);
-    setToken(accessToken);
-    await fetchAndSetUser(accessToken);
-  };
-
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("authToken");
-    setUser(null);
-    setToken(null);
-    setIsPasswordModalOpen(false);
-  };
+  }, [fetchAndSetUser]);
 
   if (initializing) {
     return (
