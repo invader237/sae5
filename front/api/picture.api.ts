@@ -29,9 +29,10 @@ export async function uploadFrame(uri: string, _options?: UploadOptions) {
   }
 
   try {
-    await axiosInstance.post('/pictures/import?type=analyse', form, {
+    const response = await axiosInstance.post('/pictures/import?type=analyse', form, {
       timeout: 20000,
     });
+    return response.data;
   } catch (e: any) {
     const status = e?.response?.status;
     const data = e?.response?.data;

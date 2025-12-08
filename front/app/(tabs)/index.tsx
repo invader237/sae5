@@ -81,7 +81,7 @@ export default function HomeScreen() {
         });
 
         if (picture?.uri) {
-          const res = await uploadFrame(FAST_API_ENDPOINT, picture.uri);
+          const res = await uploadFrame(picture.uri);
           setCurrentInference(res);
         }
       } catch (error) {
