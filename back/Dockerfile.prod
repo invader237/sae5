@@ -1,21 +1,13 @@
 # Build
-FROM python:3.12-slim AS build
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --prefix=/install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --prefix=/install --no-cache-dir -r requirements.txt --no-deps
-
-COPY . .
-
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copier uniquement les packages installés et le code
-COPY --from=build /install /usr/local
-COPY --from=build /app /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir -r requirements.txt --no-deps
+
+COPY . .
 
 EXPOSE 8000
 
