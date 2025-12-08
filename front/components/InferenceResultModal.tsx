@@ -3,13 +3,13 @@ import { Modal, View, TouchableOpacity, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spinner } from '@/components/Spinner';
-import { InferenceResult } from '@/api/DTO/inference.dto';
+import { InferenceResultDTO } from '@/api/DTO/inference.dto';
 import { Colors } from '@/constants/theme';
 
 interface InferenceResultModalProps {
   visible: boolean;
   onClose: () => void;
-  inferenceResult: InferenceResult | null;
+  inferenceResult: InferenceResultDTO | null;
   isLoading?: boolean;
 }
 
