@@ -3,6 +3,8 @@ import { Picker } from '@react-native-picker/picker';
 import { useState, useEffect } from "react";
 import { fetchModels, scanForNewModels, setActiveModel } from "../../api/model.api";
 import { ModelDTO } from "../../api/DTO/model.dto";
+import PvaPanel from '../../components/pva-panel';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function AdminPanel() {
   const [model, setModel] = useState<string | null>(null);
@@ -71,21 +73,22 @@ export default function AdminPanel() {
   };
 
   return (
-    <View className="flex-1 bg-white p-6">
-      <Text className="text-[24px] font-bold text-[#007bff] mb-2">Panneau Admin</Text>
+    <View className="flex-1 bg-white p-6 gap-4">
+      <Text className="text-[24px] font-bold text-[#007bff]">Panneau Admin</Text>
 
       <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
         <View className="flex-row items-center justify-between">
-          <Text className="text-[#333] text-base">Modèle</Text>
-
-          <TouchableOpacity
-            className="bg-[#007bff] rounded-md items-center justify-center"
-            onPress={refreshModels}
-          >
-            <Text className="text-white py-2 px-4 text-md font-semibold">
-              Rafraîchir
-            </Text>
-          </TouchableOpacity>
+          <Text className="text-[#333] text-lg font-bold">Modèle</Text>
+            <TouchableOpacity
+              onPress={refreshModels}
+              className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2"
+            >
+              <MaterialIcons 
+                name="refresh" 
+                size={20} 
+                color="white" 
+              />
+            </TouchableOpacity>
         </View>
 
         <View className="border border-gray-300 rounded-md overflow-hidden">
@@ -108,6 +111,8 @@ export default function AdminPanel() {
           Sélectionnez un modèle dans la liste déroulante ci-dessus.
         </Text>
       </View>
+
+      <PvaPanel />
 
       {/* Modal de confirmation */}
       <Modal
