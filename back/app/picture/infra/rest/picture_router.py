@@ -160,7 +160,6 @@ class PictureController:
                 status_code=500, detail=f"Inference failed: {e}"
             )
 
-
         # Extraction : privilégie le champ canonique 'top_score' si présent,
         # sinon tombe back sur le parsing défensif de la première prédiction.
         recognition_percentage = None

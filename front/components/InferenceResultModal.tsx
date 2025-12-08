@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, View, TouchableOpacity, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import Spinner from '@/components/Spinner';
+import { Spinner } from '@/components/Spinner';
 import { InferenceResult } from '@/api/DTO/inference.dto';
 import { Colors } from '@/constants/theme';
 
@@ -52,7 +52,7 @@ export function InferenceResultModal({
           {/* Header */}
           <View className="flex-row justify-between items-center mb-4">
             <ThemedText type="title" className="text-lg" lightColor={Colors.light.text}>
-              Résultat d'analyse
+              Résultat d&apos;analyse
             </ThemedText>
           </View>
 
