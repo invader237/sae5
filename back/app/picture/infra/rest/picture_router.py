@@ -265,6 +265,9 @@ class PictureController:
         if type == "thumbnail":
             image.thumbnail((150, 150))
 
+        if image.mode != "RGB":
+            image = image.convert("RGB")
+
         buffer = io.BytesIO()
         image.save(buffer, format="JPEG", quality=100)
         buffer.seek(0)
