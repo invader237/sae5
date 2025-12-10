@@ -1,24 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Modal, Pressable } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { ModelDTO } from "../../api/DTO/model.dto";
+import { fetchModels, scanForNewModels, setActiveModel } from "@/api/model.api";
+import { ModelDTO } from "@/api/DTO/model.dto";
 
-type Props = {
-  model: string | null;
-  modelsList: ModelDTO[];
-  onRefresh: () => void;
-  onConfirmChange: (newModel: string) => void;
-};
-
-export default function ModelSelector({
-  model,
-  modelsList,
-  onRefresh,
-  onConfirmChange,
-}: Props) {
+export default function ModelSelector() {
+  const [model, setModel] = useState<string | null>(null);
+  const [modelsList, setModelsList] = useState<ModelDTO[]>([]);
   const [pendingModel, setPendingModel] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const loadModels = async () => {
+    let models = await fetchModels();
+    models = models.sort((a, b) => (b.is_active ? 1 : 0) - (a.is_active ? 1 : 0));
+    setModelsList(models);
+
+    const active = models.find(m => m.is_active);
+    if (active) setModel(active.id);
+  };
+
+  const refreshModels = async () => {
+    await scanForNewModels();
+    await loadModels();
+  };
+
+  const handleConfirmChange = async (newModel: string) => {
+    await setActiveModel({ id: newModel } as any);
+    setModel(newModel);
+    await refreshModels();
+  };
+
+  useEffect(() => {
+    loadModels();
+  }, []);
 
   const handleSelect = (newModel: string) => {
     if (newModel !== model) {
@@ -29,7 +44,7 @@ export default function ModelSelector({
 
   const confirm = () => {
     if (!pendingModel) return;
-    onConfirmChange(pendingModel);
+    handleConfirmChange(pendingModel);
     setShowConfirm(false);
     setPendingModel(null);
   };
@@ -41,7 +56,7 @@ export default function ModelSelector({
           <Text className="text-[#333] text-lg font-bold">Modèle</Text>
 
           <TouchableOpacity
-            onPress={onRefresh}
+            onPress={refreshModels}
             className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2"
           >
             <MaterialIcons name="refresh" size={20} color="white" />
