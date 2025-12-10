@@ -56,10 +56,6 @@ const PvaPanel = () => {
         </TouchableOpacity>
       </ScrollView>
 
-      <Text className="text-[#555] text-sm">
-        Le système de pré-validation administrateur (PVA) est en cours de développement et sera bientôt disponible.
-      </Text>
-
       <PvaModal
         visible={pvaModalIsVisible}
         onClose={() => setPvaModalIsVisible(false)}
