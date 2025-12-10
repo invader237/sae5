@@ -1,5 +1,6 @@
 from app.room.domain.catalog.room_catalog import RoomCatalog
 from app.room.infra.repository.room_repository import RoomRepository
+from app.room.domain.entity.room import Room as RoomModel
 
 
 class RoomSQLAlchemyAdapter(RoomCatalog):
@@ -9,11 +10,14 @@ class RoomSQLAlchemyAdapter(RoomCatalog):
     def find_all(self):
         return self.repository.find_all()
 
-    def save(self, room_in: dict):
-        return self.repository.save(room_in)
+    def save(self, room: RoomModel):
+        return self.repository.save(room)
 
     def find_by_name(self, name: str):
         return self.repository.find_by_name(name)
 
     def find_by_id(self, room_id: str):
         return self.repository.find_by_id(room_id)
+
+    def delete(self, room_id: str):
+        return self.repository.delete(room_id)
