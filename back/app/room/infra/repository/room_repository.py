@@ -1,12 +1,13 @@
 from sqlalchemy.orm import Session
 from app.room.domain.entity.room import Room as RoomModel
+from typing import Collection
 
 
 class RoomRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def find_all(self):
+    def find_all(self) -> Collection[RoomModel]:
         return self.db.query(RoomModel).all()
 
     def save(self, room: RoomModel) -> RoomModel:
