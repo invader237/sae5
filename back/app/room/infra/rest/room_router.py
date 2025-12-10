@@ -63,7 +63,23 @@ class RoomController:
         room: RoomDTO,
         room_catalog: RoomCatalog = Depends(get_room_catalog),
     ):
-        room_catalog.save(roomDTO_to_room_mapper.apply(room))
+        if room.id:
+            existing_room = room_catalog.find_by_id(room.id)
+            if not existing_room:
+                raise ValueError(f"Room with id {room.id} not found.")
+
+            # Mise à jour des attributs
+            existing_room.name = room.name
+            existing_room.floor = room.floor
+            existing_room.departement = room.departement
+            existing_room.type = room.type
+
+            room_catalog.save(existing_room)
+            return existing_room
+
+        # Création
+        new_room = roomDTO_to_room_mapper.apply(room)
+        room_catalog.save(new_room)
 
     def delete_room(
         self,
