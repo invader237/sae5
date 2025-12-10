@@ -4,7 +4,7 @@ from app.room.domain.DTO.roomDTO import RoomDTO
 
 class RoomToRoomDTOMapper:
     @staticmethod
-    def apply(room: Room) -> dict:
+    def apply(room: Room) -> RoomDTO:
         return RoomDTO(
             id=room.room_id,
             name=room.name,
