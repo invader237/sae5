@@ -88,7 +88,9 @@ const PvaPictureItem = memo(function PictureItem({ picture, size = 150, isSelect
           {picture?.room?.name}
         </Text>
         <Text className="text-white text-xs mt-0.5">
-          {picture.recognition_percentage?.toFixed(2)}%
+          {picture?.recognition_percentage
+            ? `${(picture.recognition_percentage * 100).toFixed(1)}%`
+            : "Inconnu"}
         </Text>
       </View>
     </TouchableOpacity>
