@@ -13,4 +13,5 @@ class RoomDTOToRoomMapper:
             type=room_dto.type,
         )
 
+
 roomDTO_to_room_mapper = RoomDTOToRoomMapper()
