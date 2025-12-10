@@ -9,8 +9,7 @@ class RoomRepository:
     def find_all(self):
         return self.db.query(RoomModel).all()
 
-    def save(self, room_in: dict) -> RoomModel:
-        room = RoomModel(**room_in)
+    def save(self, room: RoomModel) -> RoomModel:
         self.db.add(room)
         self.db.commit()
         self.db.refresh(room)
@@ -24,3 +23,8 @@ class RoomRepository:
         if room is None:
             raise Exception("Room not found")
         return room
+
+    def delete(self, room_id: str) -> None:
+        room = self.find_by_id(room_id)
+        self.db.delete(room)
+        self.db.commit()

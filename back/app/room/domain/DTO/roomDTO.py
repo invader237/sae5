@@ -8,5 +8,5 @@ class RoomDTO(BaseModel):
     id: Optional[UUID] = None
     name: Optional[str] = None
     floor: Optional[int] = None
-    department: Optional[str] = None
+    departement: Optional[str] = None
     type: Optional[str] = None
