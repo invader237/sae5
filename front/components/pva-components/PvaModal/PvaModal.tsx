@@ -82,7 +82,7 @@ const PvaModal = ({ visible, onClose, picturesData, onValidated, onDeleted }: Pr
         
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-2xl font-bold text-[#333]">Toutes les images à valider</Text>
+          <Text className="text-2xl font-bold text-[#333]">Images à valider</Text>
           <TouchableOpacity onPress={onClose}>
             <Text className="text-blue-500 text-lg">Fermer</Text>
           </TouchableOpacity>

@@ -52,7 +52,7 @@ const PvaEditModal = ({ visible, onClose, selectedPictures, onConfirm }: Props) 
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View className="flex-1 justify-center items-center bg-black/50">
         <View className="bg-white rounded-lg p-6 w-80">
           <Text className="text-lg font-bold mb-4">Modifier les images</Text>
