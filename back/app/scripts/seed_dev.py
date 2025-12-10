@@ -8,6 +8,7 @@ from app.model.domain.entity.model import Model
 from app.user.domain.entity.user import User
 from app.authentification.auth_utils import hash_password
 from app.picture.domain.entity.picture import Picture
+from app.room.domain.entity.room import Room
 
 
 def load_fixtures() -> None:
@@ -20,48 +21,61 @@ def load_fixtures() -> None:
         model_repo = ModelRepository(db)
 
         # ---------- ROOMS ----------
-        room_repo.save({
-            "name": "F36",
-            "floor": 3,
-            "departement": "INFO",
-            "type": "IT",
-        })
-        room_repo.save({
-            "name": "A321",
-            "floor": 3,
-            "departement": "INFO",
-            "type": "normal",
-        })
-        room_repo.save({
-            "name": "A324",
-            "floor": 3,
-            "departement": "INFO",
-            "type": "normal",
-        })
-        room_repo.save({
-            "name": "E35",
-            "floor": 3,
-            "departement": "INFO",
-            "type": "normal",
-        })
-        room_repo.save({
-            "name": "E36",
-            "floor": 3,
-            "departement": "INFO",
-            "type": "normal",
-        })
-        room_repo.save({
-            "name": "E37",
-            "floor": 3,
-            "departement": "INFO",
-            "type": "normal",
-        })
-        room_repo.save({
-            "name": "F33",
-            "floor": 3,
-            "departement": "INFO",
-            "type": "normal",
-        })
+        room_repo.save(Room(
+            name="F36",
+            floor=3,
+            departement="INFO",
+            type="IT",
+        ))
+
+        room_repo.save(Room(
+            name="E24",
+            floor=3,
+            departement="INFO",
+            type="normal",
+        ))
+
+        room_repo.save(Room(
+            name="A321",
+            floor=3,
+            departement="INFO",
+            type="normal",
+        ))
+
+        room_repo.save(Room(
+            name="A324",
+            floor=3,
+            departement="INFO",
+            type="normal",
+        ))
+
+        room_repo.save(Room(
+            name="E35",
+            floor=3,
+            departement="INFO",
+            type="normal",
+        ))
+
+        room_repo.save(Room(
+            name="E36",
+            floor=3,
+            departement="INFO",
+            type="normal",
+        ))
+
+        room_repo.save(Room(
+            name="E37",
+            floor=3,
+            departement="INFO",
+            type="normal",
+        ))
+
+        room_repo.save(Room(
+            name="F33",
+            floor=3,
+            departement="INFO",
+            type="normal",
+        ))
 
         # ---------- PICTURES ----------
         picture_repo.save(
