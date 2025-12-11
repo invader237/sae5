@@ -40,6 +40,7 @@ class RoomRepository:
             .filter(Picture.is_validated == True)
             .group_by(RoomModel.room_id)
             .having(func.count(Picture.image_id) < threshold)
+            .limit(threshold)
             .all()
         )
 
