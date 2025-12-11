@@ -21,3 +21,9 @@ class RoomSQLAlchemyAdapter(RoomCatalog):
 
     def delete(self, room_id: str):
         return self.repository.delete(room_id)
+
+    def low_picture_coverage_rooms(self):
+        return self.repository.low_picture_coverage_rooms()
+
+    def total_rooms_count(self):
+        return self.repository.total_rooms_count()
