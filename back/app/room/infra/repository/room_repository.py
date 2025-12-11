@@ -37,7 +37,7 @@ class RoomRepository:
         return (
             self.db.query(RoomModel)
             .outerjoin(RoomModel.pictures)
-            .filter(Picture.is_validated == True)
+            .filter(Picture.is_validated)
             .group_by(RoomModel.room_id)
             .having(func.count(Picture.image_id) < threshold)
             .limit(threshold)
