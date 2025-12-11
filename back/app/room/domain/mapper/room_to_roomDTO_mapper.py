@@ -11,6 +11,7 @@ class RoomToRoomDTOMapper:
             floor=room.floor,
             departement=room.departement,
             type=room.type,
+            validated_picture_count=room.validated_picture_count,
         )
 
 
