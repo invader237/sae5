@@ -1,7 +1,8 @@
 import uuid
-from sqlalchemy import Column, String, Integer
+from app.picture.domain.entity.picture import Picture
+from sqlalchemy import Column, String, Integer, func, select
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, column_property
 
 from app.database import Base
 
@@ -34,3 +35,11 @@ class Room(Base):
     )
 
     pictures = relationship("Picture", back_populates="room")
+
+    validated_picture_count = column_property(
+        select(func.count(Picture.image_id))
+        .where(Picture.room_id == room_id)
+        .where(Picture.is_validated == True)
+        .correlate_except(Picture)
+        .scalar_subquery()
+    )

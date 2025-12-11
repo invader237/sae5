@@ -5,4 +5,5 @@ export default interface RoomDTO {
     floor: number;
     departement: string;
     type: string;
+    validated_picture_count: number;
 }

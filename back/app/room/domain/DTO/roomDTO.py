@@ -10,3 +10,4 @@ class RoomDTO(BaseModel):
     floor: Optional[int] = None
     departement: Optional[str] = None
     type: Optional[str] = None
+    validated_picture_count: Optional[int] = 0
