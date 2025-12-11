@@ -1,6 +1,7 @@
 import axiosInstance from './axiosConfig';
 import RoomLightDTO from './DTO/roomLight.dto';
 import RoomDTO from './DTO/room.dto';
+import RoomAnalyticsDTO from './DTO/roomAnalytics.dto';
 
 export const fetchRoomsForPva = async (): Promise<RoomLightDTO[]> => {
   try {
@@ -28,6 +29,16 @@ export const getRooms = async (): Promise<RoomDTO[]> => {
         return response.data;
     } catch (error) {
         console.error('Error fetching rooms:', error);
+        throw error;
+    }
+}
+
+export const getRoomAnalytics = async (): Promise<RoomAnalyticsDTO> => {
+    try {
+        const response = await axiosInstance.get<RoomAnalyticsDTO>('/rooms/analytics');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching room analytics:', error);
         throw error;
     }
 }
