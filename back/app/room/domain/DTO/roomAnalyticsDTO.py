@@ -1,5 +1,4 @@
 from typing import Optional
-from uuid import UUID
 from app.room.domain.DTO.roomDTO import RoomDTO
 
 from pydantic import BaseModel
