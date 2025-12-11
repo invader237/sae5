@@ -1,17 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { saveRoom, getRooms } from "@/api/room.api";
+import { saveRoom, getRooms, getRoomAnalytics } from "@/api/room.api";
 import { RoomDTO } from "@/api/DTO/room.dto";
+import RoomAnalyticsDTO from "@/api/DTO/roomAnalytics.dto";
 
 import RoomListModal from "@/components/room-managment-components/RoomListModal";
 import RoomModal from "@/components/room-managment-components/RoomModal";
+import ProgressBar from "../ProgressBar";
 
 const RoomManagementPanel = () => {
   const [rooms, setRooms] = useState<RoomDTO[]>([]);
   const [modalListVisible, setModalListVisible] = useState(false);
   const [modalRoomVisible, setModalRoomVisible] = useState(false);
   const [editingRoom, setEditingRoom] = useState<RoomDTO | null>(null);
+  const [analytics, setAnalytics] = useState<RoomAnalyticsDTO | null>(null);
 
   const loadRooms = async () => {
     try {
@@ -22,6 +25,15 @@ const RoomManagementPanel = () => {
       Alert.alert("Erreur", "Impossible de récupérer les salles");
     }
   };
+
+  const loadAnalytics = async () => {
+    try {
+      const data = await getRoomAnalytics();
+      setAnalytics(data);
+    } catch {
+      Alert.alert("Erreur", "Impossible de récupérer les statistiques des salles");
+    }
+  }
 
   const openAddModal = () => {
     setEditingRoom(null);
@@ -45,13 +57,17 @@ const RoomManagementPanel = () => {
     }
   };
 
+  useEffect(() => {
+    loadAnalytics();
+  }, []);
+
   return (
     <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
 
       {/* HEADER */}
       <View className="flex-row items-center justify-between">
         <Text className="text-[#333] text-lg font-bold">Gestion des salles</Text>
-        <TouchableOpacity onPress={loadRooms} className="bg-[#007bff] rounded-md px-4 py-2">
+        <TouchableOpacity onPress={loadAnalytics} className="bg-[#007bff] rounded-md px-4 py-2">
           <MaterialIcons name="refresh" size={20} color="white" />
         </TouchableOpacity>
       </View>
@@ -71,6 +87,33 @@ const RoomManagementPanel = () => {
         >
           <Text className="text-white font-bold text-center">Voir les salles</Text>
         </TouchableOpacity>
+      </View>
+
+        <View className="border border-gray-300"/> 
+
+      <View className="gap-2">
+        <Text className="text-[#333] text-medium font-small">
+            Salles a faible couverture
+        </Text>
+        {analytics?.low_coverage && analytics.low_coverage.length > 0 ? (
+          analytics.low_coverage.map((room) => (
+            <View key={room.id} className="p-2 rounded-md p-2">
+                <View key={room.id} className="flex-row justify-between items-center bg-yellow-100 rounded-md mb-1">
+                  <Text className="text-[#555] font-medium">{room.name}</Text>
+                  <Text className="text-[#555] text-sm">{room.validated_picture_count} / 500</Text>
+                </View>
+                <ProgressBar
+                    key={room.id}
+                    value={room.validated_picture_count ?? 0}
+                    threshold={90}
+                    width="100%"
+                  />
+            </View>
+          ))
+        ) : (
+          <Text className="text-[#555] text-sm">Aucune salle avec une faible couverture.</Text>
+        )}
+
       </View>
 
       {/* MODALS */}
