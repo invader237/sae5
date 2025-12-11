@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from app.room.domain.entity.room import Room as RoomModel
+from app.picture.domain.entity.picture import Picture
+from sqlalchemy import func
 from typing import Collection
 
 
@@ -29,3 +31,17 @@ class RoomRepository:
         room = self.find_by_id(room_id)
         self.db.delete(room)
         self.db.commit()
+
+    def low_picture_coverage_rooms(self) -> list[RoomModel]:
+        threshold = 3
+        return (
+            self.db.query(RoomModel)
+            .outerjoin(RoomModel.pictures)
+            .filter(Picture.is_validated == True)
+            .group_by(RoomModel.room_id)
+            .having(func.count(Picture.image_id) < threshold)
+            .all()
+        )
+
+    def total_rooms_count(self) -> int:
+        return self.db.query(RoomModel).count()
