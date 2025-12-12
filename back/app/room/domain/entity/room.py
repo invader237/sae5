@@ -40,7 +40,7 @@ class Room(Base):
         func.coalesce(
             select(func.count(Picture.image_id))
             .where(Picture.room_id == room_id)
-            .where(Picture.is_validated)
+            .where(Picture.is_validated.is_(True))
             .correlate_except(Picture)
             .scalar_subquery(),
             0
