@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   View,
@@ -7,64 +7,24 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Spinner } from '@/components/Spinner';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthForm } from "@/components/authentification/AuthForm";
 import { ChangePasswordForm } from "@/components/authentification/ChangePasswordForm";
-import { fetchMe, UserDTO } from "@/api/auth.api";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ProfileScreen() {
-  const [user, setUser] = useState<UserDTO | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [initializing, setInitializing] = useState(true);
+  const { user, token, isLoading, login, logout } = useAuth();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  
-  const handleLogout = useCallback(async () => {
-    await AsyncStorage.removeItem("authToken");
-    setUser(null);
-    setToken(null);
+
+  const handleLogout = async () => {
+    await logout();
     setIsPasswordModalOpen(false);
-  }, []);
+  };
 
-  const fetchAndSetUser = useCallback(async (accessToken: string) => {
-    try {
-      const data = await fetchMe(accessToken);
-      setUser(data);
-    } catch (error: any) {
-      const status = error?.response?.status;
-      // 401 → token invalide ou expiré : on déconnecte proprement
-      if (status === 401) {
-        await handleLogout();
-      } else {
-        console.log("FETCH /auth/me error:", error);
-      }
-    }
-  }, [handleLogout]);
+  const handleAuthenticated = async (accessToken: string) => {
+    await login(accessToken);
+  };
 
-  useEffect(() => {
-    const bootstrap = async () => {
-      try {
-        const storedToken = await AsyncStorage.getItem("authToken");
-        if (storedToken) {
-          setToken(storedToken);
-          await fetchAndSetUser(storedToken);
-        }
-      } catch (error) {
-        console.log("Error loading token", error);
-      } finally {
-        setInitializing(false);
-      }
-    };
-
-    void bootstrap();
-  }, [fetchAndSetUser]);
-
-  const handleAuthenticated = useCallback(async (accessToken: string) => {
-    await AsyncStorage.setItem("authToken", accessToken);
-    setToken(accessToken);
-    await fetchAndSetUser(accessToken);
-  }, [fetchAndSetUser]);
-
-  if (initializing) {
+  if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <Spinner />
