@@ -22,9 +22,14 @@ def verify_password(p: str, hashed: str) -> bool:
     return pwd.verify(p, hashed)
 
 
-def create_access_token(user_id: str) -> str:
+def create_access_token(user_id: str, role: str = None) -> str:
     now = int(time.time())
-    payload = {"user_id": user_id, "iat": now, "exp": now + JWT_EXPIRE_SEC}
+    payload = {
+        "user_id": user_id,
+        "role": role,
+        "iat": now,
+        "exp": now + JWT_EXPIRE_SEC
+    }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALG)
 
 
