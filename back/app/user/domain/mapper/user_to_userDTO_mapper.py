@@ -9,7 +9,8 @@ class UserToUserDTOMapper:
             id=user.user_id,
             name=user.username,
             email=user.email,
-            created_at=user.created_at
+            created_at=user.created_at,
+            role=user.role.type if user.role else None
         )
 
 
