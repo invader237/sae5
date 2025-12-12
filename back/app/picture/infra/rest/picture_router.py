@@ -206,17 +206,15 @@ class PictureController:
 
         picture = picture_catalog.save(picture)
         try:
-            history_catalog.save(
+            history_catalog.save(                
                 {
                     "image_path": str(dest_path),
-                    "room_name": top_room_name,
+                    "room_name": inference_result.get("top_label"),
                     "picture_id": getattr(picture, "image_id", None),
                 }
             )
-        except Exception:
-            # Ne pas bloquer l'import si l'historisation échoue
-            pass
-
+        except Exception as e:
+            print(f"[WARNING] Erreur lors de la sauvegarde historique: {e}")
         return inference_result
 
     async def find_picture_to_validate(
