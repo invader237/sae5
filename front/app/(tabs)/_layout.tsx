@@ -4,6 +4,7 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import "../../global.css";
+import { useAuth } from "@/hooks/useAuth";
 
 type IconName = React.ComponentProps<typeof IconSymbol>["name"];
 
@@ -16,6 +17,8 @@ function TabIcon({ name, color }: { name: IconName; color: string }) {
 }
 
 export default function TabLayout() {
+  const { isAdmin } = useAuth();
+
   return (
     <Tabs
       screenOptions={{
@@ -64,6 +67,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="admin-panel"
         options={{
+          href: isAdmin ? "/admin-panel" : null,
           title: "Admin",
           tabBarIcon: ({ color }) => (
             <TabIcon name="shield.lefthalf.fill" color={color} />
