@@ -32,7 +32,7 @@ class RoomRepository:
         self.db.delete(room)
         self.db.commit()
 
-    def low_picture_coverage_rooms(self) -> list[RoomModel]:
+    def low_picture_coverage_rooms(self) -> Collection[RoomModel]:
         threshold = 3
         return (
             self.db.query(RoomModel)
