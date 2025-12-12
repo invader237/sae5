@@ -1,6 +1,6 @@
 # from datetime import datetime
 from app.database import SessionLocal
-# from app.picture.infra.repository.picture_repository import PictureRepository
+from app.picture.infra.repository.picture_repository import PictureRepository
 from app.room.infra.repository.room_repository import RoomRepository
 from app.role.infra.repository.role_repository import RoleRepository
 # from app.model.infra.repository.model_repository import ModelRepository
@@ -15,7 +15,7 @@ def load_fixtures() -> None:
     db = SessionLocal()
 
     try:
-        # picture_repo = PictureRepository(db)
+        picture_repo = PictureRepository(db)
         room_repo = RoomRepository(db)
         role_repo = RoleRepository(db)
         # model_repo = ModelRepository(db)
