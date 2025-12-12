@@ -98,7 +98,7 @@ const RoomManagementPanel = () => {
         {analytics?.low_coverage && analytics.low_coverage.length > 0 ? (
           analytics.low_coverage.map((room) => (
             <View key={room.id} className="p-2 rounded-md p-2">
-                <View key={room.id} className="flex-row justify-between items-center bg-yellow-100 rounded-md mb-1">
+                <View key={room.id} className="flex-row justify-between items-center rounded-md mb-1">
                   <Text className="text-[#555] font-medium">{room.name}</Text>
                   <Text className="text-[#555] text-sm">{room.validated_picture_count} / 500</Text>
                 </View>
