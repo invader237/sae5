@@ -206,7 +206,7 @@ class PictureController:
 
         picture = picture_catalog.save(picture)
         try:
-            history_catalog.save(                
+            history_catalog.save(
                 {
                     "image_path": str(dest_path),
                     "room_name": inference_result.get("top_label"),
