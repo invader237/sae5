@@ -10,6 +10,7 @@ export interface UserDTO {
   email?: string | null;
   contacts?: string[] | null;
   created_at?: string | null;
+  role?: string | null;
 }
 
 export interface LoginResponse {
