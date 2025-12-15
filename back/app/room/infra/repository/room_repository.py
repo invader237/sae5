@@ -53,3 +53,11 @@ class RoomRepository:
 
     def total_rooms_count(self) -> int:
         return self.db.query(RoomModel).count()
+
+    def find_all_validated(self) -> Collection[RoomModel]:
+        return (
+            self.db.query(RoomModel)
+            .join(RoomModel.pictures)
+            .filter(Picture.is_validated.is_(True))
+            .all()
+        )
