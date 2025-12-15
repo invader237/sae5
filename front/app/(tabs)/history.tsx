@@ -1,15 +1,15 @@
 import { Text, View, Image, TouchableOpacity, Modal } from "react-native";
-import { useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback } from "react";
 import axiosInstance, { baseURL } from "../../api/axiosConfig";
 
 type HistoryItem = {
   id: string;
-  image_path: string;
-  picture_id?: string | null;
+  image_id?: string | null;
   room_name?: string | null;
   scanned_at: string;
+  model_id?: string | null;
+  model_name?: string | null;
 };
 
 export default function HistoryScreen() {
@@ -65,9 +65,9 @@ export default function HistoryScreen() {
               key={it.id}
               className="flex-row items-center border-b border-[#eee] py-5"
             >
-              <TouchableOpacity onPress={() => setPreview(toFileUri(it.picture_id, it.image_path))}>
+              <TouchableOpacity onPress={() => setPreview(toFileUri(it.image_id))}>
                 <Image
-                  source={{ uri: toFileUri(it.picture_id, it.image_path) }}
+                  source={{ uri: toFileUri(it.image_id) }}
                   style={{ width: 64, height: 64, borderRadius: 8, marginRight: 14 }}
                 />
               </TouchableOpacity>
@@ -77,6 +77,9 @@ export default function HistoryScreen() {
                 </Text>
                 <Text className="text-[#666] text-sm mt-1">
                   {formatDateTime(it.scanned_at)}
+                </Text>
+                <Text className="text-[#666] text-sm mt-1">
+                  Modèle : {it.model_name ?? (it.model_id ? it.model_id.slice(0, 8) : "Inconnu")}
                 </Text>
               </View>
             </View>
@@ -101,12 +104,9 @@ export default function HistoryScreen() {
   );
 }
 
-function toFileUri(pictureId?: string | null, fallbackPath?: string) {
-  if (pictureId) {
-    return `${baseURL}/pictures/${pictureId}/recover?type=full`;
-  }
-  if (fallbackPath && (fallbackPath.startsWith("http://") || fallbackPath.startsWith("https://"))) {
-    return fallbackPath;
+function toFileUri(imageId?: string | null) {
+  if (imageId) {
+    return `${baseURL}/pictures/${imageId}/recover?type=full`;
   }
   return "https://placehold.co/400x400/000000/FFFFFF.png";
 }
