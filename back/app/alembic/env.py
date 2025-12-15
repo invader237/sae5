@@ -17,6 +17,7 @@ from app.model.domain.entity.model import Base as ModelBase
 from app.picture.domain.entity.picture import Base as PictureBase
 from app.role.domain.entity.role import Base as RoleBase
 from app.room.domain.entity.room import Base as RoomBase
+from app.history.domain.entity.history import Base as HistoryBase
 
 # --- Config Alembic ---
 config = context.config
@@ -35,6 +36,7 @@ for meta in [
     PictureBase.metadata,
     RoleBase.metadata,
     RoomBase.metadata,
+    HistoryBase.metadata,
 ]:
     for table in meta.tables.values():
         target_metadata._add_table(table.name, table.schema, table)
