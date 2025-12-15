@@ -11,6 +11,9 @@ from app.authentification.core.admin_required import (
     require_role,
     AuthenticatedUser,
 )
+from app.model.domain.service.model_training import ModelTraining
+from app.model.infra.factory.model_factory import get_model_training
+from fastapi import BackgroundTasks
 
 
 class ModelController:
@@ -38,6 +41,12 @@ class ModelController:
             "/scan",
             self.scan_models,
             response_model=dict,
+            methods=["POST"],
+        )
+
+        self.router.add_api_route(
+            "/train",
+            self.train_model,
             methods=["POST"],
         )
 
@@ -92,6 +101,20 @@ class ModelController:
                 detail=str(e),
             )
 
+    def train_model(
+        self,
+        model_training: ModelTraining = Depends(get_model_training),
+    ):
+        """Lance l'entraînement du modèle"""
+        try:
+            model_training.train()
+            return {"message": "Entraînement lancé avec succès"}
+        except Exception as e:
+            print(f"[ERROR] Erreur lors de l'entraînement : {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(e),
+            )
 
 model_controller = ModelController()
 router = model_controller.router
