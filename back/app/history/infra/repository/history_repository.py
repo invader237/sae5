@@ -13,9 +13,9 @@ class HistoryRepository:
             .all()
         )
 
-    def save(self, history_in: dict) -> HistoryModel:
-        h = HistoryModel(**history_in)
-        self.db.add(h)
+    def save(self, history: HistoryModel) -> HistoryModel:
+        """Persist a History entity (not a dict)."""
+        self.db.add(history)
         self.db.commit()
-        self.db.refresh(h)
-        return h
+        self.db.refresh(history)
+        return history
