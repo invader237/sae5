@@ -33,7 +33,8 @@ class HistoryController:
             if model_id is not None:
                 m = model_catalog.find_by_id(str(model_id))
                 model_name = getattr(m, "name", None) if m else None
-            result.append(history_to_dto_mapper.apply(h, model_name=model_name))
+            dto = history_to_dto_mapper.apply(h, model_name=model_name)
+            result.append(dto)
         return result
 
 
