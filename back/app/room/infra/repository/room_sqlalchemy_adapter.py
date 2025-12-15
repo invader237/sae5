@@ -27,3 +27,6 @@ class RoomSQLAlchemyAdapter(RoomCatalog):
 
     def total_rooms_count(self):
         return self.repository.total_rooms_count()
+
+    def find_all_validated(self):
+        return self.repository.find_all_validated()
