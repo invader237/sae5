@@ -37,7 +37,10 @@ from app.authentification.core.admin_required import (
     require_role,
     AuthenticatedUser,
 )
+from app.model.infra.factory.model_factory import get_model_catalog
+from app.model.domain.catalog.model_catalog import ModelCatalog
 from app.history.infra.factory.history_factory import get_history_catalog
+from app.history.domain.entity.history import History
 
 UPLOAD_DIR = Path("uploads")
 
@@ -111,6 +114,7 @@ class PictureController:
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
         room_catalog: RoomCatalog = Depends(get_room_catalog),
         model_loader=Depends(get_model_loader),
+        model_catalog: ModelCatalog = Depends(get_model_catalog),
         history_catalog=Depends(get_history_catalog),
     ):
         # Supporte file ou image comme clé multipart
@@ -206,12 +210,13 @@ class PictureController:
 
         picture = picture_catalog.save(picture)
         try:
+            active_model = model_catalog.find_active_model()
             history_catalog.save(
-                {
-                    "image_path": str(dest_path),
-                    "room_name": inference_result.get("top_label"),
-                    "picture_id": getattr(picture, "image_id", None),
-                }
+                History(
+                    room_name=inference_result.get("top_label"),
+                    image_id=getattr(picture, "image_id", None),
+                    model_id=getattr(active_model, "model_id", None),
+                )
             )
         except Exception as e:
             print(f"[WARNING] Erreur lors de la sauvegarde historique: {e}")
