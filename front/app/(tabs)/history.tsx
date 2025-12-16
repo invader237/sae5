@@ -1,30 +1,23 @@
 import { Text, View, Image, TouchableOpacity, Modal } from "react-native";
 import { useState, useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import axiosInstance, { baseURL } from "../../api/axiosConfig";
-
-type HistoryItem = {
-  id: string;
-  image_id?: string | null;
-  room_name?: string | null;
-  scanned_at: string;
-  model_id?: string | null;
-  model_name?: string | null;
-};
+import axiosInstance from "../../api/axiosConfig";
+import { toFileUri } from "../../utils/image";
+import type HistoryDTO from "../../api/DTO/history.dto";
 
 export default function HistoryScreen() {
-  const [items, setItems] = useState<HistoryItem[]>([]);
+  const [items, setItems] = useState<HistoryDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axiosInstance.get<HistoryItem[]>("/histories");
+      const res = await axiosInstance.get<HistoryDTO[]>("/histories");
       setItems(res.data ?? []);
-    } catch (e: any) {
+    } catch {
       setError("Impossible de charger l'historique");
     } finally {
       setLoading(false);
@@ -79,7 +72,7 @@ export default function HistoryScreen() {
                   {formatDateTime(it.scanned_at)}
                 </Text>
                 <Text className="text-[#666] text-sm mt-1">
-                  Modèle : {it.model_name ?? (it.model_id ? it.model_id.slice(0, 8) : "Inconnu")}
+                  Modèle : {it.model?.name ?? "Inconnu"}
                 </Text>
               </View>
             </View>
@@ -104,9 +97,4 @@ export default function HistoryScreen() {
   );
 }
 
-function toFileUri(imageId?: string | null) {
-  if (imageId) {
-    return `${baseURL}/pictures/${imageId}/recover?type=full`;
-  }
-  return "https://placehold.co/400x400/000000/FFFFFF.png";
-}
+// utilitaire déplacé dans ../../utils/image
