@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Callable
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import HTTPException, status, Header
 from app.authentification.auth_utils import decode_token
 
 
@@ -34,15 +34,23 @@ def require_role(*allowed_roles: str) -> Callable[..., AuthenticatedUser]:
 
     Usage:
         @router.get("/admin-only")
-        def admin_endpoint(user: AuthenticatedUser = Depends(require_role("admin"))):
+        def admin_endpoint(
+            user: AuthenticatedUser = Depends(require_role("admin"))
+        ):
             return {"user_id": user.user_id, "role": user.role}
 
         @router.get("/any-authenticated")
-        def any_endpoint(user: AuthenticatedUser = Depends(require_role())):
+        def any_endpoint(
+            user: AuthenticatedUser = Depends(require_role())
+        ):
             return {"user_id": user.user_id}
 
         @router.get("/admin-or-moderator")
-        def multi_role(user: AuthenticatedUser = Depends(require_role("admin", "moderator"))):
+        def multi_role(
+            user: AuthenticatedUser = Depends(
+                require_role("admin", "moderator")
+            )
+        ):
             return {"user_id": user.user_id}
     """
 
@@ -64,7 +72,10 @@ def require_role(*allowed_roles: str) -> Callable[..., AuthenticatedUser]:
         if allowed_roles and role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied. Required role(s): {', '.join(allowed_roles)}",
+                detail=(
+                    "Access denied. Required role(s): "
+                    + ", ".join(allowed_roles)
+                ),
             )
 
         return AuthenticatedUser(user_id=user_id, role=role or "")
