@@ -6,8 +6,6 @@ from app.history.domain.mapper.history_to_dto_mapper import (
     history_to_dto_mapper,
 )
 from app.history.infra.factory.history_factory import get_history_catalog
-from app.model.domain.catalog.model_catalog import ModelCatalog
-from app.model.infra.factory.model_factory import get_model_catalog
 
 
 class HistoryController:
@@ -23,19 +21,9 @@ class HistoryController:
     def get_histories(
         self,
         history_catalog: HistoryCatalog = Depends(get_history_catalog),
-        model_catalog: ModelCatalog = Depends(get_model_catalog),
     ):
-        items = history_catalog.find_all()
-        result = []
-        for h in items:
-            model_name = None
-            model_id = getattr(h, "model_id", None)
-            if model_id is not None:
-                m = model_catalog.find_by_id(str(model_id))
-                model_name = getattr(m, "name", None) if m else None
-            dto = history_to_dto_mapper.apply(h, model_name=model_name)
-            result.append(dto)
-        return result
+        histories = history_catalog.find_all()
+        return [history_to_dto_mapper.apply(h) for h in histories]
 
 
 history_controller = HistoryController()
