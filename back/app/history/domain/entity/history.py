@@ -1,5 +1,6 @@
 import uuid
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -18,11 +19,22 @@ class History(Base):
     )
 
     room_name = Column(String(255), nullable=True)
-    image_id = Column(UUID(as_uuid=True), nullable=True)
-    model_id = Column(UUID(as_uuid=True), nullable=True)
+    image_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("pictures.image_id"),
+        nullable=True,
+    )
+    model_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("models.model_id"),
+        nullable=True,
+    )
 
     scanned_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
+
+    model = relationship("Model", backref="histories", lazy="joined")
+    picture = relationship("Picture", backref="histories", lazy="joined")

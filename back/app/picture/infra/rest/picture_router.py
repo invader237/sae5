@@ -211,11 +211,12 @@ class PictureController:
         picture = picture_catalog.save(picture)
         try:
             active_model = model_catalog.find_active_model()
+            model_id = active_model.model_id if active_model else None
             history_catalog.save(
                 History(
                     room_name=inference_result.get("top_label"),
-                    image_id=getattr(picture, "image_id", None),
-                    model_id=getattr(active_model, "model_id", None),
+                    image_id=picture.image_id,
+                    model_id=model_id,
                 )
             )
         except Exception as e:
