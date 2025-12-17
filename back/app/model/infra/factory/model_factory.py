@@ -8,9 +8,6 @@ from app.model.infra.repository.model_sqlalchemy_adapter import (
 from app.model.infra.model_loader.GitModelLoaderImpl import GitModelLoaderImpl
 from app.model.domain.catalog.model_catalog import ModelCatalog
 from app.model.domain.service.model_loader import ModelLoader
-from app.model.domain.service.model_training import ModelTraining
-from app.room.infra.factory.room_factory import get_room_catalog
-from app.room.domain.catalog.room_catalog import RoomCatalog
 from app.database import get_session
 
 
@@ -26,8 +23,3 @@ def get_model_loader(
     return GitModelLoaderImpl(
         model_catalog=model_catalog, models_dir="/app/models"
         )
-
-def get_model_training(
-    room_catalog: RoomCatalog = Depends(get_room_catalog),
-) -> ModelTraining:
-    return ModelTraining(room_catalog=room_catalog)
