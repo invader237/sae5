@@ -117,22 +117,16 @@ def load_fixtures() -> None:
         )
 
         # ---------- USERS ----------
-        # Récupérer les rôles
-        admin_role = role_repo.find_by_type("admin")
-        client_role = role_repo.find_by_type("client")
-
         user1 = User(
-            username="admin",
-            email="admin@example.com",
-            password=hash_password("admin123"),
-            role_id=admin_role.role_id if admin_role else None,
+            username="dev1",
+            email="dev@example.com",
+            password=hash_password("password"),
         )
 
         user2 = User(
-            username="client",
-            email="client@example.com",
-            password=hash_password("client123"),
-            role_id=client_role.role_id if client_role else None,
+            username="dev2",
+            email="dev2@example.com",
+            password=hash_password("password2"),
         )
 
         db.add(user1)
