@@ -8,8 +8,7 @@ from app.model.domain.mapper.model_to_modelDTO_mapper import (
     model_to_modelDTO_mapper,
 )
 from app.authentification.core.admin_required import (
-    require_role,
-    AuthenticatedUser,
+    get_current_admin_user_id,
 )
 
 
@@ -52,7 +51,7 @@ class ModelController:
         self,
         model_to_activate: ModelDTO,
         model_catalog: ModelCatalog = Depends(get_model_catalog),
-        user: AuthenticatedUser = Depends(require_role("admin")),
+        admin_user_id: str = Depends(get_current_admin_user_id),
     ):
         try:
             # Désactiver l'ancien modèle actif
@@ -79,7 +78,7 @@ class ModelController:
     def scan_models(
         self,
         model_loader: ModelLoader = Depends(get_model_loader),
-        user: AuthenticatedUser = Depends(require_role("admin")),
+        admin_user_id: str = Depends(get_current_admin_user_id),
     ):
         """Scanne le dossier de modèles et met à jour la base"""
         try:

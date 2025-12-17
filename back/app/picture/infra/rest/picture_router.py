@@ -34,8 +34,7 @@ from app.room.domain.catalog.room_catalog import RoomCatalog
 from app.model.domain.service.predict import predict_image
 from app.model.infra.factory.model_factory import get_model_loader
 from app.authentification.core.admin_required import (
-    require_role,
-    AuthenticatedUser,
+    get_current_admin_user_id,
 )
 
 UPLOAD_DIR = Path("uploads")
@@ -220,7 +219,7 @@ class PictureController:
         self,
         pictures: list[PicturePvaDTO],
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
-        user: AuthenticatedUser = Depends(require_role("admin")),
+        admin_user_id: str = Depends(get_current_admin_user_id),
     ):
         validation_date = datetime.now(timezone.utc)
 
@@ -283,7 +282,7 @@ class PictureController:
         self,
         pictures: list[PicturePvaDTO] = Body(...),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
-        user: AuthenticatedUser = Depends(require_role("admin")),
+        admin_user_id: str = Depends(get_current_admin_user_id),
     ):
         deleted_pictures = []
 
@@ -316,7 +315,7 @@ class PictureController:
         pictures: list[PicturePvaDTO],
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
         room_catalog: RoomCatalog = Depends(get_room_catalog),
-        user: AuthenticatedUser = Depends(require_role("admin")),
+        admin_user_id: str = Depends(get_current_admin_user_id),
     ):
         updated_pictures = []
         validation_date = datetime.now(timezone.utc)
