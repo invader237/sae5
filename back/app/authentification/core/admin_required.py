@@ -39,17 +39,17 @@ def get_current_admin_user_id(authorization: str) -> str:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Format d'autorisation invalide.",
         )
-
+    
     token = authorization.split(" ", 1)[1].strip()
     token_payload = decode_token(token)
-
+    
     require_admin(token_payload)
-
+    
     user_id = token_payload.get("user_id")
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token invalide.",
         )
-
+    
     return user_id
