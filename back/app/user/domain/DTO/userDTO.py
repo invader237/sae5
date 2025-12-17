@@ -11,4 +11,3 @@ class UserDTO(BaseModel):
     email: Optional[str] = None
     contacts: Optional[List[str]] = None
     created_at: Optional[datetime] = None
-    role: Optional[str] = None
