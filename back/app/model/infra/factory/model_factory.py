@@ -32,7 +32,4 @@ def get_model_training(
     room_catalog: RoomCatalog = Depends(get_room_catalog),
     model_catalog: ModelCatalog = Depends(get_model_catalog),
 ) -> ModelTraining:
-    return ModelTraining(
-        room_catalog=room_catalog,
-        model_catalog=model_catalog
-    )
+    return ModelTraining(room_catalog=room_catalog, model_catalog=model_catalog)

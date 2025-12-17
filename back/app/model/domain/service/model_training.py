@@ -7,6 +7,7 @@ from pathlib import Path
 from app.model.domain.service.room_dataset import RoomDataset
 import json
 import re
+import os
 
 UPLOAD_DIR = Path("./")
 MODEL_DIR = Path("/app/models")
@@ -14,12 +15,7 @@ MODEL_DIR.mkdir(parents=True, exist_ok=True)  # create folder if not exists
 
 
 class ModelTraining:
-    def __init__(self,
-                 room_catalog,
-                 model_catalog,
-                 model_name="base",
-                 num_classes=None
-                 ):
+    def __init__(self, room_catalog, model_catalog, model_name="base", num_classes=None):
         self.room_catalog = room_catalog
         self.model_catalog = model_catalog
         self.model_name = model_name
@@ -143,7 +139,7 @@ class ModelTraining:
 
         for idx, model in enumerate(models):
             if not model.name:
-                print("[DEBUG] Model has no name, skipping")
+                print(f"[DEBUG] Model has no name, skipping")
                 continue
             name = model.name
             if name.endswith(".pth"):
@@ -157,7 +153,7 @@ class ModelTraining:
                     minor = int(minor_str)
                 max_minor = max(max_minor, minor)
             else:
-                print("[DEBUG] Model did not match pattern")
+                print(f"[DEBUG] Model did not match pattern")
 
         next_model_name = f"{prefix}.{max_minor + 1}"
 
