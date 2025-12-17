@@ -6,11 +6,11 @@ from torchvision import transforms
 from pathlib import Path
 from app.model.domain.service.room_dataset import RoomDataset
 import json
+from app.room.domain.catalog.room_catalog import RoomCatalog
 
 UPLOAD_DIR = Path("./")
 MODEL_DIR = Path("/app/models")
 MODEL_DIR.mkdir(parents=True, exist_ok=True)  # create folder if not exists
-
 
 class ModelTraining:
     def __init__(self, room_catalog, model_name="resnet50", num_classes=None):
@@ -19,9 +19,7 @@ class ModelTraining:
         self.num_classes = num_classes
         self.model = None
         self.dataset = None
-        self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu"
-        )
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # 1️⃣ Fetch records
     def fetch_records(self):
@@ -42,11 +40,7 @@ class ModelTraining:
     # 3️⃣ Create Dataset
     def create_dataset(self, records):
         transform = self.get_transforms()
-        dataset = RoomDataset(
-            records=records,
-            images_dir=UPLOAD_DIR,
-            transform=transform
-        )
+        dataset = RoomDataset(records=records, images_dir=UPLOAD_DIR, transform=transform)
         return dataset
 
     # 4️⃣ Build Dataset
@@ -64,33 +58,27 @@ class ModelTraining:
             self.num_classes = len(self.dataset.room_to_idx)
 
         if self.model_name.lower() == "resnet50":
-            model = models.resnet50(
-                weights=models.ResNet50_Weights.IMAGENET1K_V1
-            )
+            model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
             model.fc = nn.Linear(model.fc.in_features, self.num_classes)
 
         elif self.model_name.lower() == "custom_cnn":
             model = nn.Sequential(
-                nn.Conv2d(3, 32, 3, 1, 1),  # input channels,
-                # output channels, kernel size, stride, padding
-                nn.ReLU(),  # activation
-                nn.MaxPool2d(2),  # pooling
-                nn.Conv2d(32, 64, 3, 1, 1),  # second conv layer
-                nn.ReLU(),  # activation
-                nn.MaxPool2d(2),  # pooling
-                nn.Flatten(),  # flatten for fully connected layers
-                nn.Linear(64 * 56 * 56, 128),  # fully connected layer
-                nn.ReLU(),  # activation
-                nn.Linear(128, self.num_classes)  # output layer
+                nn.Conv2d(3, 32, 3, 1, 1), # input channels, output channels, kernel size, stride, padding
+                nn.ReLU(), # activation
+                nn.MaxPool2d(2), # pooling
+                nn.Conv2d(32, 64, 3, 1, 1), # second conv layer
+                nn.ReLU(), # activation
+                nn.MaxPool2d(2), # pooling
+                nn.Flatten(), # flatten for fully connected layers
+                nn.Linear(64 * 56 * 56, 128), # fully connected layer
+                nn.ReLU(), # activation
+                nn.Linear(128, self.num_classes) # output layer
             )
         else:
             raise ValueError(f"Unknown model name: {self.model_name}")
 
         self.model = model
-        print(
-            f"Initialized model: {self.model_name} "
-            f"with {self.num_classes} classes"
-        )
+        print(f"Initialized model: {self.model_name} with {self.num_classes} classes")
         return model
 
     # 6️⃣ Create DataLoader
@@ -141,9 +129,7 @@ class ModelTraining:
         Save the label mapping (room names → class indices) to labels.json
         """
         if self.dataset is None:
-            raise ValueError(
-                "Dataset is not built yet. Call build_dataset() first."
-            )
+            raise ValueError("Dataset is not built yet. Call build_dataset() first.")
 
         labels = list(self.dataset.room_to_idx.keys())
         data = {"classes": labels}

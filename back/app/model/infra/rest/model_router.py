@@ -13,6 +13,7 @@ from app.authentification.core.admin_required import (
 )
 from app.model.domain.service.model_training import ModelTraining
 from app.model.infra.factory.model_factory import get_model_training
+from fastapi import BackgroundTasks
 from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
 
 
@@ -119,7 +120,6 @@ class ModelController:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(e),
             )
-
 
 model_controller = ModelController()
 router = model_controller.router
