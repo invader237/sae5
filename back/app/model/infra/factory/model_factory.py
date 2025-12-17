@@ -27,6 +27,7 @@ def get_model_loader(
         model_catalog=model_catalog, models_dir="/app/models"
         )
 
+
 def get_model_training(
     room_catalog: RoomCatalog = Depends(get_room_catalog),
 ) -> ModelTraining:
