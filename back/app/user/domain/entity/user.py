@@ -40,5 +40,5 @@ class User(Base):
         ForeignKey("roles.role_id"),
         nullable=True,
     )
-
+    
     role = relationship("Role", backref="users")

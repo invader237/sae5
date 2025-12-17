@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from app.model.domain.catalog.model_catalog import ModelCatalog
 from app.model.domain.DTO.modelDTO import ModelDTO
 from app.model.infra.factory.model_factory import get_model_catalog
