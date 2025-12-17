@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status
 from app.model.domain.catalog.model_catalog import ModelCatalog
 from app.model.domain.DTO.modelDTO import ModelDTO
 from app.model.infra.factory.model_factory import get_model_catalog
@@ -6,9 +6,6 @@ from app.model.infra.factory.model_factory import get_model_loader
 from app.model.domain.service.model_loader import ModelLoader
 from app.model.domain.mapper.model_to_modelDTO_mapper import (
     model_to_modelDTO_mapper,
-)
-from app.authentification.core.admin_required import (
-    get_current_admin_user_id,
 )
 
 
@@ -51,7 +48,6 @@ class ModelController:
         self,
         model_to_activate: ModelDTO,
         model_catalog: ModelCatalog = Depends(get_model_catalog),
-        admin_user_id: str = Depends(get_current_admin_user_id),
     ):
         try:
             # Désactiver l'ancien modèle actif
@@ -78,7 +74,6 @@ class ModelController:
     def scan_models(
         self,
         model_loader: ModelLoader = Depends(get_model_loader),
-        admin_user_id: str = Depends(get_current_admin_user_id),
     ):
         """Scanne le dossier de modèles et met à jour la base"""
         try:
