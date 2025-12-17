@@ -14,9 +14,6 @@ from app.room.infra.factory.room_factory import get_room_catalog
 from app.room.domain.DTO.roomLightDTO import RoomLightDTO
 from app.room.domain.DTO.roomDTO import RoomDTO
 from app.room.domain.DTO.roomAnalyticsDTO import RoomAnalyticsDTO
-from app.authentification.core.admin_required import (
-    get_current_admin_user_id,
-)
 
 
 class RoomController:
@@ -73,7 +70,6 @@ class RoomController:
         self,
         room: RoomDTO,
         room_catalog: RoomCatalog = Depends(get_room_catalog),
-        admin_user_id: str = Depends(get_current_admin_user_id),
     ):
         if room.id:
             existing_room = room_catalog.find_by_id(room.id)
@@ -97,7 +93,6 @@ class RoomController:
         self,
         room_id: str,
         room_catalog: RoomCatalog = Depends(get_room_catalog),
-        admin_user_id: str = Depends(get_current_admin_user_id),
     ):
         room_catalog.delete(room_id)
 
