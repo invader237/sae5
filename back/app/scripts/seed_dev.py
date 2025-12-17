@@ -78,7 +78,6 @@ def load_fixtures() -> None:
         ))
 
         # ---------- PICTURES ----------
-        """
         picture_repo.save(
             Picture(
                 path="/images/room_f36_view1.png",
@@ -102,14 +101,12 @@ def load_fixtures() -> None:
                 room=room_repo.find_by_name("F33"),
             )
         )
-        """
 
         # ---------- ROLES ----------
         role_repo.save({"type": "admin"})
         role_repo.save({"type": "client"})
 
         # Models
-        """
         model_repo.save(
             Model(
                 name="Mon modèle",
@@ -118,7 +115,6 @@ def load_fixtures() -> None:
                 input_size=384,
             )
         )
-        """
 
         # ---------- USERS ----------
         # Récupérer les rôles
