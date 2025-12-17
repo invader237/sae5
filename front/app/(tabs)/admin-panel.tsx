@@ -4,7 +4,6 @@ import { Redirect } from "expo-router";
 import ModelSelector from "@/components/model-selector";
 import PvaPanel from "@/components/pva-panel";
 import RoomManagmentPanel from "@/components/room-managment-panel";
-import ModelTrainingPanel from "@/components/model-training-panel";
 
 export default function AdminPanel() {
   const { isAdmin, isLoading } = useAuth();
@@ -24,8 +23,6 @@ export default function AdminPanel() {
       <PvaPanel />
 
       <RoomManagmentPanel />
-
-      <ModelTrainingPanel />
 
       <View className="h-[200px]" />
       </View>
