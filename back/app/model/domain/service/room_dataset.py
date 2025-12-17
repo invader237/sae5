@@ -2,6 +2,7 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset
 
+
 class RoomDataset(Dataset):
     def __init__(self, records, images_dir, transform=None):
         """
