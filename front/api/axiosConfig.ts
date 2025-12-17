@@ -1,6 +1,5 @@
 import axios from "axios";
 import Constants from "expo-constants";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Prefer explicit runtime env (process.env) when available (web/dev bundlers),
 // then fall back to Expo `extra` (app.config.js). Final fallback uses the
@@ -25,24 +24,5 @@ if (__DEV__) {
 }
 
 const axiosInstance = axios.create({ baseURL });
-
-// Intercepteur pour ajouter automatiquement le token JWT à chaque requête
-axiosInstance.interceptors.request.use(
-  async (config) => {
-    try {
-      const token = await AsyncStorage.getItem("authToken");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch (error) {
-      // Si AsyncStorage échoue, on continue sans token
-      if (__DEV__) {
-        console.warn("[axiosConfig] Failed to retrieve token:", error);
-      }
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 export default axiosInstance;
