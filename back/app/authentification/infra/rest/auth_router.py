@@ -93,8 +93,7 @@ def login(
             detail="Email ou mot de passe incorrect.",
         )
 
-    role_type = user.role.type if user.role else None
-    token = create_access_token(str(user.user_id), role_type)
+    token = create_access_token(str(user.user_id))
 
     return TokenOut(access_token=token)
 
