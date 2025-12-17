@@ -1,6 +1,5 @@
 import axiosInstance from './axiosConfig';
 import ModelDTO from './DTO/model.dto';
-import ModelTrainingDTO from './DTO/modelTraining.dto';
 
 export const fetchModels = async (): Promise<ModelDTO[]> => {
   try {
@@ -29,12 +28,3 @@ export const setActiveModel = async (model: ModelDTO): Promise<void> => {
     throw error;
   }
 };
-
-export const trainModel = async (trainingData: ModelTrainingDTO): Promise<void> => {
-    try {
-        await axiosInstance.post('/models/train', trainingData);
-    } catch (error) {
-        console.error('Error training model:', error);
-        throw error;
-    }
-}

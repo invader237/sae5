@@ -14,7 +14,6 @@ from app.authentification.core.admin_required import (
 from app.model.domain.service.model_training import ModelTraining
 from app.model.infra.factory.model_factory import get_model_training
 from fastapi import BackgroundTasks
-from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
 
 
 class ModelController:
@@ -104,15 +103,11 @@ class ModelController:
 
     def train_model(
         self,
-        model_training_dto: ModelTrainingDTO,
         model_training: ModelTraining = Depends(get_model_training),
     ):
         """Lance l'entraînement du modèle"""
         try:
-            # TODO: passer le dto en paramètre
-            model_training.train(model_training_dto.epochs,
-                                 model_training_dto.batchSize,
-                                 model_training_dto.learningRate)
+            model_training.train()
             return {"message": "Entraînement lancé avec succès"}
         except Exception as e:
             print(f"[ERROR] Erreur lors de l'entraînement : {e}")
