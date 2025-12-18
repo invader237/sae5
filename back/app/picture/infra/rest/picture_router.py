@@ -212,9 +212,11 @@ class PictureController:
         try:
             active_model = model_catalog.find_active_model()
             model_id = active_model.model_id if active_model else None
+            room_id = room_obj.room_id if room_obj else None
             history_catalog.save(
                 History(
-                    room_name=inference_result.get("top_label"),
+                    room=room_obj,
+                    room_id=room_id,
                     image_id=picture.image_id,
                     model_id=model_id,
                 )

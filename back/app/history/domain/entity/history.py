@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
@@ -18,7 +18,11 @@ class History(Base):
         nullable=False,
     )
 
-    room_name = Column(String(255), nullable=True)
+    room_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("rooms.room_id"),
+        nullable=True,
+    )
     image_id = Column(
         UUID(as_uuid=True),
         ForeignKey("pictures.image_id"),
@@ -38,3 +42,4 @@ class History(Base):
 
     model = relationship("Model", backref="histories", lazy="joined")
     picture = relationship("Picture", backref="histories", lazy="joined")
+    room = relationship("Room", back_populates="histories", lazy="joined")
