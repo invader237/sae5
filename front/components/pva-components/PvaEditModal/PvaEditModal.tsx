@@ -10,10 +10,15 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   selectedPictures: PicturePvaDTO[];
-  onConfirm?: (updatedPictures: PicturePvaDTO[]) => void;
+  onUpdated?: () => Promise<void> | void;
 }
 
-const PvaEditModal = ({ visible, onClose, selectedPictures, onConfirm }: Props) => {
+const PvaEditModal = ({
+  visible,
+  onClose,
+  selectedPictures,
+  onUpdated,
+}: Props) => {
   const [rooms, setRooms] = useState<RoomLightDTO[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
 
@@ -34,17 +39,16 @@ const PvaEditModal = ({ visible, onClose, selectedPictures, onConfirm }: Props) 
     try {
       if (!selectedRoomId) return;
 
-      const updatedPayload = selectedPictures.map(pic => ({
+      const updatedPayload = selectedPictures.map((pic) => ({
         ...pic,
         room: {
           ...pic.room,
-          id: selectedRoomId
-        }
+          id: selectedRoomId,
+        },
       }));
 
-      const updatedPictures = await updateRoomForPictures(updatedPayload);
-
-      onConfirm?.(updatedPictures);
+      await updateRoomForPictures(updatedPayload);
+      await onUpdated?.();
       onClose();
     } catch (error) {
       console.error("Erreur mise à jour des salles :", error);
@@ -52,7 +56,12 @@ const PvaEditModal = ({ visible, onClose, selectedPictures, onConfirm }: Props) 
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <View className="flex-1 justify-center items-center bg-black/50">
         <View className="bg-white rounded-lg p-6 w-80">
           <Text className="text-lg font-bold mb-4">Modifier les images</Text>
@@ -65,7 +74,7 @@ const PvaEditModal = ({ visible, onClose, selectedPictures, onConfirm }: Props) 
             onValueChange={(itemValue) => setSelectedRoomId(itemValue)}
             className="mb-4"
           >
-            {rooms.map(room => (
+            {rooms.map((room) => (
               <Picker.Item key={room.id} label={room.name} value={room.id} />
             ))}
           </Picker>
