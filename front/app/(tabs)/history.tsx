@@ -8,7 +8,7 @@ import type HistoryDTO from "../../api/DTO/history.dto";
 export default function HistoryScreen() {
   const [items, setItems] = useState<HistoryDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
   const load = useCallback(async () => {
