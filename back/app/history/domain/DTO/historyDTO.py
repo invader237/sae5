@@ -13,4 +13,3 @@ class HistoryDTO(BaseModel):
     room_name: Optional[str] = None
     scanned_at: datetime
     model: Optional[ModelDTO] = None
-
