@@ -6,4 +6,3 @@ from uuid import UUID
 class ModelLightDTO(BaseModel):
     id: Optional[UUID] = None
     name: Optional[str] = None
-
