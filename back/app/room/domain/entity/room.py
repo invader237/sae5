@@ -35,6 +35,7 @@ class Room(Base):
     )
 
     pictures = relationship("Picture", back_populates="room")
+    histories = relationship("History", back_populates="room")
 
     validated_picture_count = column_property(
         func.coalesce(
