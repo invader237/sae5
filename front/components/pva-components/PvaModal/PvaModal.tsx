@@ -15,7 +15,13 @@ interface Props {
 
 const ITEMS_PER_PAGE = 8;
 
-const PvaModal = ({ visible, onClose, picturesData, onValidated, onDeleted }: Props) => {
+const PvaModal = ({
+  visible,
+  onClose,
+  picturesData,
+  onValidated,
+  onDeleted,
+}: Props) => {
   const [selectedPictures, setSelectedPictures] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -39,14 +45,16 @@ const PvaModal = ({ visible, onClose, picturesData, onValidated, onDeleted }: Pr
   };
 
   const toggleSelect = (id: string) => {
-    setSelectedPictures(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    setSelectedPictures((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
   const handleValidate = async () => {
     try {
-      const picturesToValidate = picturesData.filter(pic => selectedPictures.includes(pic.id));
+      const picturesToValidate = picturesData.filter((pic) =>
+        selectedPictures.includes(pic.id)
+      );
       await validatePictures(picturesToValidate);
       onValidated?.(selectedPictures);
       setSelectedPictures([]);
@@ -58,12 +66,16 @@ const PvaModal = ({ visible, onClose, picturesData, onValidated, onDeleted }: Pr
 
   const handleDelete = async () => {
     if (selectedPictures.length === 0) return;
-    const confirmed = confirm(`Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`);
+    const confirmed = confirm(
+      `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`
+    );
     if (!confirmed) return;
 
     setIsDeleting(true);
     try {
-      const picturesToDelete = picturesData.filter(pic => selectedPictures.includes(pic.id));
+      const picturesToDelete = picturesData.filter((pic) =>
+        selectedPictures.includes(pic.id)
+      );
       await deletePicturesPva(picturesToDelete);
       onDeleted?.(selectedPictures);
       setSelectedPictures([]);
@@ -77,12 +89,18 @@ const PvaModal = ({ visible, onClose, picturesData, onValidated, onDeleted }: Pr
   };
 
   return (
-    <Modal animationType="slide" transparent={false} visible={visible} onRequestClose={onClose}>
+    <Modal
+      animationType="slide"
+      transparent={false}
+      visible={visible}
+      onRequestClose={onClose}
+    >
       <View className="flex-1 bg-white p-4">
-        
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-2xl font-bold text-[#333]">Images à valider</Text>
+          <Text className="text-2xl font-bold text-[#333]">
+            Images à valider
+          </Text>
           <TouchableOpacity onPress={onClose}>
             <Text className="text-blue-500 text-lg">Fermer</Text>
           </TouchableOpacity>
@@ -113,18 +131,22 @@ const PvaModal = ({ visible, onClose, picturesData, onValidated, onDeleted }: Pr
 
         {/* Footer actions */}
         <View className="flex-row items-center justify-between px-4 py-3">
-
           <TouchableOpacity
             onPress={handleValidate}
             disabled={selectedPictures.length === 0}
             className={`px-4 py-2 rounded-lg ${selectedPictures.length > 0 ? "bg-blue-500" : "bg-gray-300"}`}
           >
-            <Text className="text-white font-bold text-sm">Valider ({selectedPictures.length})</Text>
+            <Text className="text-white font-bold text-sm">
+              Valider ({selectedPictures.length})
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => setEditModalVisible(true)}
-            className="bg-blue-500 px-4 py-2 rounded-lg"
+            disabled={selectedPictures.length === 0}
+            className={`px-4 py-2 rounded-lg ${
+              selectedPictures.length > 0 ? "bg-blue-500" : "bg-gray-300"
+            }`}
           >
             <Text className="text-white font-bold text-sm">Modifier</Text>
           </TouchableOpacity>
@@ -138,18 +160,21 @@ const PvaModal = ({ visible, onClose, picturesData, onValidated, onDeleted }: Pr
               {isDeleting ? "Suppression..." : "Supprimer"}
             </Text>
           </TouchableOpacity>
-
         </View>
 
         {/* Modal de modification */}
         <PvaEditModal
           visible={editModalVisible}
           onClose={() => setEditModalVisible(false)}
-          selectedPictures={picturesData.filter(pic => selectedPictures.includes(pic.id))}
-          onConfirm={(updatedPictures) => {
-            console.log("Images mises à jour :", updatedPictures);
+          selectedPictures={picturesData.filter((pic) =>
+            selectedPictures.includes(pic.id)
+          )}
+          onUpdated={async () => {
+            const ids = selectedPictures;
             setSelectedPictures([]);
             setEditModalVisible(false);
+            onValidated?.(ids);
+            onClose();
           }}
         />
       </View>
