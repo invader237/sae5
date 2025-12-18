@@ -4,16 +4,18 @@ import { View } from "react-native";
 type Props = {
   value: number;
   threshold: number;
+  max: number;
   width?: number | string;
 };
 
-const ProgressBar = ({ value, threshold, width = 96 }: Props) => {
-  // Clamp du pourcentage
-  const percent = Math.min(Math.max(value, 0), 100);
+const ProgressBar = ({ value, threshold, max, width = 96 }: Props) => {
+  const safeMax = Math.max(1, max);
+  const clampedValue = Math.min(Math.max(value ?? 0, 0), safeMax);
+  const percent = (clampedValue / safeMax) * 100;
 
-  // Détermine la couleur selon le seuil
-  const color = percent < threshold ? "#ef4444" : "#22c55e"; 
-  // rouge 500 / vert 500
+  const clampedThreshold = Math.min(Math.max(threshold, 0), 100);
+
+  const color = percent >= clampedThreshold ? "#22c55e" : "#ef4444";
 
   return (
     <View

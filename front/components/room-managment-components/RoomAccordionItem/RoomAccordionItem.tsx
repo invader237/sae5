@@ -20,14 +20,17 @@ const RoomAccordionItem = ({ room, expanded, onToggle, onEdit }: Props) => {
       >
         <View className="flex-1">
           <View className="flex-row justify-between items-center">
-              <Text className="font-bold">{room.name}</Text>
-              <Text className="text-sm text-gray-600">{room.validated_picture_count} / 500</Text>
+            <Text className="font-bold">{room.name}</Text>
+            <Text className="text-sm text-gray-600">
+              {room.validated_picture_count} / 500
+            </Text>
           </View>
 
           <View className="mt-1">
             <ProgressBar
-              value={room.validated_picture_count ?? 80}
+              value={room.validated_picture_count ?? 0}
               threshold={90}
+              max={500}
               width="100%"
             />
           </View>
