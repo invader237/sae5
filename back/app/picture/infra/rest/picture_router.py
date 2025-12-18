@@ -231,6 +231,11 @@ class PictureController:
         room_catalog: RoomCatalog = Depends(get_room_catalog),
     ):
         pictures = picture_catalog.find_by_not_validated()
+        pictures = sorted(
+        pictures,
+        key=lambda p: (p.analyse_date or datetime.min.replace(tzinfo=timezone.utc)),
+        reverse=True,
+        )
         return [
             picture_to_picturePvaDTO_mapper.apply(picture)
             for picture in pictures
