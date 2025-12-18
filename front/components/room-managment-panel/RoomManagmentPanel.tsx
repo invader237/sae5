@@ -31,9 +31,12 @@ const RoomManagementPanel = () => {
       const data = await getRoomAnalytics();
       setAnalytics(data);
     } catch {
-      Alert.alert("Erreur", "Impossible de récupérer les statistiques des salles");
+      Alert.alert(
+        "Erreur",
+        "Impossible de récupérer les statistiques des salles"
+      );
     }
-  }
+  };
 
   const openAddModal = () => {
     setEditingRoom(null);
@@ -63,11 +66,15 @@ const RoomManagementPanel = () => {
 
   return (
     <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
-
       {/* HEADER */}
       <View className="flex-row items-center justify-between">
-        <Text className="text-[#333] text-lg font-bold">Gestion des salles</Text>
-        <TouchableOpacity onPress={loadAnalytics} className="bg-[#007bff] rounded-md px-4 py-2">
+        <Text className="text-[#333] text-lg font-bold">
+          Gestion des salles
+        </Text>
+        <TouchableOpacity
+          onPress={loadAnalytics}
+          className="bg-[#007bff] rounded-md px-4 py-2"
+        >
           <MaterialIcons name="refresh" size={20} color="white" />
         </TouchableOpacity>
       </View>
@@ -85,35 +92,43 @@ const RoomManagementPanel = () => {
           onPress={loadRooms}
           className="bg-[#6c757d] px-3 py-2 rounded-md flex-1"
         >
-          <Text className="text-white font-bold text-center">Voir les salles</Text>
+          <Text className="text-white font-bold text-center">
+            Voir les salles
+          </Text>
         </TouchableOpacity>
       </View>
 
-        <View className="border border-gray-300"/> 
+      <View className="border border-gray-300" />
 
       <View className="gap-2">
         <Text className="text-[#333] text-medium font-small">
-            Salles a faible couverture
+          Salles a faible couverture
         </Text>
         {analytics?.low_coverage && analytics.low_coverage.length > 0 ? (
           analytics.low_coverage.map((room) => (
             <View key={room.id} className="p-2 rounded-md p-2">
-                <View key={room.id} className="flex-row justify-between items-center rounded-md mb-1">
-                  <Text className="text-[#555] font-medium">{room.name}</Text>
-                  <Text className="text-[#555] text-sm">{room.validated_picture_count} / 500</Text>
-                </View>
-                <ProgressBar
-                    key={room.id}
-                    value={room.validated_picture_count ?? 0}
-                    threshold={90}
-                    width="100%"
-                  />
+              <View
+                key={room.id}
+                className="flex-row justify-between items-center rounded-md mb-1"
+              >
+                <Text className="text-[#555] font-medium">{room.name}</Text>
+                <Text className="text-[#555] text-sm">
+                  {room.validated_picture_count} / 500
+                </Text>
+              </View>
+              <ProgressBar
+                value={room.validated_picture_count ?? 0}
+                threshold={90}
+                max={500}
+                width="100%"
+              />
             </View>
           ))
         ) : (
-          <Text className="text-[#555] text-sm">Aucune salle avec une faible couverture.</Text>
+          <Text className="text-[#555] text-sm">
+            Aucune salle avec une faible couverture.
+          </Text>
         )}
-
       </View>
 
       {/* MODALS */}
