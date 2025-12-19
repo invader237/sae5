@@ -10,12 +10,14 @@ const PvaPanel = () => {
   const [picturesPvaData, setPicturesPvaData] = useState<PicturePvaDTO[]>([]);
   const [pvaModalIsVisible, setPvaModalIsVisible] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchPictures = async () => {
     setIsRefreshing(true);
     try {
       const pics = await fetchToValidatePictures(5, 0);
       setPicturesPvaData(pics);
+      setRefreshKey(prev => prev + 1);
     } catch (e) {
       console.error("Erreur rafraîchissement PVA :", e);
       alert("Impossible de récupérer les images. Veuillez réessayer plus tard.");
@@ -59,6 +61,7 @@ const PvaPanel = () => {
       <PvaModal
         visible={pvaModalIsVisible}
         onClose={() => setPvaModalIsVisible(false)}
+        refreshKey={refreshKey}
         onValidated={handleValidated}
         onDeleted={(deletedIds: string[]) => setPicturesPvaData(prev => prev.filter(pic => !deletedIds.includes(pic.id)))}
       />
