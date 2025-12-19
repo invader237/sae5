@@ -18,8 +18,8 @@ class PictureSQLAlchemyAdapter(PictureCatalog):
     def find_by_id(self, picture_id: Union[str, UUID]):
         return self.repository.find_by_id(picture_id)
 
-    def find_by_not_validated(self):
-        return self.repository.find_by_not_validated()
+    def find_by_not_validated(self, limit: int = 10, offset: int = 0):
+        return self.repository.find_by_not_validated(limit, offset)
 
     def delete(self, picture_id: Union[str, UUID]):
         return self.repository.delete(picture_id)
