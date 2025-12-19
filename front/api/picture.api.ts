@@ -41,9 +41,16 @@ export async function uploadFrame(uri: string, _options?: UploadOptions) {
   }
 }
 
-export async function fetchToValidatePictures() {
+export async function fetchToValidatePictures( limit: number = 50, offset: number = 0): Promise<PicturePvaDTO[]> {
   try {
-    const response = await axiosInstance.get<PicturePvaDTO[]>('/pictures/to-validate');
+    const response = await axiosInstance.get<PicturePvaDTO[]>( '/pictures/to-validate',
+      {
+        params: {
+          limit,
+          offset,
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error('Error fetching pictures to validate:', error);
