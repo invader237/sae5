@@ -36,10 +36,8 @@ export default function ModelSelector() {
   }, []);
 
   const handleSelect = (newModel: string) => {
-    if (newModel !== model) {
-      setPendingModel(newModel);
-      setShowConfirm(true);
-    }
+    setPendingModel(newModel);
+    setShowConfirm(true);
   };
 
   const confirm = () => {
@@ -69,6 +67,13 @@ export default function ModelSelector() {
             onValueChange={handleSelect}
             className="h-12 mx-2"
           >
+              {!model && (
+                <Picker.Item
+                  label="-- Sélectionner un modèle --"
+                  value=""
+                  enabled={false}
+                />
+              )}
             {modelsList.map((m) => (
               <Picker.Item
                 key={m.id}
