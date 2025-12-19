@@ -227,16 +227,23 @@ class PictureController:
 
     async def find_picture_to_validate(
         self,
+        limit: int = Query(50, ge=1, le=100),
+        offset: int = Query(0, ge=0),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
         room_catalog: RoomCatalog = Depends(get_room_catalog),
     ):
-        pictures = picture_catalog.find_by_not_validated()
+        pictures = picture_catalog.find_by_not_validated(
+            limit=limit,
+            offset=offset
+        )
+
         pictures = sorted(
             pictures,
             key=lambda p: (p.analyse_date or
                            datetime.min.replace(tzinfo=timezone.utc)),
             reverse=True,
             )
+
         return [
             picture_to_picturePvaDTO_mapper.apply(picture)
             for picture in pictures
