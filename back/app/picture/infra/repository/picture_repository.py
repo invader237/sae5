@@ -30,10 +30,12 @@ class PictureRepository:
             raise Exception("Picture not found")
         return picture
 
-    def find_by_not_validated(self):
+    def find_by_not_validated(self, limit: int = 10, offset: int = 0):
         return (
             self.db.query(PictureModel)
             .filter(PictureModel.is_validated.is_(False))
+            .limit(limit)
+            .offset(offset)
             .all()
         )
 
