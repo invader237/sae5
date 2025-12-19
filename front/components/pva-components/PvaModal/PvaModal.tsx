@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, FlatList } from "react-native";
-import { validatePictures, deletePicturesPva } from "@/api/picture.api";
+import { validatePictures, deletePicturesPva, fetchToValidatePictures } from "@/api/picture.api";
 import PictureItem from "@/components/pva-components/PvaPictureItem";
 import PvaEditModal from "@/components/pva-components/PvaEditModal";
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
@@ -8,41 +8,48 @@ import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 interface Props {
   visible: boolean;
   onClose: () => void;
-  picturesData: PicturePvaDTO[];
   onValidated?: (ids: string[]) => void;
   onDeleted?: (ids: string[]) => void;
 }
 
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 2;
 
-const PvaModal = ({
-  visible,
-  onClose,
-  picturesData,
-  onValidated,
-  onDeleted,
-}: Props) => {
+const PvaModal = ({ visible, onClose, onValidated, onDeleted }: Props) => {
   const [selectedPictures, setSelectedPictures] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
 
-  const [renderedList, setRenderedList] = useState<PicturePvaDTO[]>([]);
   const [page, setPage] = useState(1);
+  const [pictures, setPictures] = useState<PicturePvaDTO[]>([]);
+  const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    setRenderedList(picturesData.slice(0, ITEMS_PER_PAGE));
-    setPage(1);
-  }, [picturesData, visible]);
+    useEffect(() => {
+      if (!visible) return;
 
-  const loadMore = () => {
-    const nextPage = page + 1;
-    const nextItems = picturesData.slice(0, nextPage * ITEMS_PER_PAGE);
+      const fetchInitial = async () => {
+        const data = await fetchToValidatePictures(ITEMS_PER_PAGE, 0);
+        setPictures(data);
+        setPage(1);
+        setHasMore(data.length === ITEMS_PER_PAGE);
+      };
 
-    if (nextItems.length > renderedList.length) {
-      setRenderedList(nextItems);
-      setPage(nextPage);
-    }
-  };
+      fetchInitial();
+    }, [visible]);
+
+    const loadMore = async () => {
+      if (!hasMore) return;
+
+      const offset = page * ITEMS_PER_PAGE;
+      const more = await fetchToValidatePictures(ITEMS_PER_PAGE, offset);
+
+      if (more.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      setPictures(prev => [...prev, ...more]);
+      setPage(prev => prev + 1);
+    };
 
   const toggleSelect = (id: string) => {
     setSelectedPictures((prev) =>
@@ -52,9 +59,7 @@ const PvaModal = ({
 
   const handleValidate = async () => {
     try {
-      const picturesToValidate = picturesData.filter((pic) =>
-        selectedPictures.includes(pic.id)
-      );
+      const picturesToValidate = pictures.filter(pic => selectedPictures.includes(pic.id));
       await validatePictures(picturesToValidate);
       onValidated?.(selectedPictures);
       setSelectedPictures([]);
@@ -73,9 +78,7 @@ const PvaModal = ({
 
     setIsDeleting(true);
     try {
-      const picturesToDelete = picturesData.filter((pic) =>
-        selectedPictures.includes(pic.id)
-      );
+      const picturesToDelete = pictures.filter(pic => selectedPictures.includes(pic.id));
       await deletePicturesPva(picturesToDelete);
       onDeleted?.(selectedPictures);
       setSelectedPictures([]);
@@ -108,7 +111,7 @@ const PvaModal = ({
 
         {/* Liste optimisée */}
         <FlatList
-          data={renderedList}
+          data={pictures}
           keyExtractor={(item) => item.id}
           numColumns={2}
           columnWrapperStyle={{ justifyContent: "center", gap: 20 }}
@@ -166,11 +169,9 @@ const PvaModal = ({
         <PvaEditModal
           visible={editModalVisible}
           onClose={() => setEditModalVisible(false)}
-          selectedPictures={picturesData.filter((pic) =>
-            selectedPictures.includes(pic.id)
-          )}
-          onUpdated={async () => {
-            const ids = selectedPictures;
+          selectedPictures={pictures.filter(pic => selectedPictures.includes(pic.id))}
+          onConfirm={(updatedPictures) => {
+            console.log("Images mises à jour :", updatedPictures);
             setSelectedPictures([]);
             setEditModalVisible(false);
             onValidated?.(ids);

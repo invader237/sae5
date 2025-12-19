@@ -14,7 +14,7 @@ const PvaPanel = () => {
   const fetchPictures = async () => {
     setIsRefreshing(true);
     try {
-      const pics = await fetchToValidatePictures();
+      const pics = await fetchToValidatePictures(5, 0);
       setPicturesPvaData(pics);
     } catch (e) {
       console.error("Erreur rafraîchissement PVA :", e);
@@ -59,7 +59,6 @@ const PvaPanel = () => {
       <PvaModal
         visible={pvaModalIsVisible}
         onClose={() => setPvaModalIsVisible(false)}
-        picturesData={picturesPvaData}
         onValidated={handleValidated}
         onDeleted={(deletedIds: string[]) => setPicturesPvaData(prev => prev.filter(pic => !deletedIds.includes(pic.id)))}
       />
