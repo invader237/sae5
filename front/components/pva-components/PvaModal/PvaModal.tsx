@@ -8,13 +8,14 @@ import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 interface Props {
   visible: boolean;
   onClose: () => void;
+  refreshKey: number;
   onValidated?: (ids: string[]) => void;
   onDeleted?: (ids: string[]) => void;
 }
 
-const ITEMS_PER_PAGE = 2;
+const ITEMS_PER_PAGE = 6;
 
-const PvaModal = ({ visible, onClose, onValidated, onDeleted }: Props) => {
+const PvaModal = ({ visible, onClose, refreshKey, onValidated, onDeleted }: Props) => {
   const [selectedPictures, setSelectedPictures] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -34,7 +35,7 @@ const PvaModal = ({ visible, onClose, onValidated, onDeleted }: Props) => {
       };
 
       fetchInitial();
-    }, [visible]);
+    }, [visible, refreshKey]); 
 
     const loadMore = async () => {
       if (!hasMore) return;
