@@ -14,19 +14,35 @@ type UploadOptions = {
 export async function uploadFrame(uri: string, _options?: UploadOptions) {
   const form = new FormData();
   form.append('type', 'analyse');
+  const TARGET_SIZE = 384;
 
   if (Platform.OS === 'web') {
-    // Upload depuis navigateur -> convertir l'URI en Blob pour l'envoyer via FormData
+    // Resize on web using canvas to limit upload size and improve perf
     const response = await fetch(uri);
     const blob = await response.blob();
-    form.append('file', blob);
+    const resized = await resizeImageWeb(blob, TARGET_SIZE);
+    form.append('file', resized, _options?.filename || `frame-${Date.now()}.jpg`);
   } else {
-    // Upload depuis mobile (React Native), on passe un objet { uri, type, name }
-    form.append('file', {
-      uri,
-      type: _options?.mimeType || 'image/jpeg',
-      name: _options?.filename || `frame-${Date.now()}.jpg`,
-    } as any);
+    // Mobile (Expo): use expo-image-manipulator to resize while keeping aspect ratio
+    try {
+      const manipResult = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: TARGET_SIZE } }],
+        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+      );
+      form.append('file', {
+        uri: manipResult.uri,
+        type: _options?.mimeType || 'image/jpeg',
+        name: _options?.filename || `frame-${Date.now()}.jpg`,
+      } as any);
+    } catch (e) {
+      // Fallback to original if manipulation fails
+      form.append('file', {
+        uri,
+        type: _options?.mimeType || 'image/jpeg',
+        name: _options?.filename || `frame-${Date.now()}.jpg`,
+      } as any);
+    }
   }
 
   try {
