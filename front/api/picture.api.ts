@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import axiosInstance from './axiosConfig';
 import PicturePvaDTO from './DTO/picturePva.dto';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 type UploadOptions = {
   mimeType?: string | null;
@@ -40,6 +41,52 @@ export async function uploadFrame(uri: string, _options?: UploadOptions) {
     throw new Error(`Upload échoué (${status ?? 'ERR'}): ${msg}`);
   }
 }
+
+async function resizeImageWeb(blob: Blob, maxSize: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+      try {
+        const img = new Image();
+        const url = URL.createObjectURL(blob);
+        img.onload = () => {
+          let { width, height } = img;
+          const ratio = width / height;
+          if (width > height) {
+            if (width > maxSize) {
+              width = maxSize;
+              height = Math.round(maxSize / ratio);
+            }
+          } else {
+            if (height > maxSize) {
+              height = maxSize;
+              width = Math.round(maxSize * ratio);
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            URL.revokeObjectURL(url);
+            return reject(new Error('Canvas context unavailable'));
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((b) => {
+            URL.revokeObjectURL(url);
+            if (b) resolve(b);
+            else reject(new Error('Failed to convert canvas to blob'));
+          }, 'image/jpeg', 0.9);
+        };
+        img.onerror = (ev) => {
+          URL.revokeObjectURL(url);
+          reject(new Error('Failed to load image for resize'));
+        };
+        img.src = url;
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 
 export async function fetchToValidatePictures( limit: number = 50, offset: number = 0): Promise<PicturePvaDTO[]> {
   try {
