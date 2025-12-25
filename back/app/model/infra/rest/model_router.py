@@ -108,10 +108,7 @@ class ModelController:
     ):
         """Lance l'entraînement du modèle"""
         try:
-            # TODO: passer le dto en paramètre
-            model_training.train(model_training_dto.epochs,
-                                 model_training_dto.batchSize,
-                                 model_training_dto.learningRate)
+            model_training.train(model_training_dto)
             return {"message": "Entraînement lancé avec succès"}
         except Exception as e:
             print(f"[ERROR] Erreur lors de l'entraînement : {e}")
