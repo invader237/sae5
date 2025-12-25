@@ -7,6 +7,7 @@ from pathlib import Path
 from app.model.domain.service.room_dataset import RoomDataset
 import json
 import re
+from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
 
 UPLOAD_DIR = Path("./")
 MODEL_DIR = Path("/app/models")
@@ -205,19 +206,19 @@ class ModelTraining:
         return filepath
 
     # 12 Full training loop
-    def train(self, epochs=1, batch_size=8, lr=1e-4, save=True):
+    def train(self, modelTrainingDTO: ModelTrainingDTO, save: bool = True):
         # Ensure dataset and model are built
         self.build_dataset()
         self.init_model()
         self.model.to(self.device)
 
-        dataloader = self.create_dataloader(batch_size=batch_size)
-        optimizer = self.create_optimizer(lr=lr)
+        dataloader = self.create_dataloader(batch_size=modelTrainingDTO.batchSize)
+        optimizer = self.create_optimizer(lr=modelTrainingDTO.learningRate)
         loss_fn = self.create_loss()
 
-        for epoch in range(epochs):
+        for epoch in range(modelTrainingDTO.epochs):
             epoch_loss = self.train_epoch(dataloader, optimizer, loss_fn)
-            print(f"Epoch {epoch+1}/{epochs} - Loss: {epoch_loss:.4f}")
+            print(f"Epoch {epoch + 1}/{modelTrainingDTO.epochs} - Loss: {epoch_loss:.4f}")
 
         model_file_name = self.find_next_model_name(variant=self.model_name)
 
@@ -225,4 +226,4 @@ class ModelTraining:
             self.save_model(model_file_name)
             self.save_labels(model_file_name)
 
-        print("Training completed.")
+    print("Training completed.")
