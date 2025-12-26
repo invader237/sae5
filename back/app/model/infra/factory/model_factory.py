@@ -11,6 +11,8 @@ from app.model.domain.service.model_loader import ModelLoader
 from app.model.domain.service.model_training import ModelTraining
 from app.room.infra.factory.room_factory import get_room_catalog
 from app.room.domain.catalog.room_catalog import RoomCatalog
+from app.picture.domain.catalog.picture_catalog import PictureCatalog
+from app.picture.infra.factory.picture_factory import get_picture_catalog
 from app.database import get_session
 
 
@@ -31,8 +33,10 @@ def get_model_loader(
 def get_model_training(
     room_catalog: RoomCatalog = Depends(get_room_catalog),
     model_catalog: ModelCatalog = Depends(get_model_catalog),
+    picture_catalog: PictureCatalog = Depends(get_picture_catalog),
 ) -> ModelTraining:
     return ModelTraining(
         room_catalog=room_catalog,
-        model_catalog=model_catalog
+        model_catalog=model_catalog,
+        picture_catalog=picture_catalog,
     )
