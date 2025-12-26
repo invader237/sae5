@@ -18,11 +18,13 @@ class ModelTraining:
     def __init__(self,
                  room_catalog,
                  model_catalog,
+                 picture_catalog,
                  model_name="base",
                  num_classes=None
                  ):
         self.room_catalog = room_catalog
         self.model_catalog = model_catalog
+        self.picture_catalog = picture_catalog
         self.model_name = model_name
         self.num_classes = num_classes
         self.model = None
@@ -32,12 +34,29 @@ class ModelTraining:
         )
 
     # 1️⃣ Fetch records
-    def fetch_records(self):
+    def fetch_records(self, rooms):
+        print("[DEBUG] fetch_records called")
+        print("[DEBUG] rooms param:", rooms)
+
         records = []
-        rooms = self.room_catalog.find_all_validated()
-        for room in rooms:
+
+        room_ids = [room.room_id for room in rooms]
+        print("[DEBUG] room_ids:", room_ids)
+
+        validated_rooms = self.picture_catalog.find_all_validated_by_room_ids(
+            [room.room_id for room in rooms]
+        )
+
+        print("[DEBUG] validated_rooms:", validated_rooms)
+
+        for room in validated_rooms:
+            print("[DEBUG] room:", room, "pictures:", len(room.pictures))
             for picture in room.pictures:
-                records.append({"filename": picture.path, "room": room.name})
+                records.append({
+                    "filename": picture.path,
+                    "room": room.name
+                })
+        print("[DEBUG] records count:", len(records))
         return records
 
     # 2️⃣ Define transforms
@@ -58,16 +77,16 @@ class ModelTraining:
         return dataset
 
     # 4️⃣ Build Dataset
-    def build_dataset(self):
+    def build_dataset(self, rooms):
         if self.dataset is None:
-            records = self.fetch_records()
+            records = self.fetch_records(rooms)
             self.dataset = self.create_dataset(records)
         return self.dataset
 
     # 5️⃣ Initialize Model
     def init_model(self):
-        # Build dataset if needed to infer num_classes
-        self.build_dataset()
+        if self.dataset is None:
+            raise ValueError("Dataset must be built before initializing model")
         if self.num_classes is None:
             self.num_classes = len(self.dataset.room_to_idx)
 
@@ -207,8 +226,15 @@ class ModelTraining:
 
     # 12 Full training loop
     def train(self, modelTrainingDTO: ModelTrainingDTO, save: bool = True):
+        print("[DEBUG] Rooms from DTO:", modelTrainingDTO.roomList)
         # Ensure dataset and model are built
-        self.build_dataset()
+        rooms = []
+        for room_dto in modelTrainingDTO.roomList:
+            room = self.room_catalog.find_by_id(room_dto.id)
+            print("[DEBUG] Loaded room:", room, "id:", room.room_id)
+            rooms.append(room)
+
+        self.build_dataset(rooms)
         self.init_model()
         self.model.to(self.device)
 

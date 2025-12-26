@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from typing import Union
+from typing import Union, Collection
 from uuid import UUID
 from app.picture.domain.entity.picture import Picture as PictureModel
+from app.room.domain.entity.room import Room
 
 
 class PictureRepository:
@@ -29,6 +30,17 @@ class PictureRepository:
         if picture is None:
             raise Exception("Picture not found")
         return picture
+
+    def find_all_validated_by_room_ids(self, rooms: Collection[Room]) -> PictureModel:
+        room_ids = [room.room_id for room in Collection[Room]]
+        return (
+            self.db.query(PictureModel)
+            .filter(
+                PictureModel.room_id.in_(room_ids),
+                PictureModel.is_validated.is_(True),
+            )
+            .all()
+        )
 
     def find_by_not_validated(self, limit: int = 10, offset: int = 0):
         return (
