@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
-from typing import Union, Collection
+from typing import Union
 from uuid import UUID
 from app.picture.domain.entity.picture import Picture as PictureModel
-from app.room.domain.entity.room import Room
 
 
 class PictureRepository:
@@ -40,9 +39,14 @@ class PictureRepository:
             return []
 
         room_ids = []
-        for r in rooms:
-            print("[DEBUG][picture_catalog] room:", r, "id:", getattr(r, "room_id", None))
-            room_ids.append(r.room_id)
+        for room in rooms:
+            print(
+                "[DEBUG][picture_catalog] room:",
+                room,
+                "id:",
+                room.room_id,
+            )
+            room_ids.append(room.room_id)
 
         print("[DEBUG][picture_catalog] room_ids:", room_ids)
 

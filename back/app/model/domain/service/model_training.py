@@ -83,7 +83,9 @@ class ModelTraining:
     # 5️⃣ Initialize Model
     def init_model(self):
         if self.dataset is None:
-            raise ValueError("Dataset must be built before initializing model")
+            raise ValueError(
+                "Dataset must be built before initializing model"
+            )
         if self.num_classes is None:
             self.num_classes = len(self.dataset.room_to_idx)
 
@@ -235,13 +237,19 @@ class ModelTraining:
         self.init_model()
         self.model.to(self.device)
 
-        dataloader = self.create_dataloader(batch_size=modelTrainingDTO.batchSize)
+        dataloader = self.create_dataloader(
+            batch_size=modelTrainingDTO.batchSize
+        )
         optimizer = self.create_optimizer(lr=modelTrainingDTO.learningRate)
         loss_fn = self.create_loss()
 
         for epoch in range(modelTrainingDTO.epochs):
             epoch_loss = self.train_epoch(dataloader, optimizer, loss_fn)
-            print(f"Epoch {epoch + 1}/{modelTrainingDTO.epochs} - Loss: {epoch_loss:.4f}")
+            print(
+                f"Epoch {epoch + 1}/"
+                f"{modelTrainingDTO.epochs} "
+                f"- Loss: {epoch_loss:.4f}"
+            )
 
         model_file_name = self.find_next_model_name(variant=self.model_name)
 
