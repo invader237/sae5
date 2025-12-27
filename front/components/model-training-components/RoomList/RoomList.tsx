@@ -1,12 +1,12 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import RoomDTO from "@/api/DTO/room.dto";
+import RoomLightDTO from "@/api/DTO/roomLight.dto";
 
 type RoomCheckboxProps = {
-  room: RoomDTO;
+  room: RoomLightDTO;
   selected: boolean;
-  onToggle: (roomName: string) => void;
+  onToggle: (id: string) => void;
 };
 
 const RoomCheckbox: React.FC<RoomCheckboxProps> = ({ room, selected, onToggle }) => (
@@ -14,7 +14,7 @@ const RoomCheckbox: React.FC<RoomCheckboxProps> = ({ room, selected, onToggle })
     className={`m-1 p-4 rounded-xl shadow-sm items-center justify-center ${
       selected ? "bg-blue-500" : "bg-white"
     }`}
-    onPress={() => onToggle(room.name)}
+    onPress={() => onToggle(room.id)}
     activeOpacity={0.8}
   >
     {selected && (
@@ -29,9 +29,9 @@ const RoomCheckbox: React.FC<RoomCheckboxProps> = ({ room, selected, onToggle })
 );
 
 type RoomListProps = {
-  rooms: RoomDTO[];
-  selectedRooms: string[];
-  onToggleRoom: (roomName: string) => void;
+  rooms: RoomLightDTO[];
+  selectedRooms: string[]; 
+  onToggleRoom: (id: string) => void;
 };
 
 const RoomList: React.FC<RoomListProps> = ({ rooms, selectedRooms, onToggleRoom }) => (
@@ -41,7 +41,7 @@ const RoomList: React.FC<RoomListProps> = ({ rooms, selectedRooms, onToggleRoom 
         <View key={room.id} className="w-1/3">
           <RoomCheckbox
             room={room}
-            selected={selectedRooms.includes(room.name)}
+            selected={selectedRooms.includes(room.id)}
             onToggle={onToggleRoom}
           />
         </View>
