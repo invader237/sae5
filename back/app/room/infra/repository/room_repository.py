@@ -61,3 +61,12 @@ class RoomRepository:
             .filter(Picture.is_validated.is_(True))
             .all()
         )
+
+    def find_rooms_with_validated_pictures(self) -> Collection[RoomModel]:
+        return (
+            self.db.query(RoomModel)
+            .join(RoomModel.pictures)
+            .filter(Picture.is_validated.is_(True))
+            .distinct()
+            .all()
+        )

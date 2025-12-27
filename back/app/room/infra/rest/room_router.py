@@ -56,6 +56,13 @@ class RoomController:
             methods=["GET"],
         )
 
+        self.router.add_api_route(
+            "/for-training",
+            self.get_rooms_for_training,
+            response_model=list[RoomLightDTO],
+            methods=["GET"],
+        )
+
     def get_rooms(
         self,
         room_catalog: RoomCatalog = Depends(get_room_catalog),
@@ -113,6 +120,13 @@ class RoomController:
         ]
         analytics.total_rooms = room_catalog.total_rooms_count()
         return analytics
+
+    def get_rooms_for_training(
+        self,
+        room_catalog: RoomCatalog = Depends(get_room_catalog),
+    ):
+        rooms = room_catalog.find_rooms_with_validated_pictures()
+        return [room_to_roomLightDTO_mapper.apply(r) for r in rooms]
 
 
 room_controller = RoomController()
