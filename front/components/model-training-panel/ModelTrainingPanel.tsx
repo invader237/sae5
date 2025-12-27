@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { trainModel } from "@/api/model.api";
 import ParameterLabel from "@/components/model-training-components/ParameterLabel";
 import InfoModal from "@/components/model-training-components/ParameterInfoModal";
 import ModelTrainingDTO from "@/api/DTO/modelTraining.dto";
+import RoomList from "@/components/model-training-components/RoomList";
+import { getRooms } from "@/api/room.api";
+import RoomDTO from "@/api/DTO/room.dto";
 
 const TRAINING_TYPES = {
   BASE: "base",
@@ -21,6 +24,8 @@ const ModelTrainingPanel = () => {
     const [loading, setLoading] = useState(false);
     const [infoModal, setInfoModal] =
       useState<"epochs" | "batch" | "lr" | null>(null);
+    const [rooms, setRooms] = useState<RoomDTO[]>();
+    const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
 
     const [trainingConfig, setTrainingConfig] = useState<ModelTrainingDTO>({
       type: "base",
@@ -28,6 +33,32 @@ const ModelTrainingPanel = () => {
       batchSize: 32,
       learningRate: 0.001,
     });
+
+    const toggleRoom = (room: string) => {
+        if (selectedRooms.includes(room)) {
+          setSelectedRooms(selectedRooms.filter((r) => r !== room));
+        } else {
+          setSelectedRooms([...selectedRooms, room]);
+        }
+    };
+
+    const fetchRooms = () => {
+      getRooms().then((fetchedRooms: RoomDTO[]) => {
+        setRooms(fetchedRooms);
+
+        const roomNames = fetchedRooms.map((r) => r.name);
+        setSelectedRooms((prevSelected) =>
+          prevSelected.filter((r) => roomNames.includes(r))
+        );
+      });
+    };
+
+      useEffect(() => {
+          getRooms().then((fetchedRooms: RoomDTO[]) => {
+            setRooms(fetchedRooms);
+            setSelectedRooms(fetchedRooms.map((room) => room.name));
+          });
+      }, []);
 
     const updateConfig = <K extends keyof ModelTrainingDTO>(
       key: K,
@@ -101,7 +132,7 @@ const ModelTrainingPanel = () => {
         </Text>
 
         <TouchableOpacity className="bg-[#007bff] rounded-md px-3 py-2">
-          <MaterialIcons name="refresh" size={20} color="white" />
+          <MaterialIcons name="refresh" size={20} color="white" onPress={fetchRooms}/>
         </TouchableOpacity>
       </View>
 
@@ -125,6 +156,17 @@ const ModelTrainingPanel = () => {
           />
         </View>
       </View>
+
+        <Text className="text-base font-semibold text-gray-800">
+            Salles disponibles
+        </Text>
+        <View>
+            <RoomList
+              rooms={rooms ?? []}                
+              selectedRooms={selectedRooms}
+              onToggleRoom={toggleRoom}         
+            />
+        </View>
 
         <View>
           <Text className="text-base font-semibold text-gray-800 mb-3">
