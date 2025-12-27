@@ -42,3 +42,13 @@ export const getRoomAnalytics = async (): Promise<RoomAnalyticsDTO> => {
         throw error;
     }
 }
+
+export const fetchRoomForTraining = async (): Promise<RoomLightDTO[]> => {
+  try {
+    const response = await axiosInstance.get('/rooms/for-training');
+    return response.data; 
+  } catch (error) {
+    console.error('Error fetching rooms for training:', error);
+    throw error;
+  }
+}

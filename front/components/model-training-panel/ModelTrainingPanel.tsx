@@ -6,7 +6,7 @@ import ParameterLabel from "@/components/model-training-components/ParameterLabe
 import InfoModal from "@/components/model-training-components/ParameterInfoModal";
 import ModelTrainingDTO from "@/api/DTO/modelTraining.dto";
 import RoomList from "@/components/model-training-components/RoomList";
-import { getRooms } from "@/api/room.api";
+import { fetchRoomForTraining } from "@/api/room.api";
 import RoomLightDTO from "@/api/DTO/roomLight.dto";
 
 const TRAINING_TYPES = {
@@ -43,7 +43,7 @@ const ModelTrainingPanel = () => {
   };
 
   const fetchRooms = () => {
-    getRooms().then((fetchedRooms: RoomLightDTO[]) => {
+    fetchRoomForTraining().then((fetchedRooms: RoomLightDTO[]) => {
       setRooms(fetchedRooms);
       // Par défaut, toutes les salles cochées si aucune sélection
       if (selectedRooms.length === 0) {
