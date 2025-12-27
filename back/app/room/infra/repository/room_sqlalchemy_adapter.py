@@ -30,3 +30,6 @@ class RoomSQLAlchemyAdapter(RoomCatalog):
 
     def find_all_validated(self):
         return self.repository.find_all_validated()
+
+    def find_rooms_with_validated_pictures(self):
+        return self.repository.find_rooms_with_validated_pictures()
