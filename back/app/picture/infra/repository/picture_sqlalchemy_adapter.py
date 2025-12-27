@@ -20,7 +20,7 @@ class PictureSQLAlchemyAdapter(PictureCatalog):
         return self.repository.find_by_id(picture_id)
 
     def find_all_validated_by_room_ids(self, rooms: Collection[Room]):
-        return self.repository.find_all_validated_by_room_ids(room)
+        return self.repository.find_all_validated_by_room_ids(rooms)
 
     def find_by_not_validated(self, limit: int = 10, offset: int = 0):
         return self.repository.find_by_not_validated(limit, offset)
