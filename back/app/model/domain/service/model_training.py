@@ -38,24 +38,21 @@ class ModelTraining:
         print("[DEBUG] fetch_records called")
         print("[DEBUG] rooms param:", rooms)
 
+        pictures = self.picture_catalog.find_all_validated_by_room_ids(rooms)
+        print("[DEBUG] pictures count:", len(pictures))
+
         records = []
+        for pic in pictures:
+            if pic.room is None:
+                raise ValueError(
+                    f"Picture {pic.id} has no associated room"
+                )
 
-        room_ids = [room.room_id for room in rooms]
-        print("[DEBUG] room_ids:", room_ids)
+            records.append({
+                "filename": pic.path,
+                "room": pic.room.name
+            })
 
-        validated_rooms = self.picture_catalog.find_all_validated_by_room_ids(
-            [room.room_id for room in rooms]
-        )
-
-        print("[DEBUG] validated_rooms:", validated_rooms)
-
-        for room in validated_rooms:
-            print("[DEBUG] room:", room, "pictures:", len(room.pictures))
-            for picture in room.pictures:
-                records.append({
-                    "filename": picture.path,
-                    "room": room.name
-                })
         print("[DEBUG] records count:", len(records))
         return records
 
