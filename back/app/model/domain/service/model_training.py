@@ -8,6 +8,7 @@ from app.model.domain.service.room_dataset import RoomDataset
 import json
 import re
 from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
+from typing import Literal
 
 UPLOAD_DIR = Path("./")
 MODEL_DIR = Path("/app/models")
@@ -81,7 +82,7 @@ class ModelTraining:
         return self.dataset
 
     # 5️⃣ Initialize Model
-    def init_model(self):
+    def init_model(self, modelType: Literal["base", "scratch"] = "base"):
         if self.dataset is None:
             raise ValueError(
                 "Dataset must be built before initializing model"
@@ -89,13 +90,15 @@ class ModelTraining:
         if self.num_classes is None:
             self.num_classes = len(self.dataset.room_to_idx)
 
-        if self.model_name.lower() == "base":
+        if modelType == "base":
+            print("[DEBUG] Initializing pre-trained ResNet50 model")
             model = models.resnet50(
                 weights=models.ResNet50_Weights.IMAGENET1K_V1
             )
             model.fc = nn.Linear(model.fc.in_features, self.num_classes)
 
-        elif self.model_name.lower() == "custom_cnn":
+        elif modelType == "scratch":
+            print("[DEBUG] Initializing model from scratch")
             model = nn.Sequential(
                 nn.Conv2d(3, 32, 3, 1, 1),  # input channels,
                 # output channels, kernel size, stride, padding
@@ -234,7 +237,7 @@ class ModelTraining:
             rooms.append(room)
 
         self.build_dataset(rooms)
-        self.init_model()
+        self.init_model(modelTrainingDTO.type)
         self.model.to(self.device)
 
         dataloader = self.create_dataloader(
