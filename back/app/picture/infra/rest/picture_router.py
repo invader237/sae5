@@ -155,15 +155,10 @@ class PictureController:
         # Inference synchrone avant sauvegarde
         try:
             inference_result = predict_image(
-                contents,
-                model_version=None,
+                image_bytes=contents,
                 top_k=5,
                 confidence_threshold=0.0,
-                model_loader=model_loader,
-                labels=None,
-                preprocess_config=None,
-                save_callback=None,
-                device=None,
+                catalog=model_catalog,
             )
         except Exception as e:
             raise HTTPException(

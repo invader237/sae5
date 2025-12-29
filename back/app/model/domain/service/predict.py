@@ -31,6 +31,7 @@ import os
 import json
 from pathlib import Path
 from torch import nn
+import app.model.domain.catalog.model_catalog as model_catalog
 
 from app.model.domain.service.transforms import (
     open_image_from_bytes,
@@ -192,10 +193,9 @@ def _postprocess_logits(
 
 def predict_image(
     image_bytes: bytes,
-    model_version: str,
+    catalog: model_catalog.ModelCatalog,
     top_k: int = 3,
     confidence_threshold: float = 0.8,
-    model_loader: Optional[Callable[[str], Any]] = None,
     labels: Optional[Iterable[str]] = None,
     preprocess_config: Optional[Dict[str, Any]] = None,
     save_callback: Optional[Callable[[bytes, Dict[str, Any]], None]] = None,
@@ -206,40 +206,44 @@ def predict_image(
 
     start_time = time.time()
 
-    # load model (may raise if no loader provided and not cached)
-    model = load_model(model_version, model_loader=model_loader, device=device)
+    # 🔒 1. Récupération DU modèle actif
+    active_model = catalog.find_active_model()
+    if active_model is None:
+        raise RuntimeError("No active model configured in database")
 
-    # possible cached labels/config
-    labels_list: Optional[List[str]] = None
-    if model_version in LABELS_CACHE:
-        labels_list = LABELS_CACHE[model_version]
+    model_version = active_model.path  # clé canonique (et chemin fichier)
+
+    # 🔒 2. Chargement du modèle (aucun fallback implicite)
+    model = load_model(model_version, device=device)
+
+    # 🔹 labels (cache → override explicite)
+    labels_list: Optional[List[str]] = LABELS_CACHE.get(model_version)
     if labels is not None:
         labels_list = list(labels)
 
-    # possible preprocess config
-    pc = PREPROCESS_CACHE.get(model_version, {})
+    # 🔹 preprocess config
+    pc = PREPROCESS_CACHE.get(model_version, {}).copy()
     if preprocess_config:
         pc.update(preprocess_config)
 
-    # default preprocess params
-    size = pc.get("size", 384)
-    mean = pc.get("mean", None)
-    std = pc.get("std", None)
+    size = pc.get("size", active_model.input_size)
+    mean = pc.get("mean")
+    std = pc.get("std")
 
-    # open and preprocess image
+    # 🔹 preprocessing image
     image = open_image_from_bytes(image_bytes)
     tensor = default_preprocess(image, size=size, mean=mean, std=std)
     tensor = tensor.to(device)
 
+    # 🔹 inference
     with torch.no_grad():
         logits = model(tensor)
-        # ensure logits is a 2D tensor
         if logits.ndim == 1:
             logits = logits.unsqueeze(0)
 
         indices, scores = _postprocess_logits(logits, top_k=top_k)
 
-    # map indices -> labels
+    # 🔹 mapping indices → labels
     preds: List[Dict[str, Any]] = []
     for idx, score in zip(indices, scores):
         label = str(idx)
@@ -259,7 +263,7 @@ def predict_image(
         "time_ms": float(elapsed_ms),
     }
 
-    # If accepted, call save callback so caller controls storage
+    # 🔹 callback de sauvegarde
     if accepted and save_callback is not None:
         metadata: Dict[str, Any] = {
             "model_version": model_version,
@@ -275,24 +279,11 @@ def predict_image(
             result["save_callback_ok"] = False
             result["save_callback_error"] = str(e)
 
-    # Canonical top-* fields to simplify consumers (router / UI)
+    # 🔹 champs normalisés top-*
     top_prediction = preds[0] if preds else None
     result["top_prediction"] = top_prediction
-    if top_prediction is not None:
-        if "score" in top_prediction:
-            result["top_score"] = float(top_prediction["score"])
-        elif "probability" in top_prediction:
-            result["top_score"] = float(top_prediction["probability"])
-        elif "confidence" in top_prediction:
-            result["top_score"] = float(top_prediction["confidence"])
-        elif "prob" in top_prediction:
-            result["top_score"] = float(top_prediction["prob"])
-        else:
-            result["top_score"] = float(top_score)
-        result["top_label"] = top_prediction.get("label")
-    else:
-        result["top_score"] = 0.0
-        result["top_label"] = None
+    result["top_score"] = float(top_score) if top_prediction else 0.0
+    result["top_label"] = top_prediction["label"] if top_prediction else None
 
     return result
 
