@@ -30,7 +30,10 @@ def get_model_loader(
         model_catalog=model_catalog, models_dir="/app/models"
         )
 
-def get_model_namer(model_catalog: ModelCatalog = Depends(get_model_catalog)) -> ModelNamer:
+
+def get_model_namer(
+        model_catalog: ModelCatalog = Depends(get_model_catalog)
+        ) -> ModelNamer:
     return ModelNamer(model_catalog)
 
 
@@ -46,4 +49,3 @@ def get_model_training(
         picture_catalog=picture_catalog,
         model_namer=model_namer
     )
-

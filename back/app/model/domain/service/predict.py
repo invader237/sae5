@@ -143,7 +143,9 @@ def load_model(
                 try:
                     _try_load_sidecar(resolved_path, model_version)
                 except FileNotFoundError as e:
-                    print(f"[WARN] sidecar not loaded for {resolved_path}: {e}")
+                    print(
+                        f"[WARN] sidecar not loaded for {resolved_path}: {e}"
+                    )
             except RuntimeError as e:
                 # common message when a state_dict was passed to jit.load
                 msg = str(e)
@@ -332,7 +334,6 @@ def _try_load_sidecar(path: str, model_version: str) -> None:
     )
     preferred_label = p.parent / (p.stem + "-label.json")
 
-    print(f"[DEBUG] looking for {preferred_label}, exists={preferred_label.is_file()}")
     if preferred_label.is_file():
         try:
             with open(preferred_label, "r") as fh:
