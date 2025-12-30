@@ -140,6 +140,10 @@ def load_model(
         try:
             try:
                 module = torch.jit.load(resolved_path, map_location=device)
+                try:
+                    _try_load_sidecar(resolved_path, model_version)
+                except FileNotFoundError as e:
+                    print(f"[WARN] sidecar not loaded for {resolved_path}: {e}")
             except RuntimeError as e:
                 # common message when a state_dict was passed to jit.load
                 msg = str(e)
@@ -166,6 +170,10 @@ def load_model(
             except FileNotFoundError as e:
                 # don't fail when labels are missing; warn and continue
                 print(f"[WARN] sidecar not loaded for {resolved_path}: {e}")
+            print(
+                f"[MODEL][LOAD] model_version={model_version} "
+                f"labels_cached={model_version in LABELS_CACHE}"
+            )
 
     if module is None:
         raise ValueError(
@@ -218,6 +226,10 @@ def predict_image(
 
     # 🔹 labels (cache → override explicite)
     labels_list: Optional[List[str]] = LABELS_CACHE.get(model_version)
+    print(
+        f"[PREDICT][LABELS] model_version={model_version} "
+        f"labels_list={labels_list}"
+    )
     if labels is not None:
         labels_list = list(labels)
 
@@ -242,6 +254,9 @@ def predict_image(
             logits = logits.unsqueeze(0)
 
         indices, scores = _postprocess_logits(logits, top_k=top_k)
+        print(
+            f"[PREDICT][RAW] indices={indices} scores={scores}"
+        )
 
     # 🔹 mapping indices → labels
     preds: List[Dict[str, Any]] = []
@@ -249,6 +264,9 @@ def predict_image(
         label = str(idx)
         if labels_list is not None and idx < len(labels_list):
             label = labels_list[idx]
+        print(
+            f"[PREDICT][MAP] idx={idx} -> label={label}"
+        )
         preds.append({"label": label, "score": float(score)})
 
     top_score = preds[0]["score"] if preds else 0.0
@@ -298,12 +316,23 @@ def _try_load_sidecar(path: str, model_version: str) -> None:
     If the label sidecar is missing or malformed this function raises
     `FileNotFoundError` so callers can decide whether to fail or continue.
     """
-    p = Path(path)
+    print(f"[SIDELOAD][START] model_version={model_version}")
+    p = Path("/app/models/neuroom-base-v0.8.pth")
     # Only support the canonical sidecar names placed next to the model
     # file:
     #  - <model-stem>-label.json  -> {"classes": ["A","B",...]}
     #  - <model-stem>-preprocess.json -> preprocess config
+    print(
+        f"[SIDELOAD] model_version={model_version} path={p}"
+    )
+    print(
+        f"[SIDELOAD] looking for sidecars: "
+        f"{p.parent / (p.stem + '-label.json')}, "
+        f"{p.parent / (p.stem + '-preprocess.json')}"
+    )
     preferred_label = p.parent / (p.stem + "-label.json")
+
+    print(f"[DEBUG] looking for {preferred_label}, exists={preferred_label.is_file()}")
     if preferred_label.is_file():
         try:
             with open(preferred_label, "r") as fh:
@@ -317,6 +346,11 @@ def _try_load_sidecar(path: str, model_version: str) -> None:
                         str(x)
                         for x in data["classes"]
                     ]
+                    print(
+                        f"[LABELS][LOADED] model_version={model_version} "
+                        f"count={len(LABELS_CACHE[model_version])} "
+                        f"labels={LABELS_CACHE[model_version]}"
+                    )
                 else:
                     raise ValueError("label sidecar malformed")
         except Exception as e:
@@ -334,10 +368,15 @@ def _try_load_sidecar(path: str, model_version: str) -> None:
             pass
     # If labels were not loaded, raise to inform caller
     if model_version not in LABELS_CACHE:
+        print(
+            f"[LABELS][MISSING] model_version={model_version} "
+            f"expected={p.parent / (p.stem + '-label.json')}"
+        )
         raise FileNotFoundError(
             "Label sidecar not found for model at %s; expected %s"
             % (p, p.parent / (p.stem + "-label.json"))
         )
+    print(f"[SIDELOAD][END] labels_loaded={LABELS_CACHE.get(model_version)}")
 
 
 def _build_module_from_state(
