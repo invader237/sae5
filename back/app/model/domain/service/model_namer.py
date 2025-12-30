@@ -1,5 +1,6 @@
 import re
 
+
 class ModelNamer:
     def __init__(self, model_catalog):
         self.model_catalog = model_catalog
@@ -7,7 +8,7 @@ class ModelNamer:
     def find_next_model_name(self, variant="base", major=0, metadata=None):
         """
         Generate the next available model name with optional metadata.
-        
+
         metadata: dict, e.g., {"rooms": "all", "imagesPerClass": 100}
         """
         scope = "neuroom"

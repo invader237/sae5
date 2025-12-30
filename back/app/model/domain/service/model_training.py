@@ -201,7 +201,7 @@ class ModelTraining:
 
         filename = filename or f"{self.model_name}.pth"
         filepath = MODEL_DIR / f"{filename}.pth"
-        #torch.save(self.model.state_dict(), filepath)
+        # torch.save(self.model.state_dict(), filepath)
         scripted = torch.jit.script(self.model)
         scripted.save(filepath)
         print(f"Model saved to {filepath}")
@@ -261,7 +261,7 @@ class ModelTraining:
                 f"- Loss: {epoch_loss:.4f}"
             )
 
-        #model_file_name = self.find_next_model_name(variant=self.model_name)
+        # model_file_name = self.find_next_model_name(variant=self.model_name)
         model_file_name = self.model_namer.find_next_model_name(
             variant=modelTrainingDTO.type,
         )
