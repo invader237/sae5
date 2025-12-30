@@ -53,6 +53,7 @@ class ModelController:
     def get_models(
         self,
         model_catalog: ModelCatalog = Depends(get_model_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin")),
     ):
         models = model_catalog.find_all()
         return [model_to_modelDTO_mapper.apply(m).dict() for m in models]
@@ -105,6 +106,7 @@ class ModelController:
         self,
         model_training_dto: ModelTrainingDTO,
         model_training: ModelTraining = Depends(get_model_training),
+        user: AuthenticatedUser = Depends(require_role("admin")),
     ):
         """Lance l'entraînement du modèle"""
         try:
