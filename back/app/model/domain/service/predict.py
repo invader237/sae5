@@ -317,7 +317,7 @@ def _try_load_sidecar(path: str, model_version: str) -> None:
     `FileNotFoundError` so callers can decide whether to fail or continue.
     """
     print(f"[SIDELOAD][START] model_version={model_version}")
-    p = Path("/app/models/neuroom-base-v0.8.pth")
+    p = Path(path)
     # Only support the canonical sidecar names placed next to the model
     # file:
     #  - <model-stem>-label.json  -> {"classes": ["A","B",...]}
