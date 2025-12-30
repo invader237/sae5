@@ -107,8 +107,11 @@ class ModelTraining:
                 nn.Conv2d(32, 64, 3, 1, 1),  # second conv layer
                 nn.ReLU(),  # activation
                 nn.MaxPool2d(2),  # pooling
+                nn.AdaptiveAvgPool2d((1, 1)),  # adaptive pooling
                 nn.Flatten(),  # flatten for fully connected layers
-                nn.Linear(64 * 56 * 56, 128),  # fully connected layer
+                nn.Linear(64, 128),  # fully connected layer
+                # nn.Flatten(),  # flatten for fully connected layers
+                # nn.Linear(64 * 56 * 56, 128),  # fully connected layer
                 nn.ReLU(),  # activation
                 nn.Linear(128, self.num_classes)  # output layer
             )
@@ -196,7 +199,9 @@ class ModelTraining:
 
         filename = filename or f"{self.model_name}.pth"
         filepath = MODEL_DIR / f"{filename}.pth"
-        torch.save(self.model.state_dict(), filepath)
+        #torch.save(self.model.state_dict(), filepath)
+        scripted = torch.jit.script(self.model)
+        scripted.save(filepath)
         print(f"Model saved to {filepath}")
         return filepath
 
