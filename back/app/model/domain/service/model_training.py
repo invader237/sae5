@@ -20,12 +20,14 @@ class ModelTraining:
                  room_catalog,
                  model_catalog,
                  picture_catalog,
+                 model_namer,
                  model_name="base",
                  num_classes=None
                  ):
         self.room_catalog = room_catalog
         self.model_catalog = model_catalog
         self.picture_catalog = picture_catalog
+        self.model_namer = model_namer
         self.model_name = model_name
         self.num_classes = num_classes
         self.model = None
@@ -259,7 +261,10 @@ class ModelTraining:
                 f"- Loss: {epoch_loss:.4f}"
             )
 
-        model_file_name = self.find_next_model_name(variant=self.model_name)
+        #model_file_name = self.find_next_model_name(variant=self.model_name)
+        model_file_name = self.model_namer.find_next_model_name(
+            variant=modelTrainingDTO.type,
+        )
 
         if save:
             self.save_model(model_file_name)
