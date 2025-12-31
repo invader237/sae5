@@ -68,6 +68,29 @@ class PictureRepository:
             .all()
         )
 
+    def find_validated_by_room_id(
+        self,
+        room_id: Union[str, UUID],
+        limit: int = 500,
+        offset: int = 0,
+    ):
+        lookup_room_id = room_id
+        if isinstance(room_id, str):
+            try:
+                lookup_room_id = UUID(room_id)
+            except ValueError:
+                lookup_room_id = room_id
+
+        return (
+            self.db.query(PictureModel)
+            .filter(PictureModel.is_validated.is_(True))
+            .filter(PictureModel.room_id == lookup_room_id)
+            .order_by(PictureModel.validation_date.desc())
+            .limit(limit)
+            .offset(offset)
+            .all()
+        )
+
     def delete(self, picture_id: Union[str, UUID]) -> None:
         lookup_id = picture_id
         if isinstance(picture_id, str):
