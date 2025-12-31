@@ -13,4 +13,11 @@ class PictureCatalog(Protocol):
         limit: int,
         offset: int,
     ) -> Collection[Picture]: ...
+
+    def find_validated_by_room_id(
+        self,
+        room_id: Union[str, UUID],
+        limit: int,
+        offset: int,
+    ) -> Collection[Picture]: ...
     def delete(self, picture_id: Union[str, UUID]) -> None: ...
