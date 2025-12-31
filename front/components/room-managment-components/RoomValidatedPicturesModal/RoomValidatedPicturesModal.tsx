@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Modal, TouchableOpacity, FlatList } from "react-native";
+import { View, Text, Modal, TouchableOpacity, FlatList, Alert } from "react-native";
 
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 import { deletePicturesPva, fetchValidatedPicturesByRoom } from "@/api/picture.api";
 
 import PictureItem from "@/components/pva-components/PvaPictureItem";
 import PvaEditModal from "@/components/pva-components/PvaEditModal";
+import Spinner from "@/components/Spinner";
 
 export type RoomValidatedPicturesModalMode = "gestion" | "display";
 
@@ -34,6 +35,10 @@ const RoomValidatedPicturesModal = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const [page, setPage] = useState(1);
   const [pictures, setPictures] = useState<PicturePvaDTO[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -41,6 +46,8 @@ const RoomValidatedPicturesModal = ({
   const canSelect = mode === "gestion";
 
   const fetchInitial = async () => {
+    setErrorMessage(null);
+
     if (!roomId) {
       setPictures([]);
       setPage(1);
@@ -49,11 +56,21 @@ const RoomValidatedPicturesModal = ({
       return;
     }
 
-    const data = await fetchValidatedPicturesByRoom(roomId, ITEMS_PER_PAGE, 0);
-    setPictures(data);
-    setPage(1);
-    setHasMore(data.length === ITEMS_PER_PAGE);
-    setSelectedPictures([]);
+    setIsLoading(true);
+    try {
+      const data = await fetchValidatedPicturesByRoom(roomId, ITEMS_PER_PAGE, 0);
+      setPictures(data);
+      setPage(1);
+      setHasMore(data.length === ITEMS_PER_PAGE);
+      setSelectedPictures([]);
+    } catch (e) {
+      console.error("Erreur chargement images validées :", e);
+      setPictures([]);
+      setHasMore(false);
+      setErrorMessage("Impossible de charger les images validées.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -65,17 +82,27 @@ const RoomValidatedPicturesModal = ({
   const loadMore = async () => {
     if (!hasMore) return;
     if (!roomId) return;
+    if (isLoadingMore) return;
+
+    setIsLoadingMore(true);
 
     const offset = page * ITEMS_PER_PAGE;
-    const more = await fetchValidatedPicturesByRoom(roomId, ITEMS_PER_PAGE, offset);
+    try {
+      const more = await fetchValidatedPicturesByRoom(roomId, ITEMS_PER_PAGE, offset);
 
-    if (more.length === 0) {
+      if (more.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      setPictures((prev) => [...prev, ...more]);
+      setPage((prev) => prev + 1);
+    } catch (e) {
+      console.error("Erreur chargement page suivante :", e);
       setHasMore(false);
-      return;
+    } finally {
+      setIsLoadingMore(false);
     }
-
-    setPictures((prev) => [...prev, ...more]);
-    setPage((prev) => prev + 1);
   };
 
   const toggleSelect = (id: string) => {
@@ -86,15 +113,7 @@ const RoomValidatedPicturesModal = ({
     );
   };
 
-  const handleDelete = async () => {
-    if (!canSelect) return;
-    if (selectedPictures.length === 0) return;
-
-    const confirmed = confirm(
-      `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`
-    );
-    if (!confirmed) return;
-
+  const performDelete = async () => {
     setIsDeleting(true);
     try {
       const picturesToDelete = pictures.filter((pic) =>
@@ -104,21 +123,45 @@ const RoomValidatedPicturesModal = ({
       await deletePicturesPva(picturesToDelete);
 
       const deletedIds = [...selectedPictures];
-      setPictures((prev) => prev.filter((p) => !deletedIds.includes(p.id ?? "")));
+      setPictures((prev) =>
+        prev.filter((p) => !deletedIds.includes(p.id ?? ""))
+      );
       setSelectedPictures([]);
       onDeleted?.(deletedIds);
       onUpdated?.();
 
-      if (picturesToDelete.length > 0 && pictures.length === picturesToDelete.length) {
-        // If we deleted everything on the first page, refresh to keep pagination coherent
+      if (
+        picturesToDelete.length > 0 &&
+        pictures.length === picturesToDelete.length
+      ) {
         await fetchInitial();
       }
     } catch (error) {
       console.error("Erreur lors de la suppression :", error);
-      alert("Impossible de supprimer les images.");
+      Alert.alert("Erreur", "Impossible de supprimer les images.");
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleDelete = () => {
+    if (!canSelect) return;
+    if (selectedPictures.length === 0) return;
+
+    Alert.alert(
+      "Confirmer",
+      `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`,
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Supprimer",
+          style: "destructive",
+          onPress: () => {
+            void performDelete();
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -129,12 +172,26 @@ const RoomValidatedPicturesModal = ({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-white p-4">
+        {isLoading && <Spinner overlay />}
+
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-2xl font-bold text-[#333]">Images validées</Text>
           <TouchableOpacity onPress={onClose}>
             <Text className="text-blue-500 text-lg">Fermer</Text>
           </TouchableOpacity>
         </View>
+
+        {errorMessage && (
+          <View className="mb-3">
+            <Text className="text-center text-[#b00020]">{errorMessage}</Text>
+            <TouchableOpacity
+              onPress={fetchInitial}
+              className="mt-3 px-4 py-2 rounded-md bg-[#007bff]"
+            >
+              <Text className="text-white font-bold text-center">Réessayer</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <FlatList
           data={pictures}
@@ -153,7 +210,7 @@ const RoomValidatedPicturesModal = ({
           onEndReachedThreshold={0.4}
           ListEmptyComponent={
             <Text className="text-center text-[#555] mt-10">
-              Aucune image validée pour le moment.
+              {isLoading ? "Chargement..." : "Aucune image validée pour le moment."}
             </Text>
           }
         />
