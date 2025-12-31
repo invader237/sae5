@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { RoomDTO } from "@/api/DTO/room.dto";
+import RoomDTO from "@/api/DTO/room.dto";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import ProgressBar from "@/components/ProgressBar";
 
@@ -9,9 +9,12 @@ type Props = {
   expanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
+  onViewPictures: () => void;
 };
 
-const RoomAccordionItem = ({ room, expanded, onToggle, onEdit }: Props) => {
+const RoomAccordionItem = (
+  { room, expanded, onToggle, onEdit, onViewPictures }: Props
+) => {
   return (
     <View className="mb-2 border border-gray-300 rounded-lg">
       <TouchableOpacity
@@ -49,12 +52,21 @@ const RoomAccordionItem = ({ room, expanded, onToggle, onEdit }: Props) => {
           <Text>Département : {room.departement}</Text>
           <Text>Type : {room.type}</Text>
 
-          <TouchableOpacity
-            onPress={onEdit}
-            className="bg-[#007bff] px-3 py-2 rounded-md mt-3"
-          >
-            <Text className="text-white text-center font-bold">Modifier</Text>
-          </TouchableOpacity>
+          <View className="flex-row gap-2 mt-3">
+            <TouchableOpacity
+              onPress={onEdit}
+              className="bg-[#007bff] px-3 py-2 rounded-md flex-1"
+            >
+              <Text className="text-white text-center font-bold">Modifier</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={onViewPictures}
+              className="bg-[#6c757d] px-3 py-2 rounded-md flex-1"
+            >
+              <Text className="text-white text-center font-bold">Voir les images</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </View>

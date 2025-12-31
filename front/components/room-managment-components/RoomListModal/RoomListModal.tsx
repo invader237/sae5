@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Modal, View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { RoomDTO } from "@/api/DTO/room.dto";
+import RoomDTO from "@/api/DTO/room.dto";
 import RoomAccordionItem from "@/components/room-managment-components/RoomAccordionItem";
 
 type Props = {
@@ -8,9 +8,12 @@ type Props = {
   rooms: RoomDTO[];
   onClose: () => void;
   onEdit: (room: RoomDTO) => void;
+  onViewPictures: (room: RoomDTO) => void;
 };
 
-const RoomListModal = ({ visible, rooms, onClose, onEdit }: Props) => {
+const RoomListModal = (
+  { visible, rooms, onClose, onEdit, onViewPictures }: Props
+) => {
   const [expandedRoom, setExpandedRoom] = useState<string | null>(null);
 
   const sortedRooms = useMemo(() => {
@@ -40,6 +43,7 @@ const RoomListModal = ({ visible, rooms, onClose, onEdit }: Props) => {
                   setExpandedRoom(expandedRoom === room.id ? null : room.id)
                 }
                 onEdit={() => onEdit(room)}
+                onViewPictures={() => onViewPictures(room)}
               />
             ))}
           </ScrollView>
