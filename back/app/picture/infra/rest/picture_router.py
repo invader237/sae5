@@ -89,6 +89,12 @@ class PictureController:
             response_model=list[PicturePvaDTO],
             methods=["PATCH"],
         )
+        self.router.add_api_route(
+            "/validated/by-room/{room_id}",
+            self.get_validated_pictures_by_room,
+            response_model=list[PicturePvaDTO],
+            methods=["GET"],
+        )
 
     def get_pictures(
         self,
@@ -394,6 +400,36 @@ class PictureController:
                 )
 
         return updated_pictures
+
+    async def get_validated_pictures_by_room(
+        self,
+        room_id: uuid.UUID = FastAPIPath(
+            ..., description="ID de la salle (room_id)"
+        ),
+        limit: int = Query(500, ge=1, le=500),
+        offset: int = Query(0, ge=0),
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin")),
+    ):
+        pictures = picture_catalog.find_validated_by_room_id(
+            room_id=room_id,
+            limit=limit,
+            offset=offset,
+        )
+
+        pictures = sorted(
+            pictures,
+            key=lambda p: (
+                p.validation_date
+                or datetime.min.replace(tzinfo=timezone.utc)
+            ),
+            reverse=True,
+        )
+
+        return [
+            picture_to_picturePvaDTO_mapper.apply(picture)
+            for picture in pictures
+        ]
 
 
 picture_controller = PictureController()
