@@ -2,17 +2,20 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { saveRoom, getRooms, getRoomAnalytics } from "@/api/room.api";
-import { RoomDTO } from "@/api/DTO/room.dto";
+import RoomDTO from "@/api/DTO/room.dto";
 import RoomAnalyticsDTO from "@/api/DTO/roomAnalytics.dto";
 
 import RoomListModal from "@/components/room-managment-components/RoomListModal";
 import RoomModal from "@/components/room-managment-components/RoomModal";
+import RoomValidatedPicturesModal from "@/components/room-managment-components/RoomValidatedPicturesModal";
 import ProgressBar from "../ProgressBar";
 
 const RoomManagementPanel = () => {
   const [rooms, setRooms] = useState<RoomDTO[]>([]);
   const [modalListVisible, setModalListVisible] = useState(false);
   const [modalRoomVisible, setModalRoomVisible] = useState(false);
+  const [modalValidatedPicturesVisible, setModalValidatedPicturesVisible] = useState(false);
+  const [validatedPicturesRoomId, setValidatedPicturesRoomId] = useState<string | null>(null);
   const [editingRoom, setEditingRoom] = useState<RoomDTO | null>(null);
   const [analytics, setAnalytics] = useState<RoomAnalyticsDTO | null>(null);
 
@@ -46,6 +49,11 @@ const RoomManagementPanel = () => {
   const openEditModal = (room: RoomDTO) => {
     setEditingRoom(room);
     setModalRoomVisible(true);
+  };
+
+  const openValidatedPicturesModal = (room: RoomDTO) => {
+    setValidatedPicturesRoomId(room.id);
+    setModalValidatedPicturesVisible(true);
   };
 
   const handleSave = async (data: RoomDTO) => {
@@ -137,6 +145,14 @@ const RoomManagementPanel = () => {
         rooms={rooms}
         onClose={() => setModalListVisible(false)}
         onEdit={openEditModal}
+        onViewPictures={openValidatedPicturesModal}
+      />
+
+      <RoomValidatedPicturesModal
+        visible={modalValidatedPicturesVisible}
+        roomId={validatedPicturesRoomId}
+        mode="gestion"
+        onClose={() => setModalValidatedPicturesVisible(false)}
       />
 
       <RoomModal
