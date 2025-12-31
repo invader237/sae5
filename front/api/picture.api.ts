@@ -121,6 +121,28 @@ export async function fetchToValidatePictures( limit: number = 50, offset: numbe
   }
 }
 
+export async function fetchValidatedPicturesByRoom(
+  roomId: string,
+  limit: number = 500,
+  offset: number = 0
+): Promise<PicturePvaDTO[]> {
+  try {
+    const response = await axiosInstance.get<PicturePvaDTO[]>(
+      `/pictures/validated/by-room/${roomId}`,
+      {
+        params: {
+          limit,
+          offset,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching validated pictures by room:', error);
+    throw error;
+  }
+}
+
 export async function validatePictures(pictures: PicturePvaDTO[]) {
   try {
     const response = await axiosInstance.patch('/pictures/validate', pictures);
