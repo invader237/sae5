@@ -25,6 +25,7 @@ module.exports = {
       favicon: "./assets/images/favicon.png"
     },
     plugins: [
+      "expo-web-browser",
       "expo-router",
       [
         "expo-splash-screen",
@@ -40,7 +41,11 @@ module.exports = {
       typedRoutes: true
     },
     extra: {
-      backendApiAddress: process.env.EXPO_PUBLIC_BACKEND_API_ADDRESS || 'http://localhost:8000'
+      backendApiAddress: process.env.EXPO_PUBLIC_BACKEND_API_ADDRESS || 'http://localhost:8000',
+      eas: {
+        projectId: "70317ab0-0903-4ae3-9a6a-31190fd7e353"
+            }
+
     }
   }
 };
