@@ -108,8 +108,12 @@ export default function HomeScreen() {
           <CameraView
             ref={cameraRef}
             className="absolute inset-0"
+            style={{ flex: 1 }}
+            active={isFocused}
+            facing="back"
             zoom={zoom}
             onCameraReady={() => setCameraReady(true)}
+            onMountError={(e) => { console.error('Camera mount error', e); }}
           />
         ) : (
           <View className="flex-1 items-center justify-center p-4 gap-3">
