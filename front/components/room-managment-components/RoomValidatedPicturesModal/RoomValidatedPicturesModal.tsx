@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Modal, TouchableOpacity, FlatList, Alert, Platform } from "react-native";
+import { View, Text, Modal, TouchableOpacity, FlatList, Alert } from "react-native";
 
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 import { deletePicturesPva, fetchValidatedPicturesByRoom } from "@/api/picture.api";
@@ -144,33 +144,26 @@ const RoomValidatedPicturesModal = ({
     }
   };
 
-  const handleDelete = () => {
-    if (!canSelect) return;
+  const handleDelete = async () => {
     if (selectedPictures.length === 0) return;
-
-    if (Platform.OS === "web") {
-      const confirmed = confirm(
-        `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`
-      );
-      if (!confirmed) return;
-      void performDelete();
-      return;
-    }
-
-    Alert.alert(
-      "Confirmer",
-      `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`,
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Supprimer",
-          style: "destructive",
-          onPress: () => {
-            void performDelete();
-          },
-        },
-      ]
+    const confirmed = confirm(
+      `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`
     );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const picturesToDelete = pictures.filter(pic => selectedPictures.includes(pic.id));
+      await deletePicturesPva(picturesToDelete);
+      onDeleted?.(selectedPictures);
+      setSelectedPictures([]);
+      onClose();
+    } catch (error) {
+      console.error("Erreur lors de la suppression :", error);
+      alert("Impossible de supprimer les images.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
