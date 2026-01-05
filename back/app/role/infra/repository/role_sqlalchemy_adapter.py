@@ -11,3 +11,6 @@ class RoleSQLAlchemyAdapter(RoleCatalog):
 
     def save(self, role_in: dict):
         return self.repository.save(role_in)
+
+    def find_by_type(self, role_type: str):
+        return self.repository.find_by_type(role_type)
