@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import axiosInstance, { baseURL } from './axiosConfig';
 import PicturePvaDTO from './DTO/picturePva.dto';
-import * as ImageManipulator from 'expo-image-manipulator';
+
 
 type UploadOptions = {
   mimeType?: string | null;
@@ -22,30 +22,12 @@ export async function uploadFrame(uri: string, _options?: UploadOptions) {
     const resized = await resizeImageWeb(blob, TARGET_SIZE);
     form.append('file', resized, _options?.filename || `frame-${Date.now()}.jpg`);
   } else {
-    // Mobile (Expo): resize image while keeping aspect ratio (Android compatible)
-    try {
-      const manipResult = await ImageManipulator.manipulateAsync(
-        uri,
-        [{ resize: { width: TARGET_SIZE } }],
-        {
-          compress: 0.8,
-          format: ImageManipulator.SaveFormat.JPEG,
-        }
-      );
-
-      form.append('file', {
-        uri: manipResult.uri,
-        type: _options?.mimeType ?? 'image/jpeg',
-        name: _options?.filename ?? `frame-${Date.now()}.jpg`,
-      } as any);
-    } catch (e) {
-      // Android-safe fallback: original URI
-      form.append('file', {
-        uri,
-        type: _options?.mimeType ?? 'image/jpeg',
-        name: _options?.filename ?? `frame-${Date.now()}.jpg`,
-      } as any);
-    }
+    form.append('file', {
+      uri,
+      type: _options?.mimeType ?? 'image/jpeg',
+      name: _options?.filename ?? `frame-${Date.now()}.jpg`,
+    } as any);
+  }
 
   try {
     console.warn('[picture.api] Uploading image', { uri, platform: Platform.OS });
