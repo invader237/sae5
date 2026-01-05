@@ -116,6 +116,7 @@ class PictureController:
         model_loader=Depends(get_model_loader),
         model_catalog: ModelCatalog = Depends(get_model_catalog),
         history_catalog=Depends(get_history_catalog),
+        user: AuthenticatedUser = Depends(require_role()),
     ):
         # Supporte file ou image comme clé multipart
         upload_file = file or image
@@ -214,6 +215,7 @@ class PictureController:
                     room_id=room_id,
                     image_id=picture.image_id,
                     model_id=model_id,
+                    user_id=user.user_id,
                 )
             )
         except Exception as e:
