@@ -1,7 +1,6 @@
 from typing import Protocol, Collection, Union
 from uuid import UUID
 from app.picture.domain.entity.picture import Picture
-from app.room.domain.entity.room import Room
 
 
 class PictureCatalog(Protocol):
