@@ -20,6 +20,7 @@ from app.user.domain.mapper.user_to_userDTO_mapper import (
     user_to_userDTO_mapper,
 )
 from app.user.infra.factory.user_factory import get_user_catalog
+from app.role.infra.factory.role_factory import get_role_catalog
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -74,6 +75,12 @@ def register(
         )
 
     user_entity = user_createDTO_to_user_mapper.apply(user_create)
+    # Assigner le rôle 'client' par défaut
+    role_catalog = get_role_catalog()
+    client_role = role_catalog.find_by_type("client")
+    if client_role:
+        user_entity.role_id = client_role.role_id
+    
     user_catalog.save(user_entity)
 
     return user_to_userDTO_mapper.apply(user_entity)
