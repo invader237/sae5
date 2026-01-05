@@ -41,7 +41,22 @@ class ModelTraining:
         print("[DEBUG] fetch_records called")
         print("[DEBUG] rooms param:", rooms)
 
-        pictures = self.picture_catalog.find_all_validated_by_room_ids(rooms)
+        pictures = []
+        page_limit = 500
+        for room in rooms or []:
+            offset = 0
+            while True:
+                page = self.picture_catalog.find_validated_by_room_id(
+                    room_id=room.room_id,
+                    limit=page_limit,
+                    offset=offset,
+                )
+                if not page:
+                    break
+                pictures.extend(page)
+                if len(page) < page_limit:
+                    break
+                offset += page_limit
         print("[DEBUG] pictures count:", len(pictures))
 
         records = []

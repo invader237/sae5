@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Modal, TouchableOpacity, FlatList, Alert } from "react-native";
+import { View, Text, Modal, TouchableOpacity, FlatList, Alert, Platform } from "react-native";
 
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 import { deletePicturesPva, fetchValidatedPicturesByRoom } from "@/api/picture.api";
@@ -147,6 +147,15 @@ const RoomValidatedPicturesModal = ({
   const handleDelete = () => {
     if (!canSelect) return;
     if (selectedPictures.length === 0) return;
+
+    if (Platform.OS === "web") {
+      const confirmed = confirm(
+        `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`
+      );
+      if (!confirmed) return;
+      void performDelete();
+      return;
+    }
 
     Alert.alert(
       "Confirmer",
