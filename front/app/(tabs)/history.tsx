@@ -48,7 +48,11 @@ export default function HistoryScreen() {
           <Text className="text-[#555]">Chargement…</Text>
         )}
 
-        {!loading && items.length === 0 && (
+        {error && (
+          <Text className="text-red-500 text-base">{error}</Text>
+        )}
+
+        {!loading && !error && items.length === 0 && (
           <Text className="text-[#555] text-base">Aucun historique pour le moment.</Text>
         )}
 
@@ -99,4 +103,3 @@ export default function HistoryScreen() {
   );
 }
 
-// utilitaire déplacé dans ../../utils/image
