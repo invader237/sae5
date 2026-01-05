@@ -51,6 +51,8 @@ def assign_default_role(mapper, connection, target):
         from app.role.domain.entity.role import Role
         session = Session.object_session(target)
         if session:
-            client_role = session.query(Role).filter(Role.type == "client").first()
+            client_role = session.query(Role).filter(
+                Role.type == "client"
+            ).first()
             if client_role:
                 target.role_id = client_role.role_id
