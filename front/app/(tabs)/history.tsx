@@ -1,8 +1,9 @@
 import { Text, View, Image, TouchableOpacity, Modal, ScrollView } from "react-native";
 import { useState, useCallback } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import axiosInstance from "../../api/axiosConfig";
 import { toFileUri } from "../../utils/image";
+import { useAuth } from "../../hooks/useAuth";
 import type HistoryDTO from "../../api/DTO/history.dto";
 
 export default function HistoryScreen() {
@@ -10,8 +11,15 @@ export default function HistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const { user } = useAuth();
+  const navigation = useNavigation();
 
   const load = useCallback(async () => {
+    if (!user) {
+      navigation.navigate("index" as never);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -22,7 +30,7 @@ export default function HistoryScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user, navigation]);
 
   useFocusEffect(
     useCallback(() => {
