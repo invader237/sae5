@@ -33,6 +33,7 @@ Thumbs.db
 
 # Android
 android/app/build/
+android
 *.keystore
 
 # iOS
