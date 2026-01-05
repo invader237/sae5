@@ -9,11 +9,6 @@ class PictureCatalog(Protocol):
     def save(self, picture: Picture) -> None: ...
     def find_by_id(self, picture_id: Union[str, UUID]) -> Picture: ...
 
-    def find_all_validated_by_room_ids(
-        self,
-        rooms: Collection[Room],
-    ) -> Collection[Picture]: ...
-
     def find_by_not_validated(
         self,
         limit: int,
