@@ -1,8 +1,8 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, String, DateTime, ForeignKey, event
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Session
 
 from app.database import Base
 
@@ -42,3 +42,15 @@ class User(Base):
     )
 
     role = relationship("Role", backref="users")
+
+
+@event.listens_for(User, 'before_insert')
+def assign_default_role(mapper, connection, target):
+    """Assigne automatiquement le rôle 'client' si aucun rôle n'est défini"""
+    if target.role_id is None:
+        from app.role.domain.entity.role import Role
+        session = Session.object_session(target)
+        if session:
+            client_role = session.query(Role).filter(Role.type == "client").first()
+            if client_role:
+                target.role_id = client_role.role_id
