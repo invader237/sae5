@@ -80,7 +80,6 @@ def register(
     client_role = role_catalog.find_by_type("client")
     if client_role:
         user_entity.role_id = client_role.role_id
-    
     user_catalog.save(user_entity)
 
     return user_to_userDTO_mapper.apply(user_entity)
