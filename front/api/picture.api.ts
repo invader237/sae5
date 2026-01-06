@@ -1,7 +1,8 @@
 import { Platform } from 'react-native';
-import axiosInstance from './axiosConfig';
+import axiosInstance, { baseURL } from './axiosConfig';
 import PicturePvaDTO from './DTO/picturePva.dto';
 import * as ImageManipulator from 'expo-image-manipulator';
+
 
 type UploadOptions = {
   mimeType?: string | null;
@@ -17,43 +18,68 @@ export async function uploadFrame(uri: string, _options?: UploadOptions) {
   const TARGET_SIZE = 384;
 
   if (Platform.OS === 'web') {
-    // Resize on web using canvas to limit upload size and improve perf
     const response = await fetch(uri);
     const blob = await response.blob();
     const resized = await resizeImageWeb(blob, TARGET_SIZE);
     form.append('file', resized, _options?.filename || `frame-${Date.now()}.jpg`);
   } else {
-    // Mobile (Expo): use expo-image-manipulator to resize while keeping aspect ratio
-    try {
-      const manipResult = await ImageManipulator.manipulateAsync(
-        uri,
-        [{ resize: { width: TARGET_SIZE } }],
-        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
-      );
-      form.append('file', {
-        uri: manipResult.uri,
-        type: _options?.mimeType || 'image/jpeg',
-        name: _options?.filename || `frame-${Date.now()}.jpg`,
-      } as any);
-    } catch (e) {
-      // Fallback to original if manipulation fails
-      form.append('file', {
-        uri,
-        type: _options?.mimeType || 'image/jpeg',
-        name: _options?.filename || `frame-${Date.now()}.jpg`,
-      } as any);
-    }
+    form.append('file', {
+      uri,
+      type: _options?.mimeType ?? 'image/jpeg',
+      name: _options?.filename ?? `frame-${Date.now()}.jpg`,
+    } as any);
   }
 
   try {
-    const response = await axiosInstance.post('/pictures/import?type=analyse', form, {
+    console.warn('[picture.api] Uploading image', { uri, platform: Platform.OS });
+
+    if (Platform.OS === 'android' || Platform.OS === 'ios') {
+      const url = `${baseURL}/pictures/import?type=analyse`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+
+      const resp = await fetch(url, {
+        method: 'POST',
+        body: form,
+        signal: controller.signal,
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      clearTimeout(timeout);
+
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => '');
+        console.error('[picture.api] fetch upload non-ok', { status: resp.status, body: text });
+        throw new Error(`Upload échoué (${resp.status}): ${text}`);
+      }
+
+      const data = await resp.json().catch(() => ({}));
+      return data;
+    }
+
+    const config = {
       timeout: 20000,
-    });
+      headers: {
+        Accept: 'application/json',
+      },
+      transformRequest: [(data: any, headers: any) => {
+        if (headers) {
+          if (headers['Content-Type']) delete headers['Content-Type'];
+          if (headers['content-type']) delete headers['content-type'];
+        }
+        return data;
+      }],
+    } as any;
+
+    const response = await axiosInstance.post('/pictures/import?type=analyse', form, config);
     return response.data;
   } catch (e: any) {
-    const status = e?.response?.status;
-    const data = e?.response?.data;
+    const status = e?.response?.status ?? e?.status;
+    const data = e?.response?.data ?? e?.data;
     const msg = typeof data === 'string' ? data : JSON.stringify(data ?? {});
+    console.error('[picture.api] Upload failed', { uri, status, data, error: e?.message ?? e, requestHeaders: e?.config?.headers });
     throw new Error(`Upload échoué (${status ?? 'ERR'}): ${msg}`);
   }
 }
@@ -117,6 +143,28 @@ export async function fetchToValidatePictures( limit: number = 50, offset: numbe
     return response.data;
   } catch (error) {
     console.error('Error fetching pictures to validate:', error);
+    throw error;
+  }
+}
+
+export async function fetchValidatedPicturesByRoom(
+  roomId: string,
+  limit: number = 500,
+  offset: number = 0
+): Promise<PicturePvaDTO[]> {
+  try {
+    const response = await axiosInstance.get<PicturePvaDTO[]>(
+      `/pictures/validated/by-room/${roomId}`,
+      {
+        params: {
+          limit,
+          offset,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching validated pictures by room:', error);
     throw error;
   }
 }

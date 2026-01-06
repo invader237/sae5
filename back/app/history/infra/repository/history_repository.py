@@ -13,6 +13,14 @@ class HistoryRepository:
             .all()
         )
 
+    def find_by_user_id(self, user_id: str):
+        return (
+            self.db.query(HistoryModel)
+            .filter(HistoryModel.user_id == user_id)
+            .order_by(HistoryModel.scanned_at.desc())
+            .all()
+        )
+
     def save(self, history: HistoryModel) -> HistoryModel:
         """Persist a History entity (not a dict)."""
         self.db.add(history)

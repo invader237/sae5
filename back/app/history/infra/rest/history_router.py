@@ -6,6 +6,10 @@ from app.history.domain.mapper.history_to_dto_mapper import (
     history_to_dto_mapper,
 )
 from app.history.infra.factory.history_factory import get_history_catalog
+from app.authentification.core.admin_required import (
+    require_role,
+    AuthenticatedUser,
+)
 
 
 class HistoryController:
@@ -21,8 +25,9 @@ class HistoryController:
     def get_histories(
         self,
         history_catalog: HistoryCatalog = Depends(get_history_catalog),
+        user: AuthenticatedUser = Depends(require_role()),
     ):
-        histories = history_catalog.find_all()
+        histories = history_catalog.find_by_user_id(user.user_id)
         return [history_to_dto_mapper.apply(h) for h in histories]
 
 

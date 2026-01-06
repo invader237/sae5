@@ -89,6 +89,12 @@ class PictureController:
             response_model=list[PicturePvaDTO],
             methods=["PATCH"],
         )
+        self.router.add_api_route(
+            "/validated/by-room/{room_id}",
+            self.get_validated_pictures_by_room,
+            response_model=list[PicturePvaDTO],
+            methods=["GET"],
+        )
 
     def get_pictures(
         self,
@@ -116,6 +122,7 @@ class PictureController:
         model_loader=Depends(get_model_loader),
         model_catalog: ModelCatalog = Depends(get_model_catalog),
         history_catalog=Depends(get_history_catalog),
+        user: AuthenticatedUser = Depends(require_role()),
     ):
         # Supporte file ou image comme clé multipart
         upload_file = file or image
@@ -214,6 +221,7 @@ class PictureController:
                     room_id=room_id,
                     image_id=picture.image_id,
                     model_id=model_id,
+                    user_id=user.user_id,
                 )
             )
         except Exception as e:
@@ -231,6 +239,11 @@ class PictureController:
             limit=limit,
             offset=offset
         )
+
+        # TODO: optimiser en supprimant la boucle, il faut soit ne pas
+        # permettre d'avoir un room id null, soit remplacer par un id de
+        # rooom qui correspond à "Inconnu", soit mieux gérer l'erreur en amont
+        pictures = [p for p in pictures if p.room is not None]
 
         pictures = sorted(
             pictures,
@@ -392,6 +405,36 @@ class PictureController:
                 )
 
         return updated_pictures
+
+    async def get_validated_pictures_by_room(
+        self,
+        room_id: uuid.UUID = FastAPIPath(
+            ..., description="ID de la salle (room_id)"
+        ),
+        limit: int = Query(500, ge=1, le=500),
+        offset: int = Query(0, ge=0),
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin")),
+    ):
+        pictures = picture_catalog.find_validated_by_room_id(
+            room_id=room_id,
+            limit=limit,
+            offset=offset,
+        )
+
+        pictures = sorted(
+            pictures,
+            key=lambda p: (
+                p.validation_date
+                or datetime.min.replace(tzinfo=timezone.utc)
+            ),
+            reverse=True,
+        )
+
+        return [
+            picture_to_picturePvaDTO_mapper.apply(picture)
+            for picture in pictures
+        ]
 
 
 picture_controller = PictureController()

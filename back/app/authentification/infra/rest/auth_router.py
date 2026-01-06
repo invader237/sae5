@@ -20,7 +20,8 @@ from app.user.domain.mapper.user_to_userDTO_mapper import (
     user_to_userDTO_mapper,
 )
 from app.user.infra.factory.user_factory import get_user_catalog
-
+from app.role.infra.factory.role_factory import get_role_catalog
+from app.role.domain.catalog.role_catalog import RoleCatalog
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -63,8 +64,8 @@ def get_current_user_id(
         status_code=status.HTTP_201_CREATED)
 def register(
     user_create: UserCreate,
-    user_catalog: UserCatalog = Depends(
-        get_user_catalog),
+    user_catalog: UserCatalog = Depends(get_user_catalog),
+    role_catalog: RoleCatalog = Depends(get_role_catalog),
 ) -> UserDTO:
     existing = user_catalog.find_by_email(user_create.email)
     if existing:
@@ -74,6 +75,12 @@ def register(
         )
 
     user_entity = user_createDTO_to_user_mapper.apply(user_create)
+
+    # Assigner le rôle 'client' par défaut
+    client_role = role_catalog.find_by_type("client")
+    if client_role:
+        user_entity.role_id = client_role.role_id
+
     user_catalog.save(user_entity)
 
     return user_to_userDTO_mapper.apply(user_entity)
