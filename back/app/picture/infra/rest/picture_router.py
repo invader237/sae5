@@ -234,6 +234,11 @@ class PictureController:
             offset=offset
         )
 
+        # TODO: optimiser en supprimant la boucle, il faut soit ne pas
+        # permettre d'avoir un room id null, soit remplacer par un id de
+        # rooom qui correspond à "Inconnu", soit mieux gérer l'erreur en amont
+        pictures = [p for p in pictures if p.room is not None]
+
         pictures = sorted(
             pictures,
             key=lambda p: (p.analyse_date or
