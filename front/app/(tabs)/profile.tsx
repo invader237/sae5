@@ -1,34 +1,35 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
-  Modal,
   View,
   Text,
   ScrollView,
   TouchableOpacity,
+  Modal,
 } from "react-native";
-import { Spinner } from '@/components/Spinner';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+
+import { Spinner } from "@/components/Spinner";
 import { AuthForm } from "@/components/authentification/AuthForm";
 import { ChangePasswordForm } from "@/components/authentification/ChangePasswordForm";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function ProfileScreen() {
   const { user, token, isLoading, login, logout } = useAuth();
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-
-  const handleLogout = async () => {
-    await logout();
-    setIsPasswordModalOpen(false);
-  };
-
-  const handleAuthenticated = async (accessToken: string) => {
-    await login(accessToken);
-  };
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 bg-white items-center justify-center">
         <Spinner />
         <Text className="mt-2 text-gray-500">Chargement du profil…</Text>
+      </View>
+    );
+  }
+
+  if (!user || !token) {
+    return (
+      <View className="flex-1 bg-gray-50 items-center justify-center px-6">
+        <AuthForm onAuthenticated={login} />
       </View>
     );
   }
@@ -37,63 +38,89 @@ export default function ProfileScreen() {
     <>
       <ScrollView
         className="flex-1 bg-gray-50"
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ padding: 24 }}
       >
-        <View className="flex-1 items-center justify-center px-6 py-10">
-          {user && token ? (
-            <View className="w-full items-center justify-center mt-2">
-              <Text className="text-3xl font-extrabold text-blue-500 mb-4">
-                Profil
-              </Text>
-              <Text className="text-base text-gray-600 mb-4 text-center">
-                Connecté en tant que :
-              </Text>
+        <View className="gap-6">
+          {/* HEADER */}
+          <View className="items-center">
+            <Text className="text-3xl font-extrabold text-gray-800">
+              Profil
+            </Text>
+            <Text className="text-gray-500 mt-1">
+              Gestion de votre compte
+            </Text>
+          </View>
 
-              <View className="bg-white rounded-2xl px-4 py-4 mb-6 shadow border border-gray-100">
-                <Text className="text-blue-500 text-lg font-semibold mb-1">
-                  Username : {user.name}
-                </Text>
-                <Text className="text-gray-700">email : {user.email}</Text>
+          {/* USER CARD */}
+          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+            <View className="flex-row items-center gap-4">
+              <View className="w-14 h-14 rounded-full bg-blue-100 items-center justify-center">
+                <MaterialIcons name="person" size={28} color="#3b82f6" />
               </View>
 
-              <TouchableOpacity
-                className="bg-blue-500 rounded-xl py-2 px-4 items-center w-[150px] mx-auto mt-6"
-                onPress={() => setIsPasswordModalOpen(true)}
-              >
-                <Text className="text-white font-semibold">Modifier mdp</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="bg-red-500 rounded-xl py-2 px-4 items-center w-[150px] mx-auto mt-6"
-                onPress={handleLogout}
-              >
-                <Text className="text-white font-semibold">Se déconnecter</Text>
-              </TouchableOpacity>
+              <View className="flex-1">
+                <Text className="text-lg font-semibold text-gray-800">
+                  {user.name}
+                </Text>
+                <Text className="text-gray-500 text-sm">
+                  {user.email}
+                </Text>
+              </View>
             </View>
-          ) : (
-            <AuthForm onAuthenticated={handleAuthenticated} />
-          )}
+          </View>
+
+          {/* ACTIONS */}
+          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm gap-4">
+            <Text className="text-base font-semibold text-gray-800">
+              Sécurité
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => setShowPasswordModal(true)}
+              className="flex-row items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 border border-blue-200"
+              activeOpacity={0.85}
+            >
+              <MaterialIcons name="lock" size={22} color="#3b82f6" />
+              <Text className="text-blue-600 font-semibold">
+                Modifier le mot de passe
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={logout}
+              className="flex-row items-center gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200"
+              activeOpacity={0.85}
+            >
+              <MaterialIcons name="logout" size={22} color="#ef4444" />
+              <Text className="text-red-600 font-semibold">
+                Se déconnecter
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
       <Modal
-        visible={isPasswordModalOpen}
-        animationType="slide"
-        transparent={false}
+        visible={showPasswordModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPasswordModal(false)}
       >
-        <View className="flex-1 bg-white px-6 py-10">
-          <TouchableOpacity
-            className="mb-4"
-            onPress={() => setIsPasswordModalOpen(false)}
-          >
-            <Text className="text-blue-500 text-lg font-semibold">Fermer</Text>
-          </TouchableOpacity>
+        <View className="flex-1 bg-black bg-opacity-40 items-center justify-center px-6">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <Text className="text-xl font-bold text-gray-800 mb-4">
+              Changer le mot de passe
+            </Text>
 
-          <Text className="text-2xl font-bold text-gray-800 mb-4">
-            Changement du mot de passe
-          </Text>
+            <ChangePasswordForm token={token} />
 
-          {token && <ChangePasswordForm token={token} />}
+            <TouchableOpacity
+              onPress={() => setShowPasswordModal(false)}
+              className="mt-5 py-3 rounded-xl bg-gray-100 items-center"
+            >
+              <Text className="text-gray-700 font-semibold">Fermer</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </>
