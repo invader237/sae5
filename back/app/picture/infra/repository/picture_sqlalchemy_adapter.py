@@ -1,8 +1,9 @@
-from typing import Union
+from typing import Union, Collection
 from uuid import UUID
 from app.picture.domain.entity.picture import Picture
 from app.picture.domain.catalog.picture_catalog import PictureCatalog
 from app.picture.infra.repository.picture_repository import PictureRepository
+from app.room.domain.entity.room import Room
 
 
 class PictureSQLAlchemyAdapter(PictureCatalog):
@@ -17,6 +18,9 @@ class PictureSQLAlchemyAdapter(PictureCatalog):
 
     def find_by_id(self, picture_id: Union[str, UUID]):
         return self.repository.find_by_id(picture_id)
+
+    def find_all_validated_by_room_ids(self, rooms: Collection[Room]):
+        return self.repository.find_all_validated_by_room_ids(rooms)
 
     def find_by_not_validated(self, limit: int = 10, offset: int = 0):
         return self.repository.find_by_not_validated(limit, offset)

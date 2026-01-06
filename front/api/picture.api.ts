@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import axiosInstance, { baseURL } from './axiosConfig';
 import PicturePvaDTO from './DTO/picturePva.dto';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 
 type UploadOptions = {

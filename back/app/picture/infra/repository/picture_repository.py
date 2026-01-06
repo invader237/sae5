@@ -30,6 +30,35 @@ class PictureRepository:
             raise Exception("Picture not found")
         return picture
 
+    def find_all_validated_by_room_ids(self, rooms):
+        print("[DEBUG][picture_catalog] rooms:", rooms)
+        print("[DEBUG][picture_catalog] rooms type:", type(rooms))
+
+        if not rooms:
+            print("[DEBUG][picture_catalog] empty rooms list")
+            return []
+
+        room_ids = []
+        for room in rooms:
+            print(
+                "[DEBUG][picture_catalog] room:",
+                room,
+                "id:",
+                room.room_id,
+            )
+            room_ids.append(room.room_id)
+
+        print("[DEBUG][picture_catalog] room_ids:", room_ids)
+
+        return (
+            self.db.query(PictureModel)
+            .filter(
+                PictureModel.room_id.in_(room_ids),
+                PictureModel.is_validated.is_(True),
+            )
+            .all()
+        )
+
     def find_by_not_validated(self, limit: int = 10, offset: int = 0):
         return (
             self.db.query(PictureModel)
