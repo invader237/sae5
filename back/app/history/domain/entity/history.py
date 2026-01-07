@@ -33,6 +33,11 @@ class History(Base):
         ForeignKey("models.model_id"),
         nullable=True,
     )
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.user_id"),
+        nullable=True,
+    )
 
     scanned_at = Column(
         DateTime(timezone=True),
@@ -43,3 +48,4 @@ class History(Base):
     model = relationship("Model", backref="histories", lazy="joined")
     picture = relationship("Picture", backref="histories", lazy="joined")
     room = relationship("Room", back_populates="histories", lazy="joined")
+    user = relationship("User", backref="histories", lazy="joined")

@@ -26,6 +26,19 @@ if (__DEV__) {
 
 const axiosInstance = axios.create({ baseURL });
 
+try {
+  if (axiosInstance.defaults && axiosInstance.defaults.headers) {
+    if (axiosInstance.defaults.headers.post) {
+      delete axiosInstance.defaults.headers.post['Content-Type'];
+      delete axiosInstance.defaults.headers.post['content-type'];
+    }
+    if (axiosInstance.defaults.headers.common) {
+      delete axiosInstance.defaults.headers.common['Content-Type'];
+      delete axiosInstance.defaults.headers.common['content-type'];
+    }
+  }
+} catch (e) {}
+
 // Intercepteur pour ajouter automatiquement le token JWT à chaque requête
 axiosInstance.interceptors.request.use(
   async (config) => {

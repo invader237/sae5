@@ -33,6 +33,7 @@ Thumbs.db
 
 # Android
 android/app/build/
+android
 *.keystore
 
 # iOS
@@ -44,3 +45,6 @@ ios/Pods/
 
 expo-env.d.ts
 # @end expo-cli
+
+# Android build files
+front/andoid/
