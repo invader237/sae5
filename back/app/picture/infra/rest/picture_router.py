@@ -36,6 +36,7 @@ from app.model.infra.factory.model_factory import get_model_loader
 from app.authentification.core.admin_required import (
     require_role,
     AuthenticatedUser,
+    optional_user,
 )
 from app.model.infra.factory.model_factory import get_model_catalog
 from app.model.domain.catalog.model_catalog import ModelCatalog
@@ -122,7 +123,7 @@ class PictureController:
         model_loader=Depends(get_model_loader),
         model_catalog: ModelCatalog = Depends(get_model_catalog),
         history_catalog=Depends(get_history_catalog),
-        user: AuthenticatedUser = Depends(require_role()),
+        user: AuthenticatedUser | None = Depends(optional_user()),
     ):
         # Supporte file ou image comme clé multipart
         upload_file = file or image
@@ -211,21 +212,25 @@ class PictureController:
         picture = Picture(**picture_payload)
 
         picture = picture_catalog.save(picture)
-        try:
-            active_model = model_catalog.find_active_model()
-            model_id = active_model.model_id if active_model else None
-            room_id = room_obj.room_id if room_obj else None
-            history_catalog.save(
-                History(
-                    room=room_obj,
-                    room_id=room_id,
-                    image_id=picture.image_id,
-                    model_id=model_id,
-                    user_id=user.user_id,
+
+        # Sauvegarde de l'historique uniquement si l'utilisateur est connecté
+        if user is not None:
+            try:
+                active_model = model_catalog.find_active_model()
+                model_id = active_model.model_id if active_model else None
+                room_id = room_obj.room_id if room_obj else None
+                history_catalog.save(
+                    History(
+                        room=room_obj,
+                        room_id=room_id,
+                        image_id=picture.image_id,
+                        model_id=model_id,
+                        user_id=user.user_id,
+                    )
                 )
-            )
-        except Exception as e:
-            print(f"[WARNING] Erreur lors de la sauvegarde historique: {e}")
+            except Exception as e:
+                print(f"[WARNING] Erreur lors de la sauvegarde historique: {e}")
+
         return inference_result
 
     async def find_picture_to_validate(

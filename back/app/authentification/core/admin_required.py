@@ -88,6 +88,54 @@ require_admin = require_role("admin")
 require_authenticated = require_role()
 
 
+def optional_user() -> Callable[..., AuthenticatedUser | None]:
+    """
+    Dépendance FastAPI qui retourne un utilisateur authentifié ou None.
+
+    Ne lève pas d'exception si l'utilisateur n'est pas authentifié,
+    ce qui permet de créer des endpoints accessibles avec ou sans auth.
+
+    Returns:
+        Callable: Dépendance FastAPI retournant AuthenticatedUser | None.
+
+    Usage:
+        @router.post("/public-endpoint")
+        def endpoint(
+            user: AuthenticatedUser | None = Depends(optional_user())
+        ):
+            if user:
+                # Fonctionnalité pour utilisateurs connectés
+                pass
+            else:
+                # Fonctionnalité sans authentification
+                pass
+    """
+
+    def dependency(
+        authorization: str | None = Header(None, alias="Authorization"),
+    ) -> AuthenticatedUser | None:
+        # Si pas d'authorization header, retourne None
+        if not authorization or not authorization.startswith("Bearer "):
+            return None
+
+        try:
+            token = authorization.split(" ", 1)[1].strip()
+            payload = decode_token(token)
+
+            user_id = payload.get("user_id")
+            role = payload.get("role")
+
+            if not user_id:
+                return None
+
+            return AuthenticatedUser(user_id=user_id, role=role or "")
+        except Exception:
+            # En cas d'erreur de décodage, retourne None au lieu de lever
+            return None
+
+    return dependency
+
+
 # ---- Rétro-compatibilité (deprecated) ----
 # Ces fonctions sont conservées pour ne pas casser le code existant
 # mais devraient être migrées vers require_role()
