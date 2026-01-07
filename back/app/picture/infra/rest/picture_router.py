@@ -312,17 +312,25 @@ class PictureController:
         image = Image.open(picture.path)
 
         # A supprimer après que le resizing soit en place partout
-        if image.size != (384, 384):
-            image = image.resize((384, 384))
-
         if type == "thumbnail":
-            image.thumbnail((150, 150))
+            max_size = (150, 150)
+            quality = 75
+        else:
+            max_size = (384, 384)
+            quality = 90
+
+        image.thumbnail(max_size, Image.Resampling.LANCZOS)
 
         if image.mode != "RGB":
             image = image.convert("RGB")
 
         buffer = io.BytesIO()
-        image.save(buffer, format="JPEG", quality=100)
+        image.save(
+            buffer,
+            format="JPEG",
+            quality=quality,
+            optimize=True,
+                )
         buffer.seek(0)
 
         return StreamingResponse(buffer, media_type="image/jpeg")
