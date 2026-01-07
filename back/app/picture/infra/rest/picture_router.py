@@ -229,7 +229,9 @@ class PictureController:
                     )
                 )
             except Exception as e:
-                print(f"[WARNING] Erreur lors de la sauvegarde historique: {e}")
+                print(
+                    f"[WARNING] Erreur lors de la sauvegarde historique: {e}"
+                )
 
         return inference_result
 
