@@ -122,6 +122,7 @@ class PictureController:
         model_loader=Depends(get_model_loader),
         model_catalog: ModelCatalog = Depends(get_model_catalog),
         history_catalog=Depends(get_history_catalog),
+        user: AuthenticatedUser = Depends(require_role())
     ):
         # Supporte file ou image comme clé multipart
         upload_file = file or image
