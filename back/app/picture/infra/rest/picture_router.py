@@ -309,10 +309,9 @@ class PictureController:
 
         image = Image.open(picture.path)
 
-        # A supprimer après que le resizing soit en place partout
         if type == "thumbnail":
             max_size = (150, 150)
-            quality = 75
+            quality = 70
         else:
             max_size = (384, 384)
             quality = 90
