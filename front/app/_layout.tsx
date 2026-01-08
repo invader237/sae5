@@ -13,7 +13,7 @@ export default function RootLayout() {
     setMounted(true);
   }, []);
 
-  const isCardStyle = Platform.OS === "web" && width > 430 && mounted;
+  const isCardStyle = Platform.OS === "web" && width >= 430 && mounted;
 
   return (
     <AuthProvider>
