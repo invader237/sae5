@@ -18,9 +18,9 @@ from PIL import Image
 from typing import List, Tuple
 
 
-def resize_image(image_path: Path, target_size: Tuple[int, int] = (384, 384), quality: int = 90) -> bool:
+def resize_image(image_path: Path, target_size: Tuple[int, int] = (384, 384), quality: int = 100) -> bool:
     """
-    Redimensionne une image à la taille cible.
+    Redimensionne une image à la taille cible exacte (crop).
 
     Args:
         image_path: Chemin vers l'image
@@ -35,17 +35,14 @@ def resize_image(image_path: Path, target_size: Tuple[int, int] = (384, 384), qu
         with Image.open(image_path) as img:
             original_size = img.size
 
-            # Vérifier si l'image est déjà à la bonne taille (ou plus petite)
-            if img.size[0] <= target_size[0] and img.size[1] <= target_size[1]:
+            # Vérifier si l'image est déjà à la bonne taille exacte
+            if img.size == target_size:
                 print(f"✓ {image_path.name}: Déjà à la bonne taille {img.size}")
                 return False
 
-            # Redimensionner en conservant le ratio (plus petit côté = target_size)
-            img.thumbnail(target_size, Image.Resampling.LANCZOS)
-
-            # Convertir en RGB si nécessaire
-            if img.mode != "RGB":
-                img = img.convert("RGB")
+            # Convertir en RGB et redimensionner (crop) à la taille exacte
+            img = img.convert("RGB")
+            img = img.resize(target_size)
 
             # Sauvegarder l'image redimensionnée
             buffer = io.BytesIO()
@@ -99,8 +96,8 @@ def main():
     parser.add_argument(
         "--quality",
         type=int,
-        default=90,
-        help="Qualité JPEG (1-100, défaut: 90)"
+        default=100,
+        help="Qualité JPEG (1-100, défaut: 100)"
     )
 
     args = parser.parse_args()
@@ -147,7 +144,7 @@ def main():
         if args.dry_run:
             try:
                 with Image.open(image_path) as img:
-                    if img.size[0] <= 384 and img.size[1] <= 384:
+                    if img.size == (384, 384):
                         print(f"✓ {image_path.name}: Déjà à la bonne taille {img.size}")
                         skipped_count += 1
                     else:
