@@ -2,11 +2,18 @@ import { Stack } from "expo-router";
 import { AuthProvider } from "@/contexts/AuthContext";
 import "../global.css";
 import { View, Platform, StyleSheet, useWindowDimensions } from "react-native";
+import { useEffect, useState } from "react";
 
 export default function RootLayout() {
   const { width } = useWindowDimensions();
+  const [mounted, setMounted] = useState(false);
 
-  const isCardStyle = Platform.OS === "web" && width > 430;
+  useEffect(() => {
+    // Force un re-render après le montage pour s'assurer que les dimensions sont correctes
+    setMounted(true);
+  }, []);
+
+  const isCardStyle = Platform.OS === "web" && width > 430 && mounted;
 
   return (
     <AuthProvider>
