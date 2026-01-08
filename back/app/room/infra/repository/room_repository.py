@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.room.domain.entity.room import Room as RoomModel
 from app.picture.domain.entity.picture import Picture
-from sqlalchemy import func, case
+from sqlalchemy import func
 from typing import Collection
 
 
@@ -33,21 +33,14 @@ class RoomRepository:
         self.db.commit()
 
     def low_picture_coverage_rooms(self) -> Collection[RoomModel]:
-        threshold = 3
-
-        validated_count = func.count(
-            case(
-                (Picture.is_validated.is_(True), 1),
-                else_=None
-            )
-        )
+        picture_count = func.count(Picture.picture_id)
 
         return (
             self.db.query(RoomModel)
             .outerjoin(RoomModel.pictures)
             .group_by(RoomModel.room_id)
-            .having(validated_count < threshold)
-            .limit(threshold)
+            .order_by(picture_count.asc())
+            .limit(3)
             .all()
         )
 
