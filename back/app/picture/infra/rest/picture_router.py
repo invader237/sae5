@@ -158,7 +158,24 @@ class PictureController:
         dest_path = UPLOAD_DIR / filename
 
         contents = await upload_file.read()
-        dest_path.write_bytes(contents)
+
+        # Redimensionner l'image à 384x384 avant de la sauvegarder
+        image = Image.open(io.BytesIO(contents))
+
+        # Redimensionner à 384x384 en conservant le ratio (plus petit côté = 384)
+        image.thumbnail((384, 384), Image.Resampling.LANCZOS)
+
+        # Convertir en RGB si nécessaire
+        if image.mode != "RGB":
+            image = image.convert("RGB")
+
+        # Sauvegarder l'image redimensionnée
+        buffer = io.BytesIO()
+        image.save(buffer, format="JPEG", quality=90, optimize=True)
+        dest_path.write_bytes(buffer.getvalue())
+
+        # Utiliser les bytes redimensionnés pour l'inférence
+        contents = buffer.getvalue()
 
         # Inference synchrone avant sauvegarde
         try:
