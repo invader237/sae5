@@ -251,24 +251,11 @@ class PictureController:
         limit: int = Query(50, ge=1, le=100),
         offset: int = Query(0, ge=0),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
-        room_catalog: RoomCatalog = Depends(get_room_catalog),
     ):
         pictures = picture_catalog.find_by_not_validated(
             limit=limit,
             offset=offset
         )
-
-        # TODO: optimiser en supprimant la boucle, il faut soit ne pas
-        # permettre d'avoir un room id null, soit remplacer par un id de
-        # rooom qui correspond à "Inconnu", soit mieux gérer l'erreur en amont
-        pictures = [p for p in pictures if p.room is not None]
-
-        pictures = sorted(
-            pictures,
-            key=lambda p: (p.analyse_date or
-                           datetime.min.replace(tzinfo=timezone.utc)),
-            reverse=True,
-            )
 
         return [
             picture_to_picturePvaDTO_mapper.apply(picture)
