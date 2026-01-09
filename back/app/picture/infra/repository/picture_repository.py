@@ -63,6 +63,8 @@ class PictureRepository:
         return (
             self.db.query(PictureModel)
             .filter(PictureModel.is_validated.is_(False))
+            .filter(PictureModel.room_id.isnot(None))
+            .order_by(PictureModel.analyse_date.desc())
             .limit(limit)
             .offset(offset)
             .all()
