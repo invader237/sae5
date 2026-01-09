@@ -33,7 +33,7 @@ class RoomRepository:
         self.db.commit()
 
     def low_picture_coverage_rooms(self) -> Collection[RoomModel]:
-        picture_count = func.count(Picture.picture_id)
+        picture_count = func.count(Picture.image_id)
 
         return (
             self.db.query(RoomModel)
