@@ -1,0 +1,36 @@
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: training-job
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: trainer
+          image: ghcr.io/invader237/training:latest
+          envFrom:
+            - configMapRef:
+                name: app-config
+          volumeMounts:
+            - name: dataset
+              mountPath: /data
+            - name: models
+              mountPath: /app/models
+          resources:
+            requests:
+              cpu: "2"
+              memory: "4Gi"
+            limits:
+              memory: "6Gi"
+      volumes:
+        - name: dataset
+          persistentVolumeClaim:
+            claimName: pvc-dataset
+        - name: models
+          persistentVolumeClaim:
+            claimName: pvc-models
