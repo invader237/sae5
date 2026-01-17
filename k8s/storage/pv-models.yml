@@ -7,5 +7,6 @@ spec:
     storage: 2Gi
   accessModes:
     - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
   hostPath:
-    path: /mnt/models
+    path: /srv/sae5/sae5-model
