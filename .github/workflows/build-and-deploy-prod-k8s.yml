@@ -34,6 +34,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./back
+          file: ./back/Dockerfile.prod
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
@@ -42,6 +43,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./front
+          file: ./front/Dockerfile.prod
           push: true
           build-args: |
             EXPO_PUBLIC_BACKEND_API_ADDRESS=https://api-prod.neuroom.fr
