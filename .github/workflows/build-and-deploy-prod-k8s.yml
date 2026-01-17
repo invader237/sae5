@@ -17,7 +17,7 @@ jobs:
       REGISTRY: ghcr.io
       BACKEND_IMAGE: neuroom-backend
       FRONTEND_IMAGE: neuroom-frontend
-      IMAGE_TAG: prod-${{ github.sha }}
+      IMAGE_TAG: prod
 
     steps:
       - name: Checkout code
