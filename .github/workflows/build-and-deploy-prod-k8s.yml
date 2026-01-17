@@ -18,6 +18,7 @@ jobs:
       BACKEND_IMAGE: neuroom-backend
       FRONTEND_IMAGE: neuroom-frontend
       IMAGE_TAG: prod
+      IMAGE_OWNER: ${{ github.repository_owner }}
 
     steps:
       - name: Checkout code
@@ -37,7 +38,7 @@ jobs:
           file: ./back/Dockerfile.prod
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
 
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
