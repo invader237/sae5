@@ -4,7 +4,9 @@ metadata:
   name: pvc-dataset
 spec:
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteOnce
   resources:
     requests:
-      storage: 60Gi
+      storage: 15Gi
+  volumeName: pv-dataset
+  storageClassName: ""
