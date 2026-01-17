@@ -4,6 +4,11 @@ metadata:
   name: backend
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: backend
@@ -14,26 +19,40 @@ spec:
     spec:
       imagePullSecrets:
         - name: ghcr-secret
+      volumes:
+        - name: dataset-volume
+          persistentVolumeClaim:
+            claimName: pvc-dataset
+        - name: models-volume
+          persistentVolumeClaim:
+            claimName: pvc-models
       containers:
         - name: backend
-          image: ghcr.io/invader237/backend:latest
+          image: ghcr.io/invader237/neuroom-backend:prod
           ports:
             - containerPort: 8000
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 4Gi
           envFrom:
             - configMapRef:
                 name: app-config
             - secretRef:
-                name: app-secret
+                name: backend-secret
           volumeMounts:
-            - name: models
+            - name: dataset-volume
+              mountPath: /app/uploads
+            - name: models-volume
               mountPath: /app/models
-          resources:
-            requests:
-              cpu: "500m"
-              memory: "1Gi"
-            limits:
-              memory: "2Gi"
-      volumes:
-        - name: models
-          persistentVolumeClaim:
-            claimName: pvc-models
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3

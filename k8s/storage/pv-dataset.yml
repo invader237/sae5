@@ -4,8 +4,9 @@ metadata:
   name: pv-dataset
 spec:
   capacity:
-    storage: 60Gi
+    storage: 15Gi
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
   hostPath:
-    path: /mnt/dataset
+    path: /srv/sae5/dataset

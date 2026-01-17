@@ -12,7 +12,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: trainer
-          image: ghcr.io/invader237/training:latest
+          image: ghcr.io/invader237/training:prod
           envFrom:
             - configMapRef:
                 name: app-config

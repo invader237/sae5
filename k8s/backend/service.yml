@@ -10,3 +10,7 @@ spec:
     - port: 8000
       targetPort: 8000
       nodePort: 30080
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600
