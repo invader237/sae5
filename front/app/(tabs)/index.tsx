@@ -1,100 +1,26 @@
-import { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Pressable, View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useIsFocused } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import * as ImagePicker from 'expo-image-picker';
-import { uploadFrame } from '@/api/picture.api';
 import { InferenceResultModal } from '@/components/InferenceResultModal';
 import { RealTimeOverlay } from '@/components/RealTimeOverlay';
-import { InferenceResultDTO } from '@/api/DTO/inference.dto';
+import { useCameraInference } from '@/hooks/camera/useCameraInference';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const isFocused = useIsFocused();
   const tabBarHeight = useBottomTabBarHeight();
-  const [permission, requestPermission] = useCameraPermissions();
-  const [hasAsked, setHasAsked] = useState(false);
-  const cameraRef = useRef<any>(null);
-  const [cameraReady, setCameraReady] = useState(false);
-  const isUploadingRef = useRef(false);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [zoom] = useState(0.1);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [inferenceResult, setInferenceResult] = useState<InferenceResultDTO | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentInference, setCurrentInference] = useState<InferenceResultDTO | null>(null);
-
-  const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permissionResult.granted) {
-      alert('Permission refusée pour accéder à la galerie');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.5,
-    });
-
-    if (!result.canceled && result.assets[0]?.uri) {
-      try {
-        setInferenceResult(null);
-        setModalVisible(true);
-        setIsAnalyzing(true);
-
-        const inference = await uploadFrame(result.assets[0].uri);
-        setInferenceResult(inference);
-      } catch {
-        alert('Erreur lors de l\'envoi de l\'image');
-        // close modal on error
-        setModalVisible(false);
-      } finally {
-        setIsAnalyzing(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (!permission && !hasAsked) {
-      setHasAsked(true);
-      requestPermission();
-    }
-  }, [permission, hasAsked, requestPermission]);
-
-  const isGranted = permission?.granted;
-
-  // Capture et envoi 1 image par seconde (l'image doit aussi respecter les conditions de focus, camera ready et analyse actif)
-  useEffect(() => {
-    if (!isFocused || !isGranted || !cameraReady || !isStreaming) return;
-
-    const intervalId = setInterval(async () => {
-      if (isUploadingRef.current) return;
-
-      try {
-        isUploadingRef.current = true;
-        const picture = await cameraRef.current?.takePictureAsync?.({
-          quality: 0.5,
-          skipProcessing: true,
-        });
-
-        if (picture?.uri) {
-          const res = await uploadFrame(picture.uri);
-          setCurrentInference(res);
-        }
-      } catch (error) {
-        console.warn('Erreur lors de l\'envoi temps réel:', error);
-        // Ne pas arrêter l'interval, continuer
-      } finally {
-        isUploadingRef.current = false;
-      }
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [isFocused, isGranted, cameraReady, isStreaming]);
+  const {
+    isGranted,
+    isStreaming,
+    setIsStreaming,
+    cameraProps,
+    pickImage,
+    modalVisible,
+    setModalVisible,
+    inferenceResult,
+    isAnalyzing,
+    currentInference,
+  } = useCameraInference();
 
   return (
     <View
@@ -106,14 +32,9 @@ export default function HomeScreen() {
       <View className="flex-1 rounded-xl overflow-hidden border border-neutral-200/50 relative">
         {isGranted ? (
           <CameraView
-            ref={cameraRef}
+            {...cameraProps}
             className="absolute inset-0"
             style={{ flex: 1 }}
-            active={isFocused}
-            facing="back"
-            zoom={zoom}
-            onCameraReady={() => setCameraReady(true)}
-            onMountError={(e) => { console.error('Camera mount error', e); }}
           />
         ) : (
           <View className="flex-1 items-center justify-center p-4 gap-3">

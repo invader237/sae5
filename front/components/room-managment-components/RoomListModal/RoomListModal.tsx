@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React from "react";
 import { Modal, View, Text, TouchableOpacity, ScrollView } from "react-native";
 import RoomDTO from "@/api/DTO/room.dto";
 import RoomAccordionItem from "@/components/room-managment-components/RoomAccordionItem";
+import { useRoomListModal } from "@/hooks/rooms/useRoomListModal";
 
 type Props = {
   visible: boolean;
@@ -14,16 +15,7 @@ type Props = {
 const RoomListModal = (
   { visible, rooms, onClose, onEdit, onViewPictures }: Props
 ) => {
-  const [expandedRoom, setExpandedRoom] = useState<string | null>(null);
-
-  const sortedRooms = useMemo(() => {
-    return [...rooms].sort((a, b) => {
-      const diff =
-        (a.validated_picture_count ?? 0) - (b.validated_picture_count ?? 0);
-      if (diff !== 0) return diff;
-      return (a.name ?? "").localeCompare(b.name ?? "");
-    });
-  }, [rooms]);
+  const { expandedRoom, sortedRooms, toggleExpanded } = useRoomListModal({ rooms });
 
   return (
     <Modal transparent animationType="fade" visible={visible}>
@@ -39,9 +31,7 @@ const RoomListModal = (
                 key={room.id}
                 room={room}
                 expanded={expandedRoom === room.id}
-                onToggle={() =>
-                  setExpandedRoom(expandedRoom === room.id ? null : room.id)
-                }
+                onToggle={() => toggleExpanded(room.id)}
                 onEdit={() => onEdit(room)}
                 onViewPictures={() => onViewPictures(room)}
               />

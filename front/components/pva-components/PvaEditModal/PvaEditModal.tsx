@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, Text, Modal, TouchableOpacity } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { fetchRoomsForPva } from "@/api/room.api";
-import { updateRoomForPictures } from "@/api/picture.api";
-import RoomLightDTO from "@/api/DTO/roomLight.dto";
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
+import { usePvaEditModal } from "@/hooks/pva/usePvaEditModal";
 
 interface Props {
   visible: boolean;
@@ -19,41 +17,12 @@ const PvaEditModal = ({
   selectedPictures,
   onUpdated,
 }: Props) => {
-  const [rooms, setRooms] = useState<RoomLightDTO[]>([]);
-  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const data = await fetchRoomsForPva();
-        setRooms(data);
-        if (data.length > 0) setSelectedRoomId(data[0].id);
-      } catch (e) {
-        console.error("Erreur récupération des salles :", e);
-      }
-    };
-    fetchRooms();
-  }, []);
-
-  const handleConfirm = async () => {
-    try {
-      if (!selectedRoomId) return;
-
-      const updatedPayload = selectedPictures.map((pic) => ({
-        ...pic,
-        room: {
-          ...pic.room,
-          id: selectedRoomId,
-        },
-      }));
-
-      await updateRoomForPictures(updatedPayload);
-      await onUpdated?.();
-      onClose();
-    } catch (error) {
-      console.error("Erreur mise à jour des salles :", error);
-    }
-  };
+  const { rooms, selectedRoomId, setSelectedRoomId, handleConfirm } = usePvaEditModal({
+    visible,
+    selectedPictures,
+    onUpdated,
+    onClose,
+  });
 
   return (
     <Modal

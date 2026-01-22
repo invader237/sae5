@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Modal, TouchableOpacity, FlatList } from "react-native";
-import { validatePictures, deletePicturesPva, fetchToValidatePictures } from "@/api/picture.api";
+import React, { useState } from "react";
+import { View, Text, Modal, TouchableOpacity, FlatList, Alert, Platform } from "react-native";
 import PictureItem from "@/components/pva-components/PvaPictureItem";
 import PvaEditModal from "@/components/pva-components/PvaEditModal";
-import PicturePvaDTO from "@/api/DTO/picturePva.dto";
+import { usePvaPictures } from "@/hooks/pva/usePvaPictures";
+import { usePvaModalActions } from "@/hooks/pva/usePvaModalActions";
 
 interface Props {
   visible: boolean;
@@ -16,80 +16,62 @@ interface Props {
 const ITEMS_PER_PAGE = 6;
 
 const PvaModal = ({ visible, onClose, refreshKey, onValidated, onDeleted }: Props) => {
-  const [selectedPictures, setSelectedPictures] = useState<string[]>([]);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
 
-  const [page, setPage] = useState(1);
-  const [pictures, setPictures] = useState<PicturePvaDTO[]>([]);
-  const [hasMore, setHasMore] = useState(true);
+  const {
+    pictures,
+    setPictures,
+    isLoading,
+    loadMore,
+    refresh,
+  } = usePvaPictures({
+    visible,
+    refreshKey,
+    itemsPerPage: ITEMS_PER_PAGE,
+  });
 
-    useEffect(() => {
-      if (!visible) return;
+  const {
+    selectedPictures,
+    isDeleting,
+    toggleSelect,
+    clearSelection,
+    validateSelected,
+    deleteSelected,
+  } = usePvaModalActions({
+    pictures,
+    setPictures,
+    onValidated,
+    onDeleted,
+    onClose,
+    onError: (message) => alert(message),
+  });
 
-      const fetchInitial = async () => {
-        const data = await fetchToValidatePictures(ITEMS_PER_PAGE, 0);
-        setPictures(data);
-        setPage(1);
-        setHasMore(data.length === ITEMS_PER_PAGE);
-      };
-
-      fetchInitial();
-    }, [visible, refreshKey]); 
-
-    const loadMore = async () => {
-      if (!hasMore) return;
-
-      const offset = page * ITEMS_PER_PAGE;
-      const more = await fetchToValidatePictures(ITEMS_PER_PAGE, offset);
-
-      if (more.length === 0) {
-        setHasMore(false);
-        return;
-      }
-
-      setPictures(prev => [...prev, ...more]);
-      setPage(prev => prev + 1);
-    };
-
-  const toggleSelect = (id: string) => {
-    setSelectedPictures((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  const handleValidate = async () => {
-    try {
-      const picturesToValidate = pictures.filter(pic => selectedPictures.includes(pic.id));
-      await validatePictures(picturesToValidate);
-      onValidated?.(selectedPictures);
-      setSelectedPictures([]);
-      onClose();
-    } catch (error) {
-      console.error("Erreur lors de la validation :", error);
-    }
-  };
-
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (selectedPictures.length === 0) return;
-    const confirmed = confirm(
-      `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`
-    );
-    if (!confirmed) return;
 
-    setIsDeleting(true);
-    try {
-      const picturesToDelete = pictures.filter(pic => selectedPictures.includes(pic.id));
-      await deletePicturesPva(picturesToDelete);
-      onDeleted?.(selectedPictures);
-      setSelectedPictures([]);
-      onClose();
-    } catch (error) {
-      console.error("Erreur lors de la suppression :", error);
-      alert("Impossible de supprimer les images.");
-    } finally {
-      setIsDeleting(false);
+    if (Platform.OS === "web") {
+      const confirmed = confirm(
+        `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`
+      );
+      if (!confirmed) return;
+      void deleteSelected();
+      return;
     }
+
+    Alert.alert(
+      "Confirmer",
+      `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`,
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Supprimer",
+          style: "destructive",
+          onPress: () => {
+            void deleteSelected();
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -128,7 +110,7 @@ const PvaModal = ({ visible, onClose, refreshKey, onValidated, onDeleted }: Prop
           onEndReachedThreshold={0.4}
           ListEmptyComponent={
             <Text className="text-center text-[#555] mt-10">
-              Aucune image à valider pour le moment.
+              {isLoading ? "Chargement…" : "Aucune image à valider pour le moment."}
             </Text>
           }
         />
@@ -136,7 +118,7 @@ const PvaModal = ({ visible, onClose, refreshKey, onValidated, onDeleted }: Prop
         {/* Footer actions */}
         <View className="flex-row items-center justify-between px-4 py-3">
           <TouchableOpacity
-            onPress={handleValidate}
+            onPress={validateSelected}
             disabled={selectedPictures.length === 0}
             className={`px-4 py-2 rounded-lg ${selectedPictures.length > 0 ? "bg-blue-500" : "bg-gray-300"}`}
           >
@@ -170,13 +152,11 @@ const PvaModal = ({ visible, onClose, refreshKey, onValidated, onDeleted }: Prop
         <PvaEditModal
           visible={editModalVisible}
           onClose={() => setEditModalVisible(false)}
-          selectedPictures={pictures.filter(pic => selectedPictures.includes(pic.id))}
-          onConfirm={(updatedPictures) => {
-            console.log("Images mises à jour :", updatedPictures);
-            setSelectedPictures([]);
+          selectedPictures={pictures.filter((pic) => selectedPictures.includes(pic.id))}
+          onUpdated={async () => {
+            clearSelection();
             setEditModalVisible(false);
-            onValidated?.(ids);
-            onClose();
+            await refresh();
           }}
         />
       </View>
