@@ -11,7 +11,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Spinner } from "@/components/Spinner";
 import { AuthForm } from "@/components/authentification/AuthForm";
 import { ChangePasswordForm } from "@/components/authentification/ChangePasswordForm";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth/useAuth";
 
 export default function ProfileScreen() {
   const { user, token, isLoading, login, logout } = useAuth();

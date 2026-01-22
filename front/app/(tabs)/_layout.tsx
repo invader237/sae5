@@ -4,7 +4,7 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import "../../global.css";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth/useAuth";
 
 type IconName = React.ComponentProps<typeof IconSymbol>["name"];
 

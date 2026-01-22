@@ -1,51 +1,18 @@
+import React from "react";
 import { Text, View, Image, TouchableOpacity, Modal, ScrollView } from "react-native";
-import { useState, useCallback } from "react";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import axiosInstance from "../../api/axiosConfig";
 import { toFileUri } from "../../utils/image";
-import { useAuth } from "../../hooks/useAuth";
-import type HistoryDTO from "../../api/DTO/history.dto";
+import { useHistory } from "@/hooks/history/useHistory";
 
 export default function HistoryScreen() {
-  const [items, setItems] = useState<HistoryDTO[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const { user } = useAuth();
-  const navigation = useNavigation();
-
-  const load = useCallback(async () => {
-    if (!user) {
-      navigation.navigate("index" as never);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axiosInstance.get<HistoryDTO[]>("/histories");
-      setItems(res.data ?? []);
-    } catch {
-      setError("Impossible de charger l'historique");
-    } finally {
-      setLoading(false);
-    }
-  }, [user, navigation]);
-
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load])
-  );
-
-  const formatDateTime = (iso: string) => {
-    try {
-      const d = new Date(iso);
-      return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
-    } catch {
-      return iso;
-    }
-  };
+  const {
+    items,
+    loading,
+    error,
+    preview,
+    previewUri,
+    setPreview,
+    formatDateTime,
+  } = useHistory();
 
   return (
     <View className="flex-1 bg-white">
@@ -71,7 +38,7 @@ export default function HistoryScreen() {
                 key={it.id}
                 className="flex-row items-center border-b border-[#eee] py-5"
               >
-                <TouchableOpacity onPress={() => setPreview(toFileUri(it.image_id))}>
+                <TouchableOpacity onPress={() => setPreview(it.image_id)}>
                   <Image
                     source={{ uri: toFileUri(it.image_id) }}
                     style={{ width: 64, height: 64, borderRadius: 8, marginRight: 14 }}
@@ -96,9 +63,9 @@ export default function HistoryScreen() {
 
       <Modal visible={!!preview} transparent animationType="fade" onRequestClose={() => setPreview(null)}>
         <View className="flex-1 bg-[rgba(0,0,0,0.8)] items-center justify-center">
-          {preview && (
+          {previewUri && (
             <Image
-              source={{ uri: preview }}
+              source={{ uri: previewUri }}
               style={{ width: "90%", height: "70%", resizeMode: "contain" }}
             />
           )}

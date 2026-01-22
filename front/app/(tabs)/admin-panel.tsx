@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from "react-native";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth/useAuth";
 import { Redirect } from "expo-router";
 import ModelSelector from "@/components/model-selector";
 import PvaPanel from "@/components/pva-panel";

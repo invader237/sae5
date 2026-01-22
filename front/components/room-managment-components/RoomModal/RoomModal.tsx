@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Modal, View, Text, TextInput, TouchableOpacity } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { RoomDTO } from "@/api/DTO/room.dto";
-
-const departments = ["INFO", "GEA", "TC"];
-const roomTypes = ["IT", "NORMAL", "AMPHI"];
+import { useRoomModalForm } from "@/hooks/rooms/useRoomModalForm";
 
 type Props = {
   visible: boolean;
@@ -14,51 +12,20 @@ type Props = {
 };
 
 const RoomModal = ({ visible, room, onClose, onSubmit }: Props) => {
-  const [name, setName] = useState(room?.name ?? "");
-  const [floor, setFloor] = useState(room?.floor ?? 0);
-  const [department, setDepartment] = useState(room?.departement ?? departments[0]);
-  const [type, setType] = useState(room?.type ?? roomTypes[0]);
-
-  const mode = room ? "edit" : "add";
-
-  useEffect(() => {
-    if (room) {
-      setName(room.name);
-      setFloor(room.floor);
-      setDepartment(room.departement);
-      setType(room.type);
-    } else {
-      setName("");
-      setFloor(0);
-      setDepartment(departments[0]);
-      setType(roomTypes[0]);
-    }
-  }, [room, visible]);
-
-  const handleNameChange = (v: string) => {
-    const up = v.toUpperCase();
-    const regex = /^[A-Z][0-9]{0,3}$/;
-    if (up === "" || regex.test(up)) {
-      setName(up);
-
-      // Si le deuxième caractère est un chiffre, on le prend comme étage
-      if (up.length >= 2) {
-        const firstDigit = parseInt(up[1], 10);
-        if (!isNaN(firstDigit)) setFloor(firstDigit);
-      }
-    }
-  };
-
-  const handleSubmit = () => {
-    const payload: RoomDTO = {
-      ...(room?.id && { id: room.id }),
-      name,
-      floor,
-      departement: department,
-      type,
-    };
-    onSubmit(payload);
-  };
+  const {
+    name,
+    floor,
+    department,
+    type,
+    mode,
+    setFloor,
+    setDepartment,
+    setType,
+    handleNameChange,
+    submit,
+    departments,
+    roomTypes,
+  } = useRoomModalForm({ room, visible, onSubmit });
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -106,7 +73,7 @@ const RoomModal = ({ visible, room, onClose, onSubmit }: Props) => {
           {/* BUTTONS */}
           <TouchableOpacity
             className={`px-4 py-2 rounded-md ${mode === "add" ? "bg-[#28a745]" : "bg-[#007bff]"}`}
-            onPress={handleSubmit}
+            onPress={submit}
           >
             <Text className="text-white font-bold text-center">
               {mode === "add" ? "Ajouter" : "Mettre à jour"}

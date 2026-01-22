@@ -1,51 +1,19 @@
-import { useState, useEffect } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity, Modal, Pressable } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { fetchModels, scanForNewModels, setActiveModel } from "@/api/model.api";
-import { ModelDTO } from "@/api/DTO/model.dto";
+import { useModelSelector } from "@/hooks/models/useModelSelector";
 
 export default function ModelSelector() {
-  const [model, setModel] = useState<string | null>(null);
-  const [modelsList, setModelsList] = useState<ModelDTO[]>([]);
-  const [pendingModel, setPendingModel] = useState<string | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  const loadModels = async () => {
-    let models = await fetchModels();
-    models = models.sort((a, b) => (b.is_active ? 1 : 0) - (a.is_active ? 1 : 0));
-    setModelsList(models);
-
-    const active = models.find(m => m.is_active);
-    if (active) setModel(active.id);
-  };
-
-  const refreshModels = async () => {
-    await scanForNewModels();
-    await loadModels();
-  };
-
-  const handleConfirmChange = async (newModel: string) => {
-    await setActiveModel({ id: newModel } as any);
-    setModel(newModel);
-    await refreshModels();
-  };
-
-  useEffect(() => {
-    loadModels();
-  }, []);
-
-  const handleSelect = (newModel: string) => {
-    setPendingModel(newModel);
-    setShowConfirm(true);
-  };
-
-  const confirm = () => {
-    if (!pendingModel) return;
-    handleConfirmChange(pendingModel);
-    setShowConfirm(false);
-    setPendingModel(null);
-  };
+  const {
+    model,
+    modelsList,
+    showConfirm,
+    handleSelect,
+    refreshModels,
+    confirm,
+    cancel,
+  } = useModelSelector();
 
   return (
     <>
@@ -103,10 +71,7 @@ export default function ModelSelector() {
 
             <View className="flex-row justify-end gap-4">
               <Pressable
-                onPress={() => {
-                  setPendingModel(null);
-                  setShowConfirm(false);
-                }}
+                onPress={cancel}
                 className="px-4 py-2 rounded-md bg-gray-300"
               >
                 <Text>Annuler</Text>
