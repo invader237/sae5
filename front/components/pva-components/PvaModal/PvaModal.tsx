@@ -95,14 +95,20 @@ const PvaModal = ({ visible, onClose, refreshKey, onValidated, onDeleted }: Prop
         {/* Liste optimisée */}
         <FlatList
           data={pictures}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => {
+            if (!item.id) {
+              console.warn("Picture without id", item);
+              return index.toString();
+            }
+            return item.id;
+          }}
           numColumns={2}
           columnWrapperStyle={{ justifyContent: "center", gap: 20 }}
           contentContainerStyle={{ paddingBottom: 20, gap: 20 }}
           renderItem={({ item }) => (
             <PictureItem
               picture={item}
-              isSelected={selectedPictures.includes(item.id)}
+              isSelected={item.id ? selectedPictures.includes(item.id) : false}
               onPress={toggleSelect}
             />
           )}
@@ -152,7 +158,7 @@ const PvaModal = ({ visible, onClose, refreshKey, onValidated, onDeleted }: Prop
         <PvaEditModal
           visible={editModalVisible}
           onClose={() => setEditModalVisible(false)}
-          selectedPictures={pictures.filter((pic) => selectedPictures.includes(pic.id))}
+          selectedPictures={pictures.filter((pic) => pic.id ? selectedPictures.includes(pic.id) : false)}
           onUpdated={async () => {
             clearSelection();
             setEditModalVisible(false);
