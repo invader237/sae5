@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { CameraView } from 'expo-camera';
 import { InferenceResultModal } from '@/components/InferenceResultModal';
 import { RealTimeOverlay } from '@/components/RealTimeOverlay';
 import { useCameraInference } from '@/hooks/camera/useCameraInference';

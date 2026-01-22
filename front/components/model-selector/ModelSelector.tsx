@@ -62,7 +62,7 @@ export default function ModelSelector() {
         visible={showConfirm}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowConfirm(false)}
+        onRequestClose={cancel}
       >
         <View className="flex-1 justify-center items-center bg-black bg-opacity-40">
           <View className="bg-white p-6 rounded-lg w-11/12 max-w-md">

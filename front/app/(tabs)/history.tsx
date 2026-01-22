@@ -38,7 +38,7 @@ export default function HistoryScreen() {
                 key={it.id}
                 className="flex-row items-center border-b border-[#eee] py-5"
               >
-                <TouchableOpacity onPress={() => setPreview(it.image_id)}>
+                <TouchableOpacity onPress={() => setPreview(it.image_id ?? null)}>
                   <Image
                     source={{ uri: toFileUri(it.image_id) }}
                     style={{ width: 64, height: 64, borderRadius: 8, marginRight: 14 }}
