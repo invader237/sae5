@@ -37,12 +37,16 @@ export default function ModelStatsPanel({ modelId, refreshKey }: Props) {
     }
   }, [refreshKey, loadSummary]);
 
+  useEffect(() => {
+    if (refreshKey !== undefined && modalVisible) {
+      void loadDetailed();
+    }
+  }, [refreshKey, modalVisible, loadDetailed]);
+
   const openModal = useCallback(async () => {
     setModalVisible(true);
-    if (!detailed) {
-      await loadDetailed();
-    }
-  }, [detailed, loadDetailed]);
+    await loadDetailed();
+  }, [loadDetailed]);
 
   const closeModal = useCallback(() => setModalVisible(false), []);
 
@@ -143,94 +147,92 @@ export default function ModelStatsPanel({ modelId, refreshKey }: Props) {
       <Modal
         visible={modalVisible}
         animationType="slide"
-        transparent
+        transparent={false}
         onRequestClose={closeModal}
       >
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-2xl max-h-[85%]">
-            {/* Header */}
-            <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
-              <Text className="text-lg font-bold text-gray-800">
-                Statistiques détaillées
-              </Text>
-              <TouchableOpacity onPress={closeModal}>
-                <Text className="text-blue-500 font-semibold">Fermer</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Content */}
-            <ScrollView className="p-4">
-              {loadingDetailed ? (
-                <View className="items-center py-8">
-                  <ActivityIndicator size="large" color="#007bff" />
-                  <Text className="text-gray-500 mt-2">
-                    Chargement des graphiques...
-                  </Text>
-                </View>
-              ) : errorDetailed ? (
-                <View className="items-center py-8 gap-3">
-                  <MaterialIcons name="error-outline" size={48} color="#ef4444" />
-                  <Text className="text-red-500 text-center">
-                    {errorDetailed}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={retryDetailed}
-                    className="bg-blue-500 px-6 py-2 rounded-md mt-2"
-                  >
-                    <Text className="text-white font-semibold">Réessayer</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : detailed ? (
-                <View className="gap-6 pb-8">
-                  {/* Accuracy Global */}
-                  <AccuracyGauge value={detailed.accuracy_global} />
-
-                  {/* Confusion Matrix */}
-                  <View className="gap-2">
-                    <Text className="text-base font-bold text-gray-800">
-                      Matrice de confusion
-                    </Text>
-                    {detailed.confusion_matrix.length === 0 ? (
-                      <EmptyStateCard
-                        icon="grid-on"
-                        title="Pas de données"
-                        description="La matrice sera disponible après validation d'images."
-                      />
-                    ) : (
-                      <ConfusionMatrixTable
-                        matrix={detailed.confusion_matrix}
-                        rooms={detailed.rooms}
-                      />
-                    )}
-                  </View>
-
-                  {/* Accuracy over time */}
-                  <View className="gap-2">
-                    <Text className="text-base font-bold text-gray-800">
-                      Évolution de la précision
-                    </Text>
-                    {detailed.accuracy_over_time.length === 0 ? (
-                      <EmptyStateCard
-                        icon="show-chart"
-                        title="Pas d'historique"
-                        description="L'évolution sera disponible après plusieurs jours de validation."
-                      />
-                    ) : (
-                      <AccuracyTimeline data={detailed.accuracy_over_time} />
-                    )}
-                  </View>
-                </View>
-              ) : (
-                <View className="items-center py-8">
-                  <EmptyStateCard
-                    icon="analytics"
-                    title="Données indisponibles"
-                    description="Impossible de charger les statistiques détaillées."
-                  />
-                </View>
-              )}
-            </ScrollView>
+        <View className="flex-1 bg-white p-4">
+          {/* Header */}
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-2xl font-bold text-[#333]">
+              Statistiques détaillées
+            </Text>
+            <TouchableOpacity onPress={closeModal}>
+              <Text className="text-blue-500 text-lg">Fermer</Text>
+            </TouchableOpacity>
           </View>
+
+          {/* Content */}
+          <ScrollView className="flex-1">
+            {loadingDetailed ? (
+              <View className="items-center py-8">
+                <ActivityIndicator size="large" color="#007bff" />
+                <Text className="text-gray-500 mt-2">
+                  Chargement des graphiques...
+                </Text>
+              </View>
+            ) : errorDetailed ? (
+              <View className="items-center py-8 gap-3">
+                <MaterialIcons name="error-outline" size={48} color="#ef4444" />
+                <Text className="text-red-500 text-center">
+                  {errorDetailed}
+                </Text>
+                <TouchableOpacity
+                  onPress={retryDetailed}
+                  className="bg-blue-500 px-6 py-2 rounded-md mt-2"
+                >
+                  <Text className="text-white font-semibold">Réessayer</Text>
+                </TouchableOpacity>
+              </View>
+            ) : detailed ? (
+              <View className="gap-6 pb-8">
+                {/* Accuracy Global */}
+                <AccuracyGauge value={detailed.accuracy_global} />
+
+                {/* Confusion Matrix */}
+                <View className="gap-2">
+                  <Text className="text-base font-bold text-gray-800">
+                    Matrice de confusion
+                  </Text>
+                  {detailed.confusion_matrix.length === 0 ? (
+                    <EmptyStateCard
+                      icon="grid-on"
+                      title="Pas de données"
+                      description="La matrice sera disponible après validation d'images."
+                    />
+                  ) : (
+                    <ConfusionMatrixTable
+                      matrix={detailed.confusion_matrix}
+                      rooms={detailed.rooms}
+                    />
+                  )}
+                </View>
+
+                {/* Accuracy over time */}
+                <View className="gap-2">
+                  <Text className="text-base font-bold text-gray-800">
+                    Évolution de la précision
+                  </Text>
+                  {detailed.accuracy_over_time.length === 0 ? (
+                    <EmptyStateCard
+                      icon="show-chart"
+                      title="Pas d'historique"
+                      description="L'évolution sera disponible après plusieurs jours de validation."
+                    />
+                  ) : (
+                    <AccuracyTimeline data={detailed.accuracy_over_time} />
+                  )}
+                </View>
+              </View>
+            ) : (
+              <View className="items-center py-8">
+                <EmptyStateCard
+                  icon="analytics"
+                  title="Données indisponibles"
+                  description="Impossible de charger les statistiques détaillées."
+                />
+              </View>
+            )}
+          </ScrollView>
         </View>
       </Modal>
     </>
@@ -345,11 +347,11 @@ const ConfusionMatrixTable = memo(function ConfusionMatrixTable({
         </View>
       )}
       <ScrollView horizontal showsHorizontalScrollIndicator>
-        <View>
+        <View className="items-center">
           {/* Header row */}
           <View className="flex-row">
             <View className="w-20 h-10 border border-gray-300 bg-gray-100 justify-center items-center">
-              <Text className="text-xs font-bold">Réel ↓</Text>
+              <Text className="text-xs">Réel ↓</Text>
             </View>
             {displayedRoomIds.map((rid) => (
               <View
