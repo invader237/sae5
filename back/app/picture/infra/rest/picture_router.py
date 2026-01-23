@@ -179,12 +179,8 @@ class PictureController:
 
         buffer = io.BytesIO()
         img.save(buffer, format="JPEG", quality=100, optimize=True)
-        resized_bytes = buffer.getvalue()
-
-<<<<<<< HEAD
-        # Persist the resized image
         dest_path.write_bytes(resized_bytes)
-=======
+
         thumbnail = image.copy()
         thumbnail.thumbnail((150, 150), Image.Resampling.LANCZOS)
         thumb_buffer = io.BytesIO()
@@ -196,7 +192,6 @@ class PictureController:
 
         # Utiliser les bytes redimensionnés pour l'inférence
         contents = buffer.getvalue()
->>>>>>> 2e85044 (:zap:(picture): fix performance by implementing pre processig)
 
         # Parse layers query
         activation_layers: Optional[List[str]] = None
@@ -247,19 +242,18 @@ class PictureController:
             recognition_percentage = None
 
         room_obj = room_catalog.find_by_name(inference_result.get("top_label"))
-        picture_payload = {
-            "path": str(dest_path),
-            "analyzed_by": inference_result.get(
-                "model_version") or inference_result.get("model") or None,
-            "room": room_obj,
-            "recognition_percentage": recognition_percentage,
-            "analyse_date": datetime.now(timezone.utc),
-            "validation_date": None,
-            "is_validated": False,
-            "room_id": room_obj.room_id if room_obj else None,
-        }
 
-        picture = Picture(**picture_payload)
+        picture = Picture(
+            path=str(dest_path),
+            analyzed_by=inference_result.get("model_version") or inference_result.get("model") or None,
+            room=room_obj,
+            recognition_percentage=recognition_percentage,
+            analyse_date=datetime.now(timezone.utc),
+            validation_date=None,
+            is_validated=False,
+            room_id=room_obj.room_id if room_obj else None,
+        )
+
         picture = picture_catalog.save(picture)
 
         if user is not None:
@@ -331,13 +325,9 @@ class PictureController:
         Depends(get_picture_catalog),
     ):
         picture = picture_catalog.find_by_id(picture_id)
-<<<<<<< HEAD
-        image = Image.open(picture.path)
-=======
 
         if not picture:
             raise HTTPException(status_code=404, detail="Image introuvable")
->>>>>>> 2e85044 (:zap:(picture): fix performance by implementing pre processig)
 
         if type == "thumbnail":
             file_path = (
@@ -353,18 +343,7 @@ class PictureController:
                 detail=f"Fichier {file_path} introuvable",
             )
 
-<<<<<<< HEAD
-        if image.mode != "RGB":
-            image = image.convert("RGB")
-
-        buffer = io.BytesIO()
-        image.save(buffer, format="JPEG", quality=quality, optimize=True)
-        buffer.seek(0)
-
-        return StreamingResponse(buffer, media_type="image/jpeg")
-=======
         return FileResponse(str(file_path), media_type="image/jpeg")
->>>>>>> 2e85044 (:zap:(picture): fix performance by implementing pre processig)
 
     async def list_activation_images(self, token: str):
         act_dir = UPLOAD_DIR / "activations" / token
