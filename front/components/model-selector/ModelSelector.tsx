@@ -4,7 +4,11 @@ import { Picker } from "@react-native-picker/picker";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useModelSelector } from "@/hooks/models/useModelSelector";
 
-export default function ModelSelector() {
+interface ModelSelectorProps {
+  controller?: ReturnType<typeof useModelSelector>;
+}
+
+export default function ModelSelector({ controller }: ModelSelectorProps) {
   const {
     model,
     modelsList,
@@ -13,7 +17,7 @@ export default function ModelSelector() {
     refreshModels,
     confirm,
     cancel,
-  } = useModelSelector();
+  } = controller ?? useModelSelector();
 
   return (
     <>
