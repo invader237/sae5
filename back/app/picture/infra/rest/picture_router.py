@@ -216,20 +216,17 @@ class PictureController:
         print(room_catalog.find_by_name(inference_result.get("top_label")))
 
         room_obj = room_catalog.find_by_name(inference_result.get("top_label"))
-        picture_payload = {
-            "path": str(dest_path),
-            "analyzed_by": inference_result.get("model_version")
-            or inference_result.get("model")
-            or None,
-            "room": room_obj,  # passer l'objet Room
-            "recognition_percentage": recognition_percentage,
-            "analyse_date": datetime.now(timezone.utc),
-            "validation_date": None,
-            "is_validated": False,
-            "room_id": room_obj.room_id if room_obj else None,
-        }
 
-        picture = Picture(**picture_payload)
+        picture = Picture(
+            path=str(dest_path),
+            analyzed_by=inference_result.get("model_version") or inference_result.get("model") or None,
+            room=room_obj,
+            recognition_percentage=recognition_percentage,
+            analyse_date=datetime.now(timezone.utc),
+            validation_date=None,
+            is_validated=False,
+            room_id=room_obj.room_id if room_obj else None,
+        )
 
         picture = picture_catalog.save(picture)
 
