@@ -52,6 +52,5 @@ def get_model_training(
     )
 
 
-def get_model_stats_service() -> ModelStatsService:
-    # Contract only (commit 2): real implementation added later.
-    return ModelStatsService()
+def get_model_stats_service(db: Session = Depends(get_session)) -> ModelStatsService:
+    return ModelStatsService(db)
