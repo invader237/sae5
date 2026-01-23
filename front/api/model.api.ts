@@ -1,6 +1,10 @@
 import axiosInstance from './axiosConfig';
 import ModelDTO from './DTO/model.dto';
 import ModelTrainingDTO from './DTO/modelTraining.dto';
+import type {
+  ModelStatsSummaryDTO,
+  ModelStatsDetailedDTO,
+} from './DTO/modelStats.dto';
 
 export const fetchModels = async (): Promise<ModelDTO[]> => {
   try {
@@ -38,3 +42,31 @@ export const trainModel = async (trainingData: ModelTrainingDTO): Promise<void> 
         throw error;
     }
 }
+
+export const fetchModelStatsSummary = async (
+  modelId: string
+): Promise<ModelStatsSummaryDTO> => {
+  try {
+    const response = await axiosInstance.get(
+      `/models/${modelId}/stats/summary`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching model stats summary:', error);
+    throw error;
+  }
+};
+
+export const fetchModelStatsDetailed = async (
+  modelId: string
+): Promise<ModelStatsDetailedDTO> => {
+  try {
+    const response = await axiosInstance.get(
+      `/models/${modelId}/stats/detailed`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching model stats detailed:', error);
+    throw error;
+  }
+};
