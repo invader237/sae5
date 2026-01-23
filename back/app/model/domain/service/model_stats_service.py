@@ -128,7 +128,7 @@ class ModelStatsService:
         # Accuracy global
         acc_row = (
             self.db.query(
-                func.count().label("total"),
+                func.count(HistoryModel.id).label("total"),
                 func.sum(
                     case(
                         (
@@ -139,8 +139,9 @@ class ModelStatsService:
                     )
                 ).label("correct"),
             )
+            .select_from(HistoryModel)
             .join(
-                HistoryModel,
+                PictureModel,
                 HistoryModel.image_id == PictureModel.image_id,
             )
             .filter(*base_filter)
@@ -156,7 +157,7 @@ class ModelStatsService:
         series_rows = (
             self.db.query(
                 bucket.label("bucket"),
-                func.count().label("total"),
+                func.count(HistoryModel.id).label("total"),
                 func.sum(
                     case(
                         (
@@ -167,6 +168,7 @@ class ModelStatsService:
                     )
                 ).label("correct"),
             )
+            .select_from(HistoryModel)
             .join(
                 PictureModel,
                 HistoryModel.image_id == PictureModel.image_id,
