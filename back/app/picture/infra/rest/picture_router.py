@@ -12,7 +12,7 @@ from fastapi import (
 )
 from PIL import Image
 import io
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse
 from pathlib import Path
 from typing import Literal
 import uuid
@@ -168,6 +168,15 @@ class PictureController:
         image.save(buffer, format="JPEG", quality=100, optimize=True)
         dest_path.write_bytes(buffer.getvalue())
 
+        thumbnail = image.copy()
+        thumbnail.thumbnail((150, 150), Image.Resampling.LANCZOS)
+        thumb_buffer = io.BytesIO()
+        thumbnail.save(
+            thumb_buffer, format="JPEG", quality=70, optimize=True
+        )
+        thumb_path = UPLOAD_DIR / f"{dest_path.stem}_thumb.jpg"
+        thumb_path.write_bytes(thumb_buffer.getvalue())
+
         # Utiliser les bytes redimensionnés pour l'inférence
         contents = buffer.getvalue()
 
@@ -307,30 +316,24 @@ class PictureController:
     ):
         picture = picture_catalog.find_by_id(picture_id)
 
-        image = Image.open(picture.path)
+        if not picture:
+            raise HTTPException(status_code=404, detail="Image introuvable")
 
         if type == "thumbnail":
-            max_size = (150, 150)
-            quality = 70
+            file_path = (
+                Path(picture.path).parent
+                / f"{Path(picture.path).stem}_thumb.jpg"
+            )
         else:
-            max_size = (384, 384)
-            quality = 90
+            file_path = Path(picture.path)
 
-        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+        if not file_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Fichier {file_path} introuvable",
+            )
 
-        if image.mode != "RGB":
-            image = image.convert("RGB")
-
-        buffer = io.BytesIO()
-        image.save(
-            buffer,
-            format="JPEG",
-            quality=quality,
-            optimize=True,
-                )
-        buffer.seek(0)
-
-        return StreamingResponse(buffer, media_type="image/jpeg")
+        return FileResponse(str(file_path), media_type="image/jpeg")
 
     async def delete_pictures_pva(
         self,
