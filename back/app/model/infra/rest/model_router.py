@@ -14,6 +14,11 @@ from app.authentification.core.admin_required import (
 from app.model.domain.service.model_training import ModelTraining
 from app.model.infra.factory.model_factory import get_model_training
 from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
+from app.model.domain.DTO.modelStatsSummaryDTO import ModelStatsSummaryDTO
+from app.model.domain.DTO.modelStatsDetailedDTO import ModelStatsDetailedDTO
+from app.model.domain.service.model_stats_service import ModelStatsService
+from app.model.infra.factory.model_factory import get_model_stats_service
+from uuid import UUID
 
 
 class ModelController:
@@ -48,6 +53,20 @@ class ModelController:
             "/train",
             self.train_model,
             methods=["POST"],
+        )
+
+        self.router.add_api_route(
+            "/{model_id}/stats/summary",
+            self.get_model_stats_summary,
+            response_model=ModelStatsSummaryDTO,
+            methods=["GET"],
+        )
+
+        self.router.add_api_route(
+            "/{model_id}/stats/detailed",
+            self.get_model_stats_detailed,
+            response_model=ModelStatsDetailedDTO,
+            methods=["GET"],
         )
 
     def get_models(
@@ -118,6 +137,26 @@ class ModelController:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(e),
             )
+
+    def get_model_stats_summary(
+        self,
+        model_id: UUID,
+        model_stats_service: ModelStatsService = Depends(
+            get_model_stats_service
+        ),
+        user: AuthenticatedUser = Depends(require_role("admin")),
+    ) -> ModelStatsSummaryDTO:
+        return model_stats_service.get_summary(model_id)
+
+    def get_model_stats_detailed(
+        self,
+        model_id: UUID,
+        model_stats_service: ModelStatsService = Depends(
+            get_model_stats_service
+        ),
+        user: AuthenticatedUser = Depends(require_role("admin")),
+    ) -> ModelStatsDetailedDTO:
+        return model_stats_service.get_detailed(model_id)
 
 
 model_controller = ModelController()

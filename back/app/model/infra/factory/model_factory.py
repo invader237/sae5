@@ -15,6 +15,7 @@ from app.picture.domain.catalog.picture_catalog import PictureCatalog
 from app.picture.infra.factory.picture_factory import get_picture_catalog
 from app.database import get_session
 from app.model.domain.service.model_namer import ModelNamer
+from app.model.domain.service.model_stats_service import ModelStatsService
 
 
 def get_model_catalog(db: Session = Depends(get_session)) -> ModelCatalog:
@@ -49,3 +50,8 @@ def get_model_training(
         picture_catalog=picture_catalog,
         model_namer=model_namer
     )
+
+
+def get_model_stats_service() -> ModelStatsService:
+    # Contract only (commit 2): real implementation added later.
+    return ModelStatsService()
