@@ -13,7 +13,7 @@ from fastapi import (
 )
 from PIL import Image
 import io
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse
 from pathlib import Path
 from typing import Literal, Optional, List
 import uuid
@@ -181,8 +181,22 @@ class PictureController:
         img.save(buffer, format="JPEG", quality=100, optimize=True)
         resized_bytes = buffer.getvalue()
 
+<<<<<<< HEAD
         # Persist the resized image
         dest_path.write_bytes(resized_bytes)
+=======
+        thumbnail = image.copy()
+        thumbnail.thumbnail((150, 150), Image.Resampling.LANCZOS)
+        thumb_buffer = io.BytesIO()
+        thumbnail.save(
+            thumb_buffer, format="JPEG", quality=70, optimize=True
+        )
+        thumb_path = UPLOAD_DIR / f"{dest_path.stem}_thumb.jpg"
+        thumb_path.write_bytes(thumb_buffer.getvalue())
+
+        # Utiliser les bytes redimensionnés pour l'inférence
+        contents = buffer.getvalue()
+>>>>>>> 2e85044 (:zap:(picture): fix performance by implementing pre processig)
 
         # Parse layers query
         activation_layers: Optional[List[str]] = None
@@ -317,17 +331,29 @@ class PictureController:
         Depends(get_picture_catalog),
     ):
         picture = picture_catalog.find_by_id(picture_id)
+<<<<<<< HEAD
         image = Image.open(picture.path)
+=======
+
+        if not picture:
+            raise HTTPException(status_code=404, detail="Image introuvable")
+>>>>>>> 2e85044 (:zap:(picture): fix performance by implementing pre processig)
 
         if type == "thumbnail":
-            max_size = (150, 150)
-            quality = 70
+            file_path = (
+                Path(picture.path).parent
+                / f"{Path(picture.path).stem}_thumb.jpg"
+            )
         else:
-            max_size = (384, 384)
-            quality = 90
+            file_path = Path(picture.path)
 
-        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+        if not file_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Fichier {file_path} introuvable",
+            )
 
+<<<<<<< HEAD
         if image.mode != "RGB":
             image = image.convert("RGB")
 
@@ -336,6 +362,9 @@ class PictureController:
         buffer.seek(0)
 
         return StreamingResponse(buffer, media_type="image/jpeg")
+=======
+        return FileResponse(str(file_path), media_type="image/jpeg")
+>>>>>>> 2e85044 (:zap:(picture): fix performance by implementing pre processig)
 
     async def list_activation_images(self, token: str):
         act_dir = UPLOAD_DIR / "activations" / token
