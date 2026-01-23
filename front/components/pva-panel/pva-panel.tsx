@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import PvaModal from "@/components/pva-components/PvaModal";
 import PictureItem from "@/components/pva-components/PvaPictureItem";
 import { usePvaPreview } from "@/hooks/pva/usePvaPreview";
 
-const PvaPanel = () => {
+interface PvaPanelProps {
+  onDataChanged?: () => void;
+}
+
+const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
   const [pvaModalIsVisible, setPvaModalIsVisible] = useState(false);
   const {
     previewPictures,
@@ -15,6 +19,22 @@ const PvaPanel = () => {
     handleValidated,
     handleDeleted,
   } = usePvaPreview({ previewCount: 5 });
+
+  const handleValidatedWithRefresh = useCallback(
+    (ids: string[]) => {
+      handleValidated(ids);
+      onDataChanged?.();
+    },
+    [handleValidated, onDataChanged]
+  );
+
+  const handleDeletedWithRefresh = useCallback(
+    (ids: string[]) => {
+      handleDeleted(ids);
+      onDataChanged?.();
+    },
+    [handleDeleted, onDataChanged]
+  );
 
   const handleRefresh = async () => {
     try {
@@ -52,8 +72,8 @@ const PvaPanel = () => {
         visible={pvaModalIsVisible}
         onClose={() => setPvaModalIsVisible(false)}
         refreshKey={refreshKey}
-        onValidated={handleValidated}
-        onDeleted={handleDeleted}
+        onValidated={handleValidatedWithRefresh}
+        onDeleted={handleDeletedWithRefresh}
       />
     </View>
   );
