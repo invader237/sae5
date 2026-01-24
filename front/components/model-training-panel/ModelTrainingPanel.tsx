@@ -4,6 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import ParameterLabel from "@/components/model-training-components/ParameterLabel";
 import InfoModal from "@/components/model-training-components/ParameterInfoModal";
 import RoomList from "@/components/model-training-components/RoomList";
+import LayerSelector from "@/components/model-training-components/LayerSelector";
 import { useModelTraining } from "@/hooks/models/useModelTraining";
 
 const TRAINING_TYPES = {
@@ -24,10 +25,12 @@ const ModelTrainingPanel = () => {
     rooms,
     selectedRooms,
     trainingConfig,
+    scratchLayers,
     refreshRooms,
     toggleRoom,
     updateConfig,
     setTrainingType,
+    toggleScratchLayer,
     train,
   } = useModelTraining();
 
@@ -83,10 +86,20 @@ const ModelTrainingPanel = () => {
           <RadioCard
             value={TRAINING_TYPES.SCRATCH}
             title="From scratch"
-            description="Créer un modèle à zéro (en cours de développement)"
+            description="Créer un modèle à zéro"
           />
         </View>
       </View>
+
+      {/* COUCHES DU MODÈLE - Visible uniquement en mode scratch */}
+      {trainingConfig.type === TRAINING_TYPES.SCRATCH && (
+        <View>
+          <Text className="text-base font-semibold text-gray-800 mb-3">
+            Architecture du modèle
+          </Text>
+          <LayerSelector layers={scratchLayers} onToggleLayer={toggleScratchLayer} />
+        </View>
+      )}
 
       {/* ROOMS */}
       <Text className="text-base font-semibold text-gray-800">Salles disponibles</Text>
