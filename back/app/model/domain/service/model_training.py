@@ -7,8 +7,8 @@ from pathlib import Path
 from app.model.domain.service.room_dataset import RoomDataset
 import json
 import re
-from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
-from typing import Literal
+from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO, ScratchLayersDTO
+from typing import Literal, Optional
 
 UPLOAD_DIR = Path("./")
 MODEL_DIR = Path("/app/models")
@@ -99,7 +99,11 @@ class ModelTraining:
         return self.dataset
 
     # 5️⃣ Initialize Model
-    def init_model(self, modelType: Literal["base", "scratch"] = "base"):
+    def init_model(
+        self,
+        modelType: Literal["base", "scratch"] = "base",
+        scratch_layers: Optional[ScratchLayersDTO] = None
+    ):
         if self.dataset is None:
             raise ValueError(
                 "Dataset must be built before initializing model"
@@ -116,22 +120,7 @@ class ModelTraining:
 
         elif modelType == "scratch":
             print("[DEBUG] Initializing model from scratch")
-            model = nn.Sequential(
-                nn.Conv2d(3, 32, 3, 1, 1),  # input channels,
-                # output channels, kernel size, stride, padding
-                nn.ReLU(),  # activation
-                nn.MaxPool2d(2),  # pooling
-                nn.Conv2d(32, 64, 3, 1, 1),  # second conv layer
-                nn.ReLU(),  # activation
-                nn.MaxPool2d(2),  # pooling
-                nn.AdaptiveAvgPool2d((1, 1)),  # adaptive pooling
-                nn.Flatten(),  # flatten for fully connected layers
-                nn.Linear(64, 128),  # fully connected layer
-                # nn.Flatten(),  # flatten for fully connected layers
-                # nn.Linear(64 * 56 * 56, 128),  # fully connected layer
-                nn.ReLU(),  # activation
-                nn.Linear(128, self.num_classes)  # output layer
-            )
+            model = self._build_scratch_model(scratch_layers)
         else:
             raise ValueError(f"Unknown model name: {self.model_name}")
 
@@ -140,6 +129,61 @@ class ModelTraining:
             f"Initialized model: {self.model_name} "
             f"with {self.num_classes} classes"
         )
+        return model
+
+    def _build_scratch_model(
+        self,
+        layers_config: Optional[ScratchLayersDTO] = None
+    ) -> nn.Module:
+        """
+        Construit un modèle CNN from scratch en fonction des couches
+        sélectionnées.
+        """
+        if layers_config is None:
+            layers_config = ScratchLayersDTO()
+
+        layers = []
+        current_channels = 3  # RGB input
+
+        # Première couche convolutionnelle
+        if layers_config.conv1:
+            layers.extend([
+                nn.Conv2d(current_channels, 32, 3, 1, 1),
+                nn.ReLU(),
+            ])
+            current_channels = 32
+            if layers_config.pooling:
+                layers.append(nn.MaxPool2d(2))
+
+        # Deuxième couche convolutionnelle
+        if layers_config.conv2:
+            layers.extend([
+                nn.Conv2d(current_channels, 64, 3, 1, 1),
+                nn.ReLU(),
+            ])
+            current_channels = 64
+            if layers_config.pooling:
+                layers.append(nn.MaxPool2d(2))
+
+        # Adaptive pooling et flatten
+        layers.extend([
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten(),
+        ])
+
+        # Couche fully connected intermédiaire
+        if layers_config.fc1:
+            layers.append(nn.Linear(current_channels, 128))
+            if layers_config.dropout:
+                layers.append(nn.Dropout(0.5))
+            layers.append(nn.ReLU())
+            layers.append(nn.Linear(128, self.num_classes))
+        else:
+            # Connexion directe vers la sortie
+            layers.append(nn.Linear(current_channels, self.num_classes))
+
+        model = nn.Sequential(*layers)
+        print(f"[DEBUG] Built scratch model with layers: {layers_config}")
         return model
 
     # 6️⃣ Create DataLoader
@@ -259,7 +303,10 @@ class ModelTraining:
             rooms.append(room)
 
         self.build_dataset(rooms)
-        self.init_model(modelTrainingDTO.type)
+        self.init_model(
+            modelTrainingDTO.type,
+            scratch_layers=modelTrainingDTO.scratchLayers
+        )
         self.model.to(self.device)
 
         dataloader = self.create_dataloader(

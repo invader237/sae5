@@ -1,15 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import { trainModel } from "@/api/model.api";
 import { fetchRoomForTraining } from "@/api/room.api";
-import ModelTrainingDTO from "@/api/DTO/modelTraining.dto";
+import ModelTrainingDTO, { ScratchLayersDTO } from "@/api/DTO/modelTraining.dto";
 import RoomLightDTO from "@/api/DTO/roomLight.dto";
 
 type TrainingType = "base" | "scratch";
+
+const DEFAULT_SCRATCH_LAYERS: ScratchLayersDTO = {
+  conv1: true,
+  conv2: true,
+  pooling: true,
+  fc1: true,
+  dropout: false,
+};
 
 export function useModelTraining() {
   const [isTraining, setIsTraining] = useState(false);
   const [rooms, setRooms] = useState<RoomLightDTO[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const [scratchLayers, setScratchLayers] = useState<ScratchLayersDTO>(DEFAULT_SCRATCH_LAYERS);
 
   const [trainingConfig, setTrainingConfig] = useState<ModelTrainingDTO>({
     type: "base",
@@ -17,6 +26,7 @@ export function useModelTraining() {
     batchSize: 32,
     learningRate: 0.001,
     roomList: [],
+    scratchLayers: DEFAULT_SCRATCH_LAYERS,
   });
 
   const refreshRooms = useCallback(async () => {
@@ -65,24 +75,44 @@ export function useModelTraining() {
     updateConfig("type", type);
   }, [updateConfig]);
 
+  const toggleScratchLayer = useCallback(<K extends keyof ScratchLayersDTO>(
+    layerKey: K
+  ) => {
+    setScratchLayers((prev) => {
+      const newLayers = { ...prev, [layerKey]: !prev[layerKey] };
+      setTrainingConfig((prevConfig) => ({
+        ...prevConfig,
+        scratchLayers: newLayers,
+      }));
+      return newLayers;
+    });
+  }, []);
+
   const train = useCallback(async () => {
     setIsTraining(true);
     try {
-      await trainModel(trainingConfig);
+      // Inclure scratchLayers uniquement pour le mode scratch
+      const payload: ModelTrainingDTO = {
+        ...trainingConfig,
+        scratchLayers: trainingConfig.type === "scratch" ? scratchLayers : undefined,
+      };
+      await trainModel(payload);
     } finally {
       setIsTraining(false);
     }
-  }, [trainingConfig]);
+  }, [trainingConfig, scratchLayers]);
 
   return {
     isTraining,
     rooms,
     selectedRooms,
     trainingConfig,
+    scratchLayers,
     refreshRooms,
     toggleRoom,
     updateConfig,
     setTrainingType,
+    toggleScratchLayer,
     train,
   };
 }
