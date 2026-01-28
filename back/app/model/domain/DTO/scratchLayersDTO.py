@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class ScratchLayersDTO(BaseModel):
     """Selection couches pour entraînement From Scratch"""
     conv1: bool = True
