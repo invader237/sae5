@@ -173,7 +173,7 @@ const ModelTrainingPanel = () => {
         <View className="bg-red-50 border border-red-300 rounded-lg p-3 flex-row items-center">
           <MaterialIcons name="error-outline" size={20} color="#dc2626" />
           <Text className="text-red-700 ml-2 flex-1">
-            Veuillez sélectionner au moins une couche pour l'entraînement from scratch.
+            Veuillez sélectionner au moins une couche pour l&apos;entraînement from scratch.
           </Text>
         </View>
       )}
