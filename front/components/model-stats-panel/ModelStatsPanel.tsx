@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
+import Svg, { Polyline, Circle, Line, Text as SvgText } from "react-native-svg";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useModelStats } from "@/hooks/models/useModelStats";
 
@@ -423,6 +424,24 @@ const AccuracyTimeline = memo(function AccuracyTimeline({
     return data.length > 30 ? data.slice(-30) : data;
   }, [data]);
 
+  const [chartWidth, setChartWidth] = useState(0);
+  const chartHeight = 160;
+  const padding = 24;
+
+  const points = useMemo(() => {
+    if (!chartWidth || displayedData.length === 0) return "";
+    const count = displayedData.length;
+    const stepX = count > 1 ? (chartWidth - padding * 2) / (count - 1) : 0;
+    return displayedData
+      .map((point, idx) => {
+        const x = padding + idx * stepX;
+        const y =
+          padding + (1 - point.accuracy) * (chartHeight - padding * 2);
+        return `${x},${y}`;
+      })
+      .join(" ");
+  }, [chartWidth, displayedData]);
+
   return (
     <View className="gap-2">
       {data.length > 30 && (
@@ -432,41 +451,106 @@ const AccuracyTimeline = memo(function AccuracyTimeline({
           </Text>
         </View>
       )}
-      <View className="border border-gray-200 rounded-lg overflow-hidden">
-        {displayedData.map((point, idx) => {
-          const pct = (point.accuracy * 100).toFixed(1);
-          const barColor =
-            point.accuracy >= 0.8
-              ? "bg-green-500"
-              : point.accuracy >= 0.5
-              ? "bg-yellow-500"
-              : "bg-red-500";
-
-          return (
-            <View
-              key={point.bucket}
-              className={`flex-row items-center p-3 ${
-                idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-              }`}
-            >
-              <Text className="text-sm text-gray-600 w-24">
-                {new Date(point.bucket).toLocaleDateString("fr-FR", {
+      <View
+        className="border border-gray-200 rounded-lg overflow-hidden bg-white"
+        onLayout={(e) => setChartWidth(e.nativeEvent.layout.width)}
+      >
+        <View className="px-4 pt-4">
+          <Text className="text-xs text-gray-500">Précision (%)</Text>
+        </View>
+        <View className="px-2 pb-4">
+          <Svg width={chartWidth} height={chartHeight}>
+            {/* Y-axis gridlines and labels */}
+            {chartWidth > 0 &&
+              [1, 0.5, 0].map((v) => {
+                const y = padding + (1 - v) * (chartHeight - padding * 2);
+                return (
+                  <React.Fragment key={`grid-${v}`}>
+                    <Line
+                      x1={padding}
+                      y1={y}
+                      x2={chartWidth - padding}
+                      y2={y}
+                      stroke="#f3f4f6"
+                      strokeWidth={1}
+                    />
+                    <SvgText
+                      x={padding - 6}
+                      y={y + 4}
+                      fontSize={10}
+                      fill="#9ca3af"
+                      textAnchor="end"
+                    >
+                      {Math.round(v * 100)}
+                    </SvgText>
+                  </React.Fragment>
+                );
+              })}
+            <Line
+              x1={padding}
+              y1={chartHeight - padding}
+              x2={chartWidth - padding}
+              y2={chartHeight - padding}
+              stroke="#e5e7eb"
+              strokeWidth={1}
+            />
+            <Line
+              x1={padding}
+              y1={padding}
+              x2={padding}
+              y2={chartHeight - padding}
+              stroke="#e5e7eb"
+              strokeWidth={1}
+            />
+            {points && (
+              <Polyline
+                points={points}
+                stroke="#4f46e5"
+                strokeWidth={2}
+                fill="none"
+              />
+            )}
+            {chartWidth > 0 &&
+              displayedData.map((point, idx) => {
+                const count = displayedData.length;
+                const stepX =
+                  count > 1 ? (chartWidth - padding * 2) / (count - 1) : 0;
+                const x = padding + idx * stepX;
+                const y =
+                  padding +
+                  (1 - point.accuracy) * (chartHeight - padding * 2);
+                return (
+                  <Circle
+                    key={point.bucket}
+                    cx={x}
+                    cy={y}
+                    r={3}
+                    fill="#4f46e5"
+                  />
+                );
+              })}
+          </Svg>
+        </View>
+        <View className="flex-row justify-between px-4 pb-3">
+          <Text className="text-xs text-gray-500">
+            {displayedData.length > 0
+              ? new Date(displayedData[0].bucket).toLocaleDateString("fr-FR", {
                   day: "2-digit",
                   month: "short",
-                })}
-              </Text>
-              <View className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden mx-2">
-                <View
-                  className={`h-full rounded-full ${barColor}`}
-                  style={{ width: `${point.accuracy * 100}%` }}
-                />
-              </View>
-              <Text className="text-sm font-semibold w-14 text-right">
-                {pct}%
-              </Text>
-            </View>
-          );
-        })}
+                })
+              : ""}
+          </Text>
+          <Text className="text-xs text-gray-500">
+            {displayedData.length > 0
+              ? new Date(
+                  displayedData[displayedData.length - 1].bucket
+                ).toLocaleDateString("fr-FR", {
+                  day: "2-digit",
+                  month: "short",
+                })
+              : ""}
+          </Text>
+        </View>
       </View>
     </View>
   );

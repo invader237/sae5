@@ -152,8 +152,8 @@ class ModelStatsService:
         correct = int(acc_row.correct or 0)
         accuracy_global = float(correct / total) if total > 0 else 0.0
 
-        # Accuracy evolution over time (daily buckets)
-        bucket = func.date(HistoryModel.scanned_at)
+        # Accuracy evolution over time (daily buckets based on validation date)
+        bucket = func.date(PictureModel.validation_date)
         series_rows = (
             self.db.query(
                 bucket.label("bucket"),
@@ -174,6 +174,7 @@ class ModelStatsService:
                 HistoryModel.image_id == PictureModel.image_id,
             )
             .filter(*base_filter)
+            .filter(PictureModel.validation_date.isnot(None))
             .group_by(bucket)
             .order_by(bucket.asc())
             .all()
