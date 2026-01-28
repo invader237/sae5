@@ -3,7 +3,7 @@ import { View, Text, Modal, TouchableOpacity, FlatList, Alert, Platform } from "
 
 import PictureItem from "@/components/pva-components/PvaPictureItem";
 import PvaEditModal from "@/components/pva-components/PvaEditModal";
-import Spinner from "@/components/Spinner";
+import { Spinner } from "@/components/Spinner";
 import { useValidatedPicturesByRoom } from "@/hooks/rooms/useValidatedPicturesByRoom";
 import { useValidatedPicturesActions } from "@/hooks/rooms/useValidatedPicturesActions";
 
