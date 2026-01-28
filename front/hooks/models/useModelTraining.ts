@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { trainModel } from "@/api/model.api";
 import { fetchRoomForTraining } from "@/api/room.api";
-import ModelTrainingDTO, { ScratchLayersDTO } from "@/api/DTO/modelTraining.dto";
+import ModelTrainingDTO from "@/api/DTO/modelTraining.dto";
+import { ScratchLayersDTO } from "@/api/DTO/scratchLayers.dto";
 import RoomLightDTO from "@/api/DTO/roomLight.dto";
 
 type TrainingType = "base" | "scratch";
@@ -75,6 +76,12 @@ export function useModelTraining() {
     updateConfig("type", type);
   }, [updateConfig]);
 
+  const hasAtLeastOneLayer = useCallback((layers: ScratchLayersDTO): boolean => {
+    return layers.conv1 || layers.conv2 || layers.fc1;
+  }, []);
+
+  const canTrain = trainingConfig.type === "base" || hasAtLeastOneLayer(scratchLayers);
+
   const toggleScratchLayer = useCallback(<K extends keyof ScratchLayersDTO>(
     layerKey: K
   ) => {
@@ -108,6 +115,7 @@ export function useModelTraining() {
     selectedRooms,
     trainingConfig,
     scratchLayers,
+    canTrain,
     refreshRooms,
     toggleRoom,
     updateConfig,

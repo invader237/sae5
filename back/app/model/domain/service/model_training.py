@@ -7,7 +7,8 @@ from pathlib import Path
 from app.model.domain.service.room_dataset import RoomDataset
 import json
 import re
-from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO, ScratchLayersDTO
+from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
+from app.model.domain.DTO.scratchLayersDTO import ScratchLayersDTO
 from typing import Literal, Optional
 
 UPLOAD_DIR = Path("./")

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { ScratchLayersDTO } from "@/api/DTO/modelTraining.dto";
+import { ScratchLayersDTO } from "@/api/DTO/scratchLayers.dto";
 
 type LayerKey = keyof ScratchLayersDTO;
 

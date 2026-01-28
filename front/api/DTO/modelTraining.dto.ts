@@ -9,6 +9,6 @@ export default interface ModelTrainingDTO {
   batchSize: number;
   learningRate: number;
   roomList: RoomLightDTO[];
-  scratchLayers: ScratchLayersDTO;
+  scratchLayers?: ScratchLayersDTO;
 }
 

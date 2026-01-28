@@ -26,6 +26,7 @@ const ModelTrainingPanel = () => {
     selectedRooms,
     trainingConfig,
     scratchLayers,
+    canTrain,
     refreshRooms,
     toggleRoom,
     updateConfig,
@@ -167,11 +168,21 @@ const ModelTrainingPanel = () => {
         decrease="Apprentissage plus lent mais plus stable."
       />
 
+      {/* MESSAGE D'ERREUR SI AUCUNE COUCHE */}
+      {trainingConfig.type === "scratch" && !canTrain && (
+        <View className="bg-red-50 border border-red-300 rounded-lg p-3 flex-row items-center">
+          <MaterialIcons name="error-outline" size={20} color="#dc2626" />
+          <Text className="text-red-700 ml-2 flex-1">
+            Veuillez sélectionner au moins une couche pour l'entraînement from scratch.
+          </Text>
+        </View>
+      )}
+
       {/* ACTION */}
       <TouchableOpacity
-        disabled={isTraining}
+        disabled={isTraining || !canTrain}
         onPress={train}
-        className={`px-4 py-3 rounded-md ${isTraining ? "bg-gray-400" : "bg-[#28a745]"}`}
+        className={`px-4 py-3 rounded-md ${isTraining || !canTrain ? "bg-gray-400" : "bg-[#28a745]"}`}
       >
         <Text className="text-white font-bold text-center">
           {isTraining ? "Entraînement en cours..." : "Lancer l’entraînement"}
