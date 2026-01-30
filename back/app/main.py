@@ -6,7 +6,7 @@ from app.database import engine, Base
 from app.scripts.seed_dev import load_fixtures
 from sqlalchemy import text
 from fastapi.exceptions import RequestValidationError
-from app.authentification.core.exception_handlers import (
+from app.auth.core.exception_handlers import (
     validation_exception_handler,
 )
 
@@ -15,9 +15,7 @@ from app.authentification.core.exception_handlers import (
 from app.user.infra.rest.user_router import router as user_router
 from app.model.infra.rest.model_router import router as model_router
 from app.picture.infra.rest.picture_router import router as picture_router
-from app.authentification.infra.rest.auth_router import (
-    router as auth_router,
-)
+from app.auth.infra.rest.auth_router import router as auth_router
 from app.room.infra.rest.room_router import router as room_router
 from app.history.infra.rest.history_router import router as history_router
 

@@ -7,7 +7,7 @@ from app.model.domain.service.model_loader import ModelLoader
 from app.model.domain.mapper.model_to_modelDTO_mapper import (
     model_to_modelDTO_mapper,
 )
-from app.authentification.core.admin_required import (
+from app.auth.core.admin_required import (
     require_role,
     AuthenticatedUser,
 )
@@ -72,7 +72,7 @@ class ModelController:
     def get_models(
         self,
         model_catalog: ModelCatalog = Depends(get_model_catalog),
-        user: AuthenticatedUser = Depends(require_role("admin")),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         models = model_catalog.find_all()
         return [model_to_modelDTO_mapper.apply(m).dict() for m in models]

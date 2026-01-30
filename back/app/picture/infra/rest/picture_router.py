@@ -34,7 +34,7 @@ from app.room.infra.factory.room_factory import get_room_catalog
 from app.room.domain.catalog.room_catalog import RoomCatalog
 from app.model.domain.service.predict import predict_image
 from app.model.infra.factory.model_factory import get_model_loader
-from app.authentification.core.admin_required import (
+from app.auth.core.admin_required import (
     require_role,
     AuthenticatedUser,
     optional_user,
@@ -112,6 +112,7 @@ class PictureController:
     def get_pictures(
         self,
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         pictures = picture_catalog.find_all()
         return [picture_to_pictureDTO_mapper.apply(p) for p in pictures]
@@ -282,6 +283,7 @@ class PictureController:
         offset: int = Query(0, ge=0),
         picture_catalog: PictureCatalog = Depends(
             get_picture_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         pictures = picture_catalog.find_by_not_validated(
             limit=limit, offset=offset)
@@ -458,7 +460,7 @@ class PictureController:
         limit: int = Query(500, ge=1, le=500),
         offset: int = Query(0, ge=0),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
-        user: AuthenticatedUser = Depends(require_role("admin")),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         pictures = picture_catalog.find_validated_by_room_id(
             room_id=room_id, limit=limit, offset=offset)
