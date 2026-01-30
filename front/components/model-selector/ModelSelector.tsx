@@ -9,6 +9,7 @@ interface ModelSelectorProps {
 }
 
 export default function ModelSelector({ controller }: ModelSelectorProps) {
+  const internalController = useModelSelector();
   const {
     model,
     modelsList,
@@ -17,7 +18,7 @@ export default function ModelSelector({ controller }: ModelSelectorProps) {
     refreshModels,
     confirm,
     cancel,
-  } = controller ?? useModelSelector();
+  } = controller ?? internalController;
 
   return (
     <>
