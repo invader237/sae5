@@ -36,6 +36,10 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
     [handleDeleted, onDataChanged]
   );
 
+  const handleUpdatedWithRefresh = useCallback(() => {
+    onDataChanged?.();
+  }, [onDataChanged]);
+
   const handleRefresh = async () => {
     try {
       await refresh();
@@ -74,6 +78,7 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
         refreshKey={refreshKey}
         onValidated={handleValidatedWithRefresh}
         onDeleted={handleDeletedWithRefresh}
+        onUpdated={handleUpdatedWithRefresh}
       />
     </View>
   );

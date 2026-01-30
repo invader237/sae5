@@ -11,11 +11,19 @@ interface Props {
   refreshKey: number;
   onValidated?: (ids: string[]) => void;
   onDeleted?: (ids: string[]) => void;
+  onUpdated?: () => void;
 }
 
 const ITEMS_PER_PAGE = 6;
 
-const PvaModal = ({ visible, onClose, refreshKey, onValidated, onDeleted }: Props) => {
+const PvaModal = ({
+  visible,
+  onClose,
+  refreshKey,
+  onValidated,
+  onDeleted,
+  onUpdated,
+}: Props) => {
   const [editModalVisible, setEditModalVisible] = useState(false);
 
   const {
@@ -163,6 +171,7 @@ const PvaModal = ({ visible, onClose, refreshKey, onValidated, onDeleted }: Prop
             clearSelection();
             setEditModalVisible(false);
             await refresh();
+            onUpdated?.();
           }}
         />
       </View>
