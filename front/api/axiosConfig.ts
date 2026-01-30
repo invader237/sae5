@@ -58,4 +58,24 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Response interceptor: log 401s and token presence (dev only)
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (__DEV__) {
+      const status = error?.response?.status;
+      const url = error?.config?.url;
+      // Non-blocking check of token presence
+      AsyncStorage.getItem("authToken")
+        .then((t) => {
+          console.warn(`[axiosConfig] Response error ${status} for ${url} — token present: ${!!t}`);
+        })
+        .catch((e) => {
+          console.warn(`[axiosConfig] Response error ${status} for ${url} — failed to read token:`, e);
+        });
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchModels, scanForNewModels, setActiveModel } from "@/api/model.api";
 import ModelDTO from "@/api/DTO/model.dto";
+import { useAuth } from "@/hooks/auth/useAuth";
 
 export function useModelSelector() {
   const [model, setModel] = useState<string | null>(null);
@@ -8,13 +9,19 @@ export function useModelSelector() {
   const [pendingModel, setPendingModel] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const loadModels = useCallback(async () => {
-    let models = await fetchModels();
-    models = models.sort((a, b) => (b.is_active ? 1 : 0) - (a.is_active ? 1 : 0));
-    setModelsList(models);
+  const { isLoading, user } = useAuth();
 
-    const active = models.find((m) => m.is_active);
-    if (active) setModel(active.id);
+  const loadModels = useCallback(async () => {
+    try {
+      let models = await fetchModels();
+      models = models.sort((a, b) => (b.is_active ? 1 : 0) - (a.is_active ? 1 : 0));
+      setModelsList(models);
+
+      const active = models.find((m) => m.is_active);
+      if (active) setModel(active.id);
+    } catch (error) {
+      console.error("Failed to load models:", error);
+    }
   }, []);
 
   const refreshModels = useCallback(async () => {
@@ -29,8 +36,12 @@ export function useModelSelector() {
   }, [refreshModels]);
 
   useEffect(() => {
-    void loadModels();
-  }, [loadModels]);
+    if (isLoading) return;
+    // Only load models when auth is initialized and a user exists
+    if (user) {
+      void loadModels();
+    }
+  }, [isLoading, user, loadModels]);
 
   const handleSelect = useCallback((newModel: string) => {
     setPendingModel(newModel);

@@ -17,7 +17,7 @@ function TabIcon({ name, color }: { name: IconName; color: string }) {
 }
 
 export default function TabLayout() {
-  const { isAdmin } = useAuth();
+  const { isPrivileged } = useAuth();
 
   return (
     <Tabs
@@ -67,7 +67,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="admin-panel"
         options={{
-          href: isAdmin ? "/admin-panel" : null,
+          href: isPrivileged ? "/admin-panel" : null,
           title: "Admin",
           tabBarIcon: ({ color }) => (
             <TabIcon name="shield.lefthalf.fill" color={color} />
