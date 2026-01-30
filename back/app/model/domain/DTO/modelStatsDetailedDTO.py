@@ -24,6 +24,10 @@ class AccuracyOverTimePointDTO(BaseModel):
 
 class ModelStatsDetailedDTO(BaseModel):
     rooms: list[RoomLightDTO] = Field(default_factory=list)
-    confusion_matrix: list[ConfusionMatrixCellDTO] = Field(default_factory=list)
+    confusion_matrix: list[ConfusionMatrixCellDTO] = Field(
+        default_factory=list
+    )
     accuracy_global: float = 0.0
-    accuracy_over_time: list[AccuracyOverTimePointDTO] = Field(default_factory=list)
+    accuracy_over_time: list[AccuracyOverTimePointDTO] = Field(
+        default_factory=list
+    )
