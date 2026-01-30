@@ -1,6 +1,6 @@
-from app.authentification.schemas import UserCreate
+from app.auth.domain.DTO.user_create import UserCreate
 from app.user.domain.entity.user import User
-from app.authentification.auth_utils import hash_password
+from app.auth.infra.password.password_hasher import hash_password
 
 
 class UserCreateDTOToUserMapper:
