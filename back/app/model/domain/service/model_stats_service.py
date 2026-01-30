@@ -24,7 +24,7 @@ class ModelStatsService:
         self.db = db
 
     def get_summary(self, model_id: UUID) -> ModelStatsSummaryDTO:
-        """2 KPIs for quick cards: validated images count + average score (%)."""
+        """2 KPIs: validated images count + average score (%)."""
 
         per_picture = (
             self.db.query(
@@ -60,7 +60,7 @@ class ModelStatsService:
             PictureModel.room_id.isnot(None),
         ]
 
-        # Confusion matrix: actual (validated picture room) vs predicted (history room)
+        # Confusion matrix: actual vs predicted room
         cm_rows = (
             self.db.query(
                 PictureModel.room_id.label("actual_room_id"),
@@ -123,7 +123,9 @@ class ModelStatsService:
                 .order_by(RoomModel.name.asc())
                 .all()
             )
-            rooms = [room_to_roomLightDTO_mapper.apply(r) for r in room_entities]
+            rooms = [
+                room_to_roomLightDTO_mapper.apply(r) for r in room_entities
+            ]
 
         # Accuracy global
         acc_row = (

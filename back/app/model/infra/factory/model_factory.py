@@ -52,5 +52,7 @@ def get_model_training(
     )
 
 
-def get_model_stats_service(db: Session = Depends(get_session)) -> ModelStatsService:
+def get_model_stats_service(
+    db: Session = Depends(get_session),
+) -> ModelStatsService:
     return ModelStatsService(db)
