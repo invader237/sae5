@@ -4,16 +4,10 @@ import { fetchRoomForTraining } from "@/api/room.api";
 import ModelTrainingDTO from "@/api/DTO/modelTraining.dto";
 import { ScratchLayersDTO } from "@/api/DTO/scratchLayers.dto";
 import RoomLightDTO from "@/api/DTO/roomLight.dto";
+import { DEFAULT_SCRATCH_LAYERS } from "./modelTraining.config";
+
 
 type TrainingType = "base" | "scratch";
-
-const DEFAULT_SCRATCH_LAYERS: ScratchLayersDTO = {
-  conv1: true,
-  conv2: true,
-  pooling: true,
-  fc1: true,
-  dropout: false,
-};
 
 export function useModelTraining() {
   const [isTraining, setIsTraining] = useState(false);
