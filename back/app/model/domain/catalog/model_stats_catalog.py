@@ -22,7 +22,8 @@ class ModelStatsCatalog(Protocol):
         model_id: UUID,
     ) -> Collection[Tuple[UUID, UUID, int]]:
         """
-        Returns confusion matrix data as (actual_room_id, predicted_room_id, count).
+        Returns confusion matrix data as
+        (actual_room_id, predicted_room_id, count).
         """
         ...
 
@@ -31,7 +32,8 @@ class ModelStatsCatalog(Protocol):
         model_id: UUID,
     ) -> Collection[UUID]:
         """
-        Returns all room IDs (actual and predicted) involved in validated predictions.
+        Returns all room IDs (actual and predicted)
+        involved in validated predictions.
         """
         ...
 

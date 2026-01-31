@@ -48,7 +48,10 @@ class ModelStatsRepository:
         self,
         model_id: UUID,
     ) -> Collection[Tuple[UUID, UUID, int]]:
-        """Returns confusion matrix data as (actual_room_id, predicted_room_id, count)."""
+        """Return confusion matrix data.
+
+        Returns (actual_room_id, predicted_room_id, count).
+        """
         rows = (
             self.db.query(
                 PictureModel.room_id.label("actual_room_id"),
