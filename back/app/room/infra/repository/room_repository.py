@@ -1,8 +1,11 @@
+from typing import Collection, Union
+from uuid import UUID
+
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+
 from app.room.domain.entity.room import Room as RoomModel
 from app.picture.domain.entity.picture import Picture
-from sqlalchemy import func
-from typing import Collection
 
 
 class RoomRepository:
@@ -11,6 +14,16 @@ class RoomRepository:
 
     def find_all(self) -> Collection[RoomModel]:
         return self.db.query(RoomModel).all()
+
+    def find_by_ids(
+        self, room_ids: Collection[Union[str, UUID]]
+    ) -> Collection[RoomModel]:
+        return (
+            self.db.query(RoomModel)
+            .filter(RoomModel.room_id.in_(list(room_ids)))
+            .order_by(RoomModel.name.asc())
+            .all()
+        )
 
     def save(self, room: RoomModel) -> RoomModel:
         self.db.add(room)
