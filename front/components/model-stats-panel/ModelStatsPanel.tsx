@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, memo } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -7,11 +7,12 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import Svg, { Polyline, Circle, Line, Text as SvgText } from "react-native-svg";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useModelStats } from "@/hooks/models/useModelStats";
-
-const MAX_ROOMS_DISPLAYED = 15;
+import { useModelStatsPanel } from "@/hooks/models/useModelStatsPanel";
+import EmptyStateCard from "./EmptyStateCard";
+import AccuracyGauge from "./AccuracyGauge";
+import ConfusionMatrixTable from "./ConfusionMatrixTable";
+import AccuracyTimeline from "./AccuracyTimeline";
 
 interface Props {
   modelId: string | null;
@@ -26,11 +27,16 @@ export default function ModelStatsPanel({ modelId, refreshKey }: Props) {
     loadingDetailed,
     errorSummary,
     errorDetailed,
+    modalVisible,
+    hasNoValidatedImages,
+    shouldRender,
+    openModal,
+    closeModal,
+    retrySummary,
+    retryDetailed,
     loadSummary,
     loadDetailed,
-  } = useModelStats(modelId);
-
-  const [modalVisible, setModalVisible] = useState(false);
+  } = useModelStatsPanel({ modelId, refreshKey });
 
   useEffect(() => {
     if (refreshKey !== undefined) {
@@ -44,27 +50,10 @@ export default function ModelStatsPanel({ modelId, refreshKey }: Props) {
     }
   }, [refreshKey, modalVisible, loadDetailed]);
 
-  const openModal = useCallback(async () => {
-    setModalVisible(true);
-    await loadDetailed();
-  }, [loadDetailed]);
-
-  const closeModal = useCallback(() => setModalVisible(false), []);
-
-  const retrySummary = useCallback(() => {
-    void loadSummary();
-  }, [loadSummary]);
-
-  const retryDetailed = useCallback(() => {
-    void loadDetailed();
-  }, [loadDetailed]);
-
   // Don't render anything if no model selected
-  if (!modelId) {
+  if (!shouldRender) {
     return null;
   }
-
-  const hasNoValidatedImages = !!(summary && summary.validated_images === 0);
 
   return (
     <>
@@ -239,319 +228,3 @@ export default function ModelStatsPanel({ modelId, refreshKey }: Props) {
     </>
   );
 }
-
-/* ---------- Sub-components ---------- */
-
-interface EmptyStateCardProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
-  title: string;
-  description: string;
-}
-
-const EmptyStateCard = memo(function EmptyStateCard({
-  icon,
-  title,
-  description,
-}: EmptyStateCardProps) {
-  return (
-    <View className="bg-gray-50 border border-gray-200 rounded-lg p-6 items-center">
-      <MaterialIcons name={icon} size={40} color="#9ca3af" />
-      <Text className="text-base font-semibold text-gray-700 mt-3">{title}</Text>
-      <Text className="text-sm text-gray-500 text-center mt-1">
-        {description}
-      </Text>
-    </View>
-  );
-});
-
-interface AccuracyGaugeProps {
-  value: number;
-}
-
-const AccuracyGauge = memo(function AccuracyGauge({ value }: AccuracyGaugeProps) {
-  const percentage = (value * 100).toFixed(1);
-  const color =
-    value >= 0.8 ? "text-green-600" : value >= 0.5 ? "text-yellow-600" : "text-red-600";
-  const bgColor =
-    value >= 0.8
-      ? "bg-green-50 border-green-200"
-      : value >= 0.5
-      ? "bg-yellow-50 border-yellow-200"
-      : "bg-red-50 border-red-200";
-
-  return (
-    <View className={`border rounded-lg p-4 items-center ${bgColor}`}>
-      <Text className={`text-4xl font-bold ${color}`}>{percentage}%</Text>
-      <Text className="text-sm text-gray-600 mt-1">Précision globale</Text>
-      <Text className="text-xs text-gray-400 mt-2">
-        {value >= 0.8
-          ? "Excellente performance"
-          : value >= 0.5
-          ? "Performance acceptable"
-          : "Performance à améliorer"}
-      </Text>
-    </View>
-  );
-});
-
-interface ConfusionMatrixTableProps {
-  matrix: {
-    actual_room_id: string | null;
-    predicted_room_id: string | null;
-    count: number;
-  }[];
-  rooms: { id: string; name: string }[];
-}
-
-const ConfusionMatrixTable = memo(function ConfusionMatrixTable({
-  matrix,
-  rooms,
-}: ConfusionMatrixTableProps) {
-  const { roomMap, displayedRoomIds, isTruncated, lookup, maxCount } = useMemo(() => {
-    const rMap = new Map(rooms.map((r) => [r.id, r.name]));
-    const allRoomIds = rooms.map((r) => r.id);
-    const truncated = allRoomIds.length > MAX_ROOMS_DISPLAYED;
-    const displayed = truncated
-      ? allRoomIds.slice(0, MAX_ROOMS_DISPLAYED)
-      : allRoomIds;
-
-    // Build a 2D lookup: map[actual][predicted] = count
-    const lkp = new Map<string, Map<string, number>>();
-    matrix.forEach((cell) => {
-      if (!cell.actual_room_id || !cell.predicted_room_id) return;
-      if (!lkp.has(cell.actual_room_id)) {
-        lkp.set(cell.actual_room_id, new Map());
-      }
-      lkp.get(cell.actual_room_id)!.set(cell.predicted_room_id, cell.count);
-    });
-
-    // Find max value for color scaling
-    const max = Math.max(...matrix.map((c) => c.count), 1);
-
-    return {
-      roomMap: rMap,
-      displayedRoomIds: displayed,
-      isTruncated: truncated,
-      lookup: lkp,
-      maxCount: max,
-    };
-  }, [matrix, rooms]);
-
-  return (
-    <View className="gap-2">
-      {isTruncated && (
-        <View className="bg-yellow-50 border border-yellow-200 rounded-md p-2">
-          <Text className="text-xs text-yellow-700 text-center">
-            Affichage limité aux {MAX_ROOMS_DISPLAYED} premières salles (
-            {rooms.length} au total)
-          </Text>
-        </View>
-      )}
-      <ScrollView horizontal showsHorizontalScrollIndicator>
-        <View className="items-center">
-          {/* Header row */}
-          <View className="flex-row">
-            <View className="w-20 h-10 border border-gray-300 bg-gray-100 justify-center items-center">
-              <Text className="text-xs">Réel ↓</Text>
-            </View>
-            {displayedRoomIds.map((rid) => (
-              <View
-                key={rid}
-                className="w-16 h-10 border border-gray-300 bg-gray-100 justify-center items-center"
-              >
-                <Text className="text-xs text-center" numberOfLines={1}>
-                  {roomMap.get(rid) ?? rid.slice(0, 4)}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Data rows */}
-          {displayedRoomIds.map((actualId) => (
-            <View key={actualId} className="flex-row">
-              <View className="w-20 h-12 border border-gray-300 bg-gray-100 justify-center px-1">
-                <Text className="text-xs" numberOfLines={2}>
-                  {roomMap.get(actualId) ?? actualId.slice(0, 6)}
-                </Text>
-              </View>
-              {displayedRoomIds.map((predictedId) => {
-                const count = lookup.get(actualId)?.get(predictedId) ?? 0;
-                const isDiagonal = actualId === predictedId;
-                const intensity = count / maxCount;
-                const bgColor = isDiagonal
-                  ? `rgba(34, 197, 94, ${0.2 + intensity * 0.6})`
-                  : count > 0
-                  ? `rgba(239, 68, 68, ${0.2 + intensity * 0.5})`
-                  : "white";
-
-                return (
-                  <View
-                    key={predictedId}
-                    className="w-16 h-12 border border-gray-300 justify-center items-center"
-                    style={{ backgroundColor: bgColor }}
-                  >
-                    <Text className="text-sm font-semibold">{count}</Text>
-                  </View>
-                );
-              })}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-      <View className="flex-row items-center gap-4 mt-2">
-        <View className="flex-row items-center gap-1">
-          <View className="w-4 h-4 bg-green-400 rounded" />
-          <Text className="text-xs text-gray-600">Correct</Text>
-        </View>
-        <View className="flex-row items-center gap-1">
-          <View className="w-4 h-4 bg-red-400 rounded" />
-          <Text className="text-xs text-gray-600">Erreur</Text>
-        </View>
-      </View>
-    </View>
-  );
-});
-
-interface AccuracyTimelineProps {
-  data: { bucket: string; accuracy: number; total: number; correct: number }[];
-}
-
-const AccuracyTimeline = memo(function AccuracyTimeline({
-  data,
-}: AccuracyTimelineProps) {
-  // Limit to last 30 days if too many entries
-  const displayedData = useMemo(() => {
-    return data.length > 30 ? data.slice(-30) : data;
-  }, [data]);
-
-  const [chartWidth, setChartWidth] = useState(0);
-  const chartHeight = 160;
-  const padding = 24;
-
-  const points = useMemo(() => {
-    if (!chartWidth || displayedData.length === 0) return "";
-    const count = displayedData.length;
-    const stepX = count > 1 ? (chartWidth - padding * 2) / (count - 1) : 0;
-    return displayedData
-      .map((point, idx) => {
-        const x = padding + idx * stepX;
-        const y =
-          padding + (1 - point.accuracy) * (chartHeight - padding * 2);
-        return `${x},${y}`;
-      })
-      .join(" ");
-  }, [chartWidth, displayedData]);
-
-  return (
-    <View className="gap-2">
-      {data.length > 30 && (
-        <View className="bg-blue-50 border border-blue-200 rounded-md p-2">
-          <Text className="text-xs text-blue-700 text-center">
-            Affichage des 30 derniers jours
-          </Text>
-        </View>
-      )}
-      <View
-        className="border border-gray-200 rounded-lg overflow-hidden bg-white"
-        onLayout={(e) => setChartWidth(e.nativeEvent.layout.width)}
-      >
-        <View className="px-4 pt-4">
-          <Text className="text-xs text-gray-500">Précision (%)</Text>
-        </View>
-        <View className="px-2 pb-4">
-          <Svg width={chartWidth} height={chartHeight}>
-            {/* Y-axis gridlines and labels */}
-            {chartWidth > 0 &&
-              [1, 0.5, 0].map((v) => {
-                const y = padding + (1 - v) * (chartHeight - padding * 2);
-                return (
-                  <React.Fragment key={`grid-${v}`}>
-                    <Line
-                      x1={padding}
-                      y1={y}
-                      x2={chartWidth - padding}
-                      y2={y}
-                      stroke="#f3f4f6"
-                      strokeWidth={1}
-                    />
-                    <SvgText
-                      x={padding - 6}
-                      y={y + 4}
-                      fontSize={10}
-                      fill="#9ca3af"
-                      textAnchor="end"
-                    >
-                      {Math.round(v * 100)}
-                    </SvgText>
-                  </React.Fragment>
-                );
-              })}
-            <Line
-              x1={padding}
-              y1={chartHeight - padding}
-              x2={chartWidth - padding}
-              y2={chartHeight - padding}
-              stroke="#e5e7eb"
-              strokeWidth={1}
-            />
-            <Line
-              x1={padding}
-              y1={padding}
-              x2={padding}
-              y2={chartHeight - padding}
-              stroke="#e5e7eb"
-              strokeWidth={1}
-            />
-            {points && (
-              <Polyline
-                points={points}
-                stroke="#4f46e5"
-                strokeWidth={2}
-                fill="none"
-              />
-            )}
-            {chartWidth > 0 &&
-              displayedData.map((point, idx) => {
-                const count = displayedData.length;
-                const stepX =
-                  count > 1 ? (chartWidth - padding * 2) / (count - 1) : 0;
-                const x = padding + idx * stepX;
-                const y =
-                  padding +
-                  (1 - point.accuracy) * (chartHeight - padding * 2);
-                return (
-                  <Circle
-                    key={point.bucket}
-                    cx={x}
-                    cy={y}
-                    r={3}
-                    fill="#4f46e5"
-                  />
-                );
-              })}
-          </Svg>
-        </View>
-        <View className="flex-row justify-between px-4 pb-3">
-          <Text className="text-xs text-gray-500">
-            {displayedData.length > 0
-              ? new Date(displayedData[0].bucket).toLocaleDateString("fr-FR", {
-                  day: "2-digit",
-                  month: "short",
-                })
-              : ""}
-          </Text>
-          <Text className="text-xs text-gray-500">
-            {displayedData.length > 0
-              ? new Date(
-                  displayedData[displayedData.length - 1].bucket
-                ).toLocaleDateString("fr-FR", {
-                  day: "2-digit",
-                  month: "short",
-                })
-              : ""}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-});
