@@ -6,7 +6,9 @@ from app.model.domain.catalog.model_stats_catalog import ModelStatsCatalog
 from app.model.domain.DTO.modelStatsDetailedDTO import ModelStatsDetailedDTO
 from app.model.domain.DTO.modelStatsSummaryDTO import ModelStatsSummaryDTO
 from app.model.domain.DTO.confusionMatrixCellDTO import ConfusionMatrixCellDTO
-from app.model.domain.DTO.accuracyOverTimePointDTO import AccuracyOverTimePointDTO
+from app.model.domain.DTO.accuracyOverTimePointDTO import (
+    AccuracyOverTimePointDTO,
+)
 from app.room.domain.catalog.room_catalog import RoomCatalog
 from app.room.domain.mapper.room_to_roomLightDTO_mapper import (
     room_to_roomLightDTO_mapper,
