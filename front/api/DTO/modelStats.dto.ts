@@ -1,24 +1,10 @@
+import RoomLightDTO from "./roomLight.dto";
+import { ConfusionMatrixCellDTO } from "./confusionMatrixCell.dto";
+import { AccuracyOverTimePointDTO } from "./accuracyOverTimePoint.dto";
+
 export interface ModelStatsSummaryDTO {
   validated_images: number;
   avg_score: number;
-}
-
-export interface RoomLightDTO {
-  id: string;
-  name: string;
-}
-
-export interface ConfusionMatrixCellDTO {
-  actual_room_id: string | null;
-  predicted_room_id: string | null;
-  count: number;
-}
-
-export interface AccuracyOverTimePointDTO {
-  bucket: string; // ISO date string
-  accuracy: number;
-  total: number;
-  correct: number;
 }
 
 export interface ModelStatsDetailedDTO {
@@ -27,3 +13,7 @@ export interface ModelStatsDetailedDTO {
   accuracy_global: number;
   accuracy_over_time: AccuracyOverTimePointDTO[];
 }
+
+// Re-export for convenience
+export type { ConfusionMatrixCellDTO, AccuracyOverTimePointDTO };
+export type { default as RoomLightDTO } from "./roomLight.dto";
