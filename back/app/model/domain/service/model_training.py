@@ -4,46 +4,68 @@ import torchvision.models as models
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from pathlib import Path
-from app.model.domain.service.room_dataset import RoomDataset
 import json
 import re
-from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
-from app.model.domain.DTO.scratchLayersDTO import ScratchLayersDTO
+import logging
 from typing import Literal, Optional
 
+from app.model.domain.service.room_dataset import RoomDataset
+from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
+from app.model.domain.DTO.scratchLayersDTO import ScratchLayersDTO
+
+# -----------------------------------------------------------------------------
+# Logging configuration
+# -----------------------------------------------------------------------------
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
+)
+logger = logging.getLogger("model-training")
+
+# -----------------------------------------------------------------------------
+# Paths
+# -----------------------------------------------------------------------------
 UPLOAD_DIR = Path("./")
 MODEL_DIR = Path("/app/models")
-MODEL_DIR.mkdir(parents=True, exist_ok=True)  # create folder if not exists
+MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class ModelTraining:
-    def __init__(self,
-                 room_catalog,
-                 model_catalog,
-                 picture_catalog,
-                 model_namer,
-                 model_name="base",
-                 num_classes=None
-                 ):
+
+    def __init__(
+        self,
+        room_catalog,
+        model_catalog,
+        picture_catalog,
+        model_namer,
+        model_name="base",
+        num_classes=None
+    ):
         self.room_catalog = room_catalog
         self.model_catalog = model_catalog
         self.picture_catalog = picture_catalog
         self.model_namer = model_namer
         self.model_name = model_name
         self.num_classes = num_classes
+
         self.model = None
         self.dataset = None
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
 
+        logger.info("ModelTraining initialized | device=%s", self.device)
+
+    # -------------------------------------------------------------------------
     # 1️⃣ Fetch records
+    # -------------------------------------------------------------------------
     def fetch_records(self, rooms):
-        print("[DEBUG] fetch_records called")
-        print("[DEBUG] rooms param:", rooms)
+        logger.info("Fetching records...")
+        logger.debug("Rooms input: %s", rooms)
 
         pictures = []
         page_limit = 500
+
         for room in rooms or []:
             offset = 0
             while True:
@@ -54,283 +76,298 @@ class ModelTraining:
                 )
                 if not page:
                     break
+
                 pictures.extend(page)
+
                 if len(page) < page_limit:
                     break
+
                 offset += page_limit
-        print("[DEBUG] pictures count:", len(pictures))
+
+        logger.info("Total pictures fetched: %d", len(pictures))
 
         records = []
         for pic in pictures:
             if pic.room is None:
-                raise ValueError(
-                    f"Picture {pic.id} has no associated room"
-                )
+                logger.error("Picture %s has no associated room", pic.id)
+                raise ValueError(f"Picture {pic.id} has no associated room")
 
             records.append({
                 "filename": pic.path,
                 "room": pic.room.name
             })
 
-        print("[DEBUG] records count:", len(records))
+        logger.info("Records created: %d", len(records))
         return records
 
-    # 2️⃣ Define transforms
+    # -------------------------------------------------------------------------
+    # 2️⃣ Transforms
+    # -------------------------------------------------------------------------
     def get_transforms(self):
         return transforms.Compose([
             transforms.Resize((224, 224)),
             transforms.ToTensor()
         ])
 
-    # 3️⃣ Create Dataset
+    # -------------------------------------------------------------------------
+    # 3️⃣ Dataset creation
+    # -------------------------------------------------------------------------
     def create_dataset(self, records):
-        transform = self.get_transforms()
+        logger.info("Creating dataset...")
+        logger.debug("Records count: %d", len(records))
+
         dataset = RoomDataset(
             records=records,
             images_dir=UPLOAD_DIR,
-            transform=transform
+            transform=self.get_transforms()
+        )
+
+        # Sanity check
+        try:
+            img, label = dataset[0]
+            logger.debug(
+                "Dataset sample OK | image=%s | label=%s",
+                tuple(img.shape),
+                label
+            )
+        except Exception:
+            logger.exception("Dataset sanity check failed")
+            raise
+
+        logger.info(
+            "Dataset ready | samples=%d | classes=%d",
+            len(dataset),
+            len(dataset.room_to_idx)
         )
         return dataset
 
-    # 4️⃣ Build Dataset
+    # -------------------------------------------------------------------------
+    # 4️⃣ Build dataset
+    # -------------------------------------------------------------------------
     def build_dataset(self, rooms):
         if self.dataset is None:
+            logger.info("Building dataset...")
             records = self.fetch_records(rooms)
+
+            if not records:
+                logger.error("No records found → dataset empty")
+                raise ValueError("Dataset is empty")
+
             self.dataset = self.create_dataset(records)
+
         return self.dataset
 
-    # 5️⃣ Initialize Model
+    # -------------------------------------------------------------------------
+    # 5️⃣ Model initialization
+    # -------------------------------------------------------------------------
     def init_model(
         self,
         modelType: Literal["base", "scratch"] = "base",
         scratch_layers: Optional[ScratchLayersDTO] = None
     ):
         if self.dataset is None:
-            raise ValueError(
-                "Dataset must be built before initializing model"
-            )
+            raise ValueError("Dataset must be built first")
+
         if self.num_classes is None:
             self.num_classes = len(self.dataset.room_to_idx)
 
+        logger.info(
+            "Initializing model | type=%s | num_classes=%d",
+            modelType,
+            self.num_classes
+        )
+
         if modelType == "base":
-            print("[DEBUG] Initializing pre-trained ResNet50 model")
             model = models.resnet50(
                 weights=models.ResNet50_Weights.IMAGENET1K_V1
             )
             model.fc = nn.Linear(model.fc.in_features, self.num_classes)
 
         elif modelType == "scratch":
-            print("[DEBUG] Initializing model from scratch")
             model = self._build_scratch_model(scratch_layers)
+
         else:
-            raise ValueError(f"Unknown model name: {self.model_name}")
+            raise ValueError(f"Unknown model type: {modelType}")
 
         self.model = model
-        print(
-            f"Initialized model: {self.model_name} "
-            f"with {self.num_classes} classes"
-        )
+        logger.debug("Model architecture:\n%s", self.model)
         return model
 
     def _build_scratch_model(
         self,
         layers_config: Optional[ScratchLayersDTO] = None
     ) -> nn.Module:
-        """
-        Construit un modèle CNN from scratch en fonction des couches
-        sélectionnées.
-        """
+
         if layers_config is None:
             layers_config = ScratchLayersDTO()
 
         layers = []
-        current_channels = 3  # RGB input
+        current_channels = 3
 
-        # Première couche convolutionnelle
         if layers_config.conv1:
-            layers.extend([
+            layers += [
                 nn.Conv2d(current_channels, 32, 3, 1, 1),
                 nn.ReLU(),
-            ])
+            ]
             current_channels = 32
             if layers_config.pooling:
                 layers.append(nn.MaxPool2d(2))
 
-        # Deuxième couche convolutionnelle
         if layers_config.conv2:
-            layers.extend([
+            layers += [
                 nn.Conv2d(current_channels, 64, 3, 1, 1),
                 nn.ReLU(),
-            ])
+            ]
             current_channels = 64
             if layers_config.pooling:
                 layers.append(nn.MaxPool2d(2))
 
-        # Adaptive pooling et flatten
-        layers.extend([
+        layers += [
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-        ])
+        ]
 
-        # Couche fully connected intermédiaire
         if layers_config.fc1:
-            layers.append(nn.Linear(current_channels, 128))
-            if layers_config.dropout:
-                layers.append(nn.Dropout(0.5))
-            layers.append(nn.ReLU())
-            layers.append(nn.Linear(128, self.num_classes))
+            layers += [
+                nn.Linear(current_channels, 128),
+                nn.ReLU(),
+                nn.Linear(128, self.num_classes),
+            ]
         else:
-            # Connexion directe vers la sortie
             layers.append(nn.Linear(current_channels, self.num_classes))
 
         model = nn.Sequential(*layers)
-        print(f"[DEBUG] Built scratch model with layers: {layers_config}")
+        logger.info("Scratch model built")
         return model
 
-    # 6️⃣ Create DataLoader
+    # -------------------------------------------------------------------------
+    # 6️⃣ Dataloader
+    # -------------------------------------------------------------------------
     def create_dataloader(self, batch_size=8, shuffle=True):
-        return DataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle)
+        dataloader = DataLoader(
+            self.dataset,
+            batch_size=batch_size,
+            shuffle=shuffle
+        )
 
-    # 7️⃣ Create optimizer
+        logger.info(
+            "DataLoader created | batches=%d | batch_size=%d",
+            len(dataloader),
+            batch_size
+        )
+
+        if len(dataloader) == 0:
+            raise ValueError("Empty DataLoader")
+
+        return dataloader
+
+    # -------------------------------------------------------------------------
+    # 7️⃣ Optimizer & loss
+    # -------------------------------------------------------------------------
     def create_optimizer(self, lr=1e-4):
+        logger.info("Optimizer: Adam | lr=%f", lr)
         return torch.optim.Adam(self.model.parameters(), lr=lr)
 
-    # 8️⃣ Create loss function
     def create_loss(self):
-        return torch.nn.CrossEntropyLoss()
+        logger.info("Loss: CrossEntropyLoss")
+        return nn.CrossEntropyLoss()
 
-    # 9 Train one epoch
+    # -------------------------------------------------------------------------
+    # 8️⃣ Training epoch
+    # -------------------------------------------------------------------------
     def train_epoch(self, dataloader, optimizer, loss_fn):
-        self.model.train()  # set model to training mode
+        self.model.train()
         running_loss = 0.0
-        for images, labels in dataloader:
-            images, labels = images.to(self.device), labels.to(self.device)
-            optimizer.zero_grad()
-            outputs = self.model(images)
-            loss = loss_fn(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            running_loss += loss.item() * images.size(0)
-        epoch_loss = running_loss / len(dataloader.dataset)
-        return epoch_loss
 
-    # 10 find next model name
-    def find_next_model_name(self, variant="base", major=0):
-        """
-        Extract the next available minor version from existing models.
-        Logs all intermediate values for debugging.
-        """
-        scope = "neuroom"
-        prefix = f"{scope}-{variant}-v{major}"
-        max_minor = -1
-
-        pattern = re.compile(rf"^{re.escape(prefix)}(?:\.(\d+))?$")
-
-        models = self.model_catalog.find_all()
-
-        for idx, model in enumerate(models):
-            if not model.name:
-                print("[DEBUG] Model has no name, skipping")
-                continue
-            name = model.name
-            if name.endswith(".pth"):
-                name = name[:-4]
-            match = pattern.match(name)
-            if match:
-                minor_str = match.group(1)
-                if minor_str is None:
-                    minor = 0
-                else:
-                    minor = int(minor_str)
-                max_minor = max(max_minor, minor)
-            else:
-                print("[DEBUG] Model did not match pattern")
-
-        next_model_name = f"{prefix}.{max_minor + 1}"
-
-        return next_model_name
-
-    # 10 Save model
-    def save_model(self, filename=None):
-        """
-        Save the trained model to disk.
-        If filename is not provided, uses model_name.pt
-        """
-        if self.model is None:
-            raise ValueError("Model is not initialized.")
-
-        filename = filename or f"{self.model_name}.pth"
-        filepath = MODEL_DIR / f"{filename}.pth"
-        # torch.save(self.model.state_dict(), filepath)
-        scripted = torch.jit.script(self.model)
-        scripted.save(filepath)
-        print(f"Model saved to {filepath}")
-        return filepath
-
-    # 11 Save labels
-    def save_labels(self, filename=None):
-        """
-        Save the label mapping (room names → class indices) to labels.json
-        """
-        if self.dataset is None:
-            raise ValueError(
-                "Dataset is not built yet. Call build_dataset() first."
+        for batch_idx, (images, labels) in enumerate(dataloader):
+            logger.debug(
+                "Batch %d | images=%s | labels=%s",
+                batch_idx,
+                tuple(images.shape),
+                labels.unique().tolist()
             )
 
-        labels = list(self.dataset.room_to_idx.keys())
-        data = {"classes": labels}
+            images = images.to(self.device)
+            labels = labels.to(self.device)
 
-        # Directly define filename
-        filename = f"{filename}-label.json"
-        filepath = MODEL_DIR / filename
+            optimizer.zero_grad()
 
-        # Ensure directory exists
-        MODEL_DIR.mkdir(parents=True, exist_ok=True)
+            outputs = self.model(images)
+            logger.debug("Outputs shape: %s", tuple(outputs.shape))
 
-        with open(filepath, "w") as f:
-            json.dump(data, f, indent=2)
+            loss = loss_fn(outputs, labels)
+            logger.debug("Loss: %.6f", loss.item())
 
-        print(f"Labels saved to {filepath}")
+            loss.backward()
+
+            grad_norm = sum(
+                p.grad.norm().item()
+                for p in self.model.parameters()
+                if p.grad is not None
+            )
+            logger.debug("Gradient norm: %.6f", grad_norm)
+
+            optimizer.step()
+            running_loss += loss.item() * images.size(0)
+
+        return running_loss / len(dataloader.dataset)
+
+    # -------------------------------------------------------------------------
+    # 9️⃣ Save model & labels
+    # -------------------------------------------------------------------------
+    def save_model(self, filename):
+        filepath = MODEL_DIR / f"{filename}.pth"
+        logger.info("Saving model to %s", filepath)
+
+        scripted = torch.jit.script(self.model)
+        scripted.save(filepath)
+
+        logger.info("Model saved successfully")
         return filepath
 
-    # 12 Full training loop
-    def train(self, modelTrainingDTO: ModelTrainingDTO, save: bool = True):
-        print("[DEBUG] Rooms from DTO:", modelTrainingDTO.roomList)
-        # Ensure dataset and model are built
+    def save_labels(self, filename):
+        labels = list(self.dataset.room_to_idx.keys())
+        filepath = MODEL_DIR / f"{filename}-label.json"
+
+        with open(filepath, "w") as f:
+            json.dump({"classes": labels}, f, indent=2)
+
+        logger.info("Labels saved to %s", filepath)
+        return filepath
+
+    # -------------------------------------------------------------------------
+    # 🔟 Full training
+    # -------------------------------------------------------------------------
+    def train(self, dto: ModelTrainingDTO, save=True):
+        logger.info("Training started")
+
         rooms = []
-        for room_dto in modelTrainingDTO.roomList:
+        for room_dto in dto.roomList:
             room = self.room_catalog.find_by_id(room_dto.id)
-            print("[DEBUG] Loaded room:", room, "id:", room.room_id)
+            logger.debug("Loaded room: %s", room)
             rooms.append(room)
 
         self.build_dataset(rooms)
-        self.init_model(
-            modelTrainingDTO.type,
-            scratch_layers=modelTrainingDTO.scratchLayers
-        )
+        self.init_model(dto.type, dto.scratchLayers)
         self.model.to(self.device)
 
-        dataloader = self.create_dataloader(
-            batch_size=modelTrainingDTO.batchSize
-        )
-        optimizer = self.create_optimizer(lr=modelTrainingDTO.learningRate)
+        dataloader = self.create_dataloader(dto.batchSize)
+        optimizer = self.create_optimizer(dto.learningRate)
         loss_fn = self.create_loss()
 
-        for epoch in range(modelTrainingDTO.epochs):
-            epoch_loss = self.train_epoch(dataloader, optimizer, loss_fn)
-            print(
-                f"Epoch {epoch + 1}/"
-                f"{modelTrainingDTO.epochs} "
-                f"- Loss: {epoch_loss:.4f}"
+        for epoch in range(dto.epochs):
+            loss = self.train_epoch(dataloader, optimizer, loss_fn)
+            logger.info(
+                "Epoch %d/%d | loss=%.6f",
+                epoch + 1,
+                dto.epochs,
+                loss
             )
 
-        # model_file_name = self.find_next_model_name(variant=self.model_name)
-        model_file_name = self.model_namer.find_next_model_name(
-            variant=modelTrainingDTO.type,
-        )
+        model_name = self.model_namer.find_next_model_name(variant=dto.type)
 
         if save:
-            self.save_model(model_file_name)
-            self.save_labels(model_file_name)
+            self.save_model(model_name)
+            self.save_labels(model_name)
 
-    print("Training completed.")
+        logger.info("Training completed successfully")
