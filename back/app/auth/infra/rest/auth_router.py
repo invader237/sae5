@@ -3,7 +3,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth.domain.service.auth_service import AuthService
-from app.auth.infra.password.password_hasher import hash_password, verify_password
+from app.auth.infra.password.password_hasher import (
+    hash_password,
+    verify_password,
+)
 from app.auth.infra.rest.dependencies import get_current_user
 from app.auth.domain.DTO.user_login import UserLogin
 from app.auth.domain.DTO.token import TokenOut
@@ -64,7 +67,10 @@ class AuthController:
     ) -> TokenOut:
         try:
             auth_service = AuthService(user_catalog)
-            token = auth_service.authenticate(user_login.email, user_login.password)
+            token = auth_service.authenticate(
+                user_login.email,
+                user_login.password
+            )
 
             return TokenOut(access_token=token)
 
@@ -107,7 +113,6 @@ class AuthController:
 
         return user_to_userDTO_mapper.apply(user_entity)
 
-
     def me(
         self,
         user: dict = Depends(get_current_user),
@@ -129,7 +134,6 @@ class AuthController:
             )
 
         return user_to_userDTO_mapper.apply(user_entity)
-
 
     def change_password(
         self,

@@ -20,7 +20,9 @@ def _extract_token(authorization: str) -> str:
 
 
 def require_role(*allowed_roles: str) -> Callable[..., AuthenticatedUser]:
-    def dependency(authorization: str = Header(..., alias="Authorization")) -> AuthenticatedUser:
+    def dependency(
+            authorization: str = Header(..., alias="Authorization")
+    ) -> AuthenticatedUser:
         token = _extract_token(authorization)
         payload = decode_token(token)
 
@@ -36,7 +38,10 @@ def require_role(*allowed_roles: str) -> Callable[..., AuthenticatedUser]:
         if allowed_roles and role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=("Access denied. Required role(s): " + ", ".join(allowed_roles)),
+                detail=(
+                    "Access denied. Required role(s): " +
+                    ", ".join(allowed_roles)
+                ),
             )
 
         return AuthenticatedUser(user_id=user_id, role=role or "")
@@ -49,7 +54,9 @@ require_authenticated = require_role()
 
 
 def optional_user() -> Callable[..., AuthenticatedUser | None]:
-    def dependency(authorization: str | None = Header(None, alias="Authorization")) -> AuthenticatedUser | None:
+    def dependency(
+            authorization: str | None = Header(None, alias="Authorization")
+    ) -> AuthenticatedUser | None:
         if not authorization or not authorization.startswith("Bearer "):
             return None
         try:

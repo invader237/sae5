@@ -220,7 +220,11 @@ class PictureController:
 
         picture = Picture(
             path=str(dest_path),
-            analyzed_by=inference_result.get("model_version") or inference_result.get("model") or None,
+            analyzed_by=(
+                inference_result.get("model_version")
+                or inference_result.get("model")
+                or None
+            ),
             room=room_obj,
             recognition_percentage=recognition_percentage,
             analyse_date=datetime.now(timezone.utc),
@@ -312,7 +316,9 @@ class PictureController:
             description="Type d'image à récupérer",
         ),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
-        user: AuthenticatedUser = Depends(require_role("admin", "watcher","client")),
+        user: AuthenticatedUser = Depends(
+            require_role("admin", "watcher", "client")
+        )
     ):
         picture = picture_catalog.find_by_id(picture_id)
 
