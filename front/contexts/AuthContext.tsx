@@ -7,6 +7,8 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isWatcher: boolean;
+  isPrivileged: boolean;
   login: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -24,6 +26,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   const isAdmin = user?.role === "admin";
+  const isWatcher = user?.role === "watcher";
+  const isPrivileged = isAdmin || isWatcher;
 
   const logout = useCallback(async () => {
     await AsyncStorage.removeItem("authToken");
@@ -89,6 +93,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         token,
         isLoading,
         isAdmin,
+        isWatcher,
+        isPrivileged,
         login,
         logout,
         refreshUser,

@@ -7,10 +7,19 @@ import RoomManagmentPanel from "@/components/room-managment-panel";
 import ModelTrainingPanel from "@/components/model-training-panel";
 
 export default function AdminPanel() {
-  const { isAdmin, isLoading } = useAuth();
+  const { isPrivileged, isLoading } = useAuth();
 
-  // Protection supplémentaire : redirige si pas admin
-  if (!isLoading && !isAdmin) {
+  // Attendre que l'auth soit initialisée avant de rendre le panneau
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text>Chargement...</Text>
+      </View>
+    );
+  }
+
+  // Protection supplémentaire : redirige si pas privilégié (admin ou watcher)
+  if (!isPrivileged) {
     return <Redirect href="/" />;
   }
 

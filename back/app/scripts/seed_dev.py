@@ -6,7 +6,7 @@ from app.role.infra.repository.role_repository import RoleRepository
 # from app.model.infra.repository.model_repository import ModelRepository
 # from app.model.domain.entity.model import Model
 from app.user.domain.entity.user import User
-from app.authentification.auth_utils import hash_password
+from app.auth.infra.password.password_hasher import hash_password
 # from app.picture.domain.entity.picture import Picture
 from app.room.domain.entity.room import Room
 
@@ -107,6 +107,7 @@ def load_fixtures() -> None:
         # ---------- ROLES ----------
         role_repo.save({"type": "admin"})
         role_repo.save({"type": "client"})
+        role_repo.save({"type": "watcher"})
 
         # Models
         """

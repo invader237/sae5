@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 import { fetchToValidatePictures } from "@/api/picture.api";
+import { useAuth } from "@/hooks/auth/useAuth";
 
 type UsePvaPreviewOptions = {
   previewCount?: number;
@@ -10,6 +11,7 @@ export function usePvaPreview({ previewCount = 5 }: UsePvaPreviewOptions = {}) {
   const [pictures, setPictures] = useState<PicturePvaDTO[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const { logout } = useAuth();
 
   const refresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -18,8 +20,16 @@ export function usePvaPreview({ previewCount = 5 }: UsePvaPreviewOptions = {}) {
       setPictures(pics);
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
-      console.error("Erreur rafraîchissement PVA :", error);
-      throw error;
+      const status = (error as any)?.response?.status ?? (error as any)?.status;
+      if (status === 401) {
+        try {
+          await logout();
+        } catch (e) {
+          // ignore logout errors
+        }
+      } else {
+        console.error("Erreur rafraîchissement PVA :", error);
+      }
     } finally {
       setIsRefreshing(false);
     }
