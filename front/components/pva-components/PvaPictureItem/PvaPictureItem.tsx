@@ -1,7 +1,7 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { memo } from "react";
 import { TouchableOpacity, Image, View, Text } from "react-native";
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
-import { baseURL } from "@/api/axiosConfig";
+import { usePvaThumbnail } from "@/hooks/pva/usePvaThumbnail";
 
 interface Props {
   picture: PicturePvaDTO;
@@ -10,49 +10,8 @@ interface Props {
   onPress?: (id: string) => void;
 }
 
-// --- Cache en mémoire intelligent ---
-const MAX_CACHE = 50;
-const imageCache: Record<string, string> = {};
-const cacheOrder: string[] = []; 
-
-const addToCache = (id: string, data: string) => {
-  if (!imageCache[id]) {
-    if (cacheOrder.length >= MAX_CACHE) {
-      const oldestId = cacheOrder.shift(); 
-      if (oldestId) delete imageCache[oldestId];
-    }
-    cacheOrder.push(id);
-  }
-  imageCache[id] = data;
-};
-
 const PvaPictureItem = memo(function PictureItem({ picture, size = 150, isSelected, onPress }: Props) {
-  const [uri, setUri] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    const fetchImage = async () => {
-      if (imageCache[picture.id]) {
-        setUri(imageCache[picture.id]);
-      } else {
-        try {
-          const response = await fetch(
-            `${baseURL}/pictures/${picture.id}/recover?type=thumbnail`
-          );
-          const blob = await response.blob();
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const dataUrl = reader.result as string;
-            addToCache(picture.id, dataUrl); // ajout au cache intelligent
-            setUri(dataUrl);
-          };
-          reader.readAsDataURL(blob);
-        } catch (e) {
-          console.error("Erreur chargement image :", e);
-        }
-      }
-    };
-    fetchImage();
-  }, [picture.id]);
+  const { uri } = usePvaThumbnail(picture.id);
 
   return (
     <TouchableOpacity

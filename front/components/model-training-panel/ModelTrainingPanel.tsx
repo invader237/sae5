@@ -1,18 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { trainModel } from "@/api/model.api";
 import ParameterLabel from "@/components/model-training-components/ParameterLabel";
 import InfoModal from "@/components/model-training-components/ParameterInfoModal";
-import ModelTrainingDTO from "@/api/DTO/modelTraining.dto";
 import RoomList from "@/components/model-training-components/RoomList";
-import { fetchRoomForTraining } from "@/api/room.api";
-import RoomLightDTO from "@/api/DTO/roomLight.dto";
+import LayerSelector from "@/components/model-training-components/LayerSelector";
+import { useModelTraining } from "@/hooks/models/useModelTraining";
 
 const TRAINING_TYPES = {
   BASE: "base",
   SCRATCH: "scratch",
-};
+} as const;
 
 type RadioCardProps = {
   value: "base" | "scratch";
@@ -21,72 +19,21 @@ type RadioCardProps = {
 };
 
 const ModelTrainingPanel = () => {
-  const [loading, setLoading] = useState(false);
   const [infoModal, setInfoModal] = useState<"epochs" | "batch" | "lr" | null>(null);
-  const [rooms, setRooms] = useState<RoomLightDTO[]>([]);
-  const [selectedRooms, setSelectedRooms] = useState<string[]>([]); // IDs
-
-  const [trainingConfig, setTrainingConfig] = useState<ModelTrainingDTO>({
-    type: "base",
-    epochs: 10,
-    batchSize: 32,
-    learningRate: 0.001,
-    roomList: [],
-  });
-
-  const toggleRoom = (id: string) => {
-    if (selectedRooms.includes(id)) {
-      setSelectedRooms(selectedRooms.filter((r) => r !== id));
-    } else {
-      setSelectedRooms([...selectedRooms, id]);
-    }
-  };
-
-  const fetchRooms = () => {
-    fetchRoomForTraining().then((fetchedRooms: RoomLightDTO[]) => {
-      setRooms(fetchedRooms);
-      // Par défaut, toutes les salles cochées si aucune sélection
-      if (selectedRooms.length === 0) {
-        setSelectedRooms(fetchedRooms.map((r) => r.id));
-      }
-    });
-  };
-
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
-    useEffect(() => {
-      // On envoie les objets complets plutôt que juste les IDs
-      const selectedRoomObjects = rooms.filter((room) => selectedRooms.includes(room.id));
-      setTrainingConfig((prev) => ({
-        ...prev,
-        roomList: selectedRoomObjects,
-      }));
-    }, [selectedRooms, rooms]);
-
-  const updateConfig = <K extends keyof ModelTrainingDTO>(
-    key: K,
-    value: ModelTrainingDTO[K]
-  ) => {
-    setTrainingConfig((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const handleTrain = async () => {
-    setLoading(true);
-    try {
-      await trainModel(trainingConfig);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const setTrainingType = (type: "base" | "scratch") => {
-    updateConfig("type", type);
-  };
+  const {
+    isTraining,
+    rooms,
+    selectedRooms,
+    trainingConfig,
+    scratchLayers,
+    canTrain,
+    refreshRooms,
+    toggleRoom,
+    updateConfig,
+    setTrainingType,
+    toggleScratchLayer,
+    train,
+  } = useModelTraining();
 
   const RadioCard: React.FC<RadioCardProps> = ({ value, title, description }) => {
     const selected = trainingConfig.type === value;
@@ -123,7 +70,7 @@ const ModelTrainingPanel = () => {
       <View className="flex-row items-center justify-between">
         <Text className="text-[#333] text-lg font-bold">Entraînement d’un modèle</Text>
 
-        <TouchableOpacity className="bg-[#007bff] rounded-md px-3 py-2" onPress={fetchRooms}>
+        <TouchableOpacity className="bg-[#007bff] rounded-md px-3 py-2" onPress={refreshRooms}>
           <MaterialIcons name="refresh" size={20} color="white" />
         </TouchableOpacity>
       </View>
@@ -140,10 +87,20 @@ const ModelTrainingPanel = () => {
           <RadioCard
             value={TRAINING_TYPES.SCRATCH}
             title="From scratch"
-            description="Créer un modèle à zéro (en cours de développement)"
+            description="Créer un modèle à zéro"
           />
         </View>
       </View>
+
+      {/* COUCHES DU MODÈLE - Visible uniquement en mode scratch */}
+      {trainingConfig.type === TRAINING_TYPES.SCRATCH && (
+        <View>
+          <Text className="text-base font-semibold text-gray-800 mb-3">
+            Architecture du modèle
+          </Text>
+          <LayerSelector layers={scratchLayers} onToggleLayer={toggleScratchLayer} />
+        </View>
+      )}
 
       {/* ROOMS */}
       <Text className="text-base font-semibold text-gray-800">Salles disponibles</Text>
@@ -211,14 +168,24 @@ const ModelTrainingPanel = () => {
         decrease="Apprentissage plus lent mais plus stable."
       />
 
+      {/* MESSAGE D'ERREUR SI AUCUNE COUCHE */}
+      {trainingConfig.type === "scratch" && !canTrain && (
+        <View className="bg-red-50 border border-red-300 rounded-lg p-3 flex-row items-center">
+          <MaterialIcons name="error-outline" size={20} color="#dc2626" />
+          <Text className="text-red-700 ml-2 flex-1">
+            Veuillez sélectionner au moins une couche pour l&apos;entraînement from scratch.
+          </Text>
+        </View>
+      )}
+
       {/* ACTION */}
       <TouchableOpacity
-        disabled={loading}
-        onPress={handleTrain}
-        className={`px-4 py-3 rounded-md ${loading ? "bg-gray-400" : "bg-[#28a745]"}`}
+        disabled={isTraining || !canTrain}
+        onPress={train}
+        className={`px-4 py-3 rounded-md ${isTraining || !canTrain ? "bg-gray-400" : "bg-[#28a745]"}`}
       >
         <Text className="text-white font-bold text-center">
-          {loading ? "Entraînement en cours..." : "Lancer l’entraînement"}
+          {isTraining ? "Entraînement en cours..." : "Lancer l’entraînement"}
         </Text>
       </TouchableOpacity>
     </View>

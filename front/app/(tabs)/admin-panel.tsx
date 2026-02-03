@@ -1,13 +1,22 @@
 import { View, Text, ScrollView } from "react-native";
-import { useAuth } from "@/hooks/useAuth";
+import { useCallback, useState } from "react";
+import { useAuth } from "@/hooks/auth/useAuth";
 import { Redirect } from "expo-router";
 import ModelSelector from "@/components/model-selector";
+import ModelStatsPanel from "@/components/model-stats-panel";
 import PvaPanel from "@/components/pva-panel";
 import RoomManagmentPanel from "@/components/room-managment-panel";
 import ModelTrainingPanel from "@/components/model-training-panel";
+import { useModelSelector } from "@/hooks/models/useModelSelector";
 
 export default function AdminPanel() {
   const { isAdmin, isLoading } = useAuth();
+  const modelSelector = useModelSelector();
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0);
+
+  const triggerStatsRefresh = useCallback(() => {
+    setStatsRefreshKey((prev) => prev + 1);
+  }, []);
 
   // Protection supplémentaire : redirige si pas admin
   if (!isLoading && !isAdmin) {
@@ -19,9 +28,14 @@ export default function AdminPanel() {
       <View className="gap-4">
       <Text className="text-[24px] font-bold text-[#007bff] mb-4">Panneau Admin</Text>
 
-      <ModelSelector />
+      <ModelSelector controller={modelSelector} />
 
-      <PvaPanel />
+      <ModelStatsPanel
+        modelId={modelSelector.model}
+        refreshKey={statsRefreshKey}
+      />
+
+      <PvaPanel onDataChanged={triggerStatsRefresh} />
 
       <RoomManagmentPanel />
 

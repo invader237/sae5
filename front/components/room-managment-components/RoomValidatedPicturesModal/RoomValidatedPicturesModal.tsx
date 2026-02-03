@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, Modal, TouchableOpacity, FlatList, Alert, Platform } from "react-native";
-
-import PicturePvaDTO from "@/api/DTO/picturePva.dto";
-import { deletePicturesPva, fetchValidatedPicturesByRoom } from "@/api/picture.api";
 
 import PictureItem from "@/components/pva-components/PvaPictureItem";
 import PvaEditModal from "@/components/pva-components/PvaEditModal";
-import Spinner from "@/components/Spinner";
+import { Spinner } from "@/components/Spinner";
+import { useValidatedPicturesByRoom } from "@/hooks/rooms/useValidatedPicturesByRoom";
+import { useValidatedPicturesActions } from "@/hooks/rooms/useValidatedPicturesActions";
 
 export type RoomValidatedPicturesModalMode = "gestion" | "display";
 
@@ -31,118 +30,37 @@ const RoomValidatedPicturesModal = ({
   onDeleted,
   onUpdated,
 }: Props) => {
-  const [selectedPictures, setSelectedPictures] = useState<string[]>([]);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const [page, setPage] = useState(1);
-  const [pictures, setPictures] = useState<PicturePvaDTO[]>([]);
-  const [hasMore, setHasMore] = useState(true);
+  const {
+    pictures,
+    isLoading,
+    errorMessage,
+    refresh,
+    loadMore,
+    removeByIds,
+  } = useValidatedPicturesByRoom({
+    roomId,
+    visible,
+    itemsPerPage: ITEMS_PER_PAGE,
+  });
 
   const canSelect = mode === "gestion";
 
-  const fetchInitial = async () => {
-    setErrorMessage(null);
-
-    if (!roomId) {
-      setPictures([]);
-      setPage(1);
-      setHasMore(false);
-      setSelectedPictures([]);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const data = await fetchValidatedPicturesByRoom(roomId, ITEMS_PER_PAGE, 0);
-      setPictures(data);
-      setPage(1);
-      setHasMore(data.length === ITEMS_PER_PAGE);
-      setSelectedPictures([]);
-    } catch (e) {
-      console.error("Erreur chargement images validées :", e);
-      setPictures([]);
-      setHasMore(false);
-      setErrorMessage("Impossible de charger les images validées.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!visible) return;
-    fetchInitial();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, roomId]);
-
-  const loadMore = async () => {
-    if (!hasMore) return;
-    if (!roomId) return;
-    if (isLoadingMore) return;
-
-    setIsLoadingMore(true);
-
-    const offset = page * ITEMS_PER_PAGE;
-    try {
-      const more = await fetchValidatedPicturesByRoom(roomId, ITEMS_PER_PAGE, offset);
-
-      if (more.length === 0) {
-        setHasMore(false);
-        return;
-      }
-
-      setPictures((prev) => [...prev, ...more]);
-      setPage((prev) => prev + 1);
-    } catch (e) {
-      console.error("Erreur chargement page suivante :", e);
-      setHasMore(false);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  };
-
-  const toggleSelect = (id: string) => {
-    if (!canSelect) return;
-
-    setSelectedPictures((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  const performDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const picturesToDelete = pictures.filter((pic) =>
-        selectedPictures.includes(pic.id ?? "")
-      );
-
-      await deletePicturesPva(picturesToDelete);
-
-      const deletedIds = [...selectedPictures];
-      setPictures((prev) =>
-        prev.filter((p) => !deletedIds.includes(p.id ?? ""))
-      );
-      setSelectedPictures([]);
-      onDeleted?.(deletedIds);
-      onUpdated?.();
-
-      if (
-        picturesToDelete.length > 0 &&
-        pictures.length === picturesToDelete.length
-      ) {
-        await fetchInitial();
-      }
-    } catch (error) {
-      console.error("Erreur lors de la suppression :", error);
-      Alert.alert("Erreur", "Impossible de supprimer les images.");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  const {
+    selectedPictures,
+    isDeleting,
+    toggleSelect,
+    clearSelection,
+    deleteSelected,
+  } = useValidatedPicturesActions({
+    pictures,
+    removeByIds,
+    refresh,
+    onDeleted,
+    onUpdated,
+    onError: (message) => Alert.alert("Erreur", message),
+  });
 
   const handleDelete = () => {
     if (!canSelect) return;
@@ -153,7 +71,7 @@ const RoomValidatedPicturesModal = ({
         `Voulez-vous vraiment supprimer ${selectedPictures.length} image(s) ?`
       );
       if (!confirmed) return;
-      void performDelete();
+      void deleteSelected();
       return;
     }
 
@@ -166,7 +84,7 @@ const RoomValidatedPicturesModal = ({
           text: "Supprimer",
           style: "destructive",
           onPress: () => {
-            void performDelete();
+            void deleteSelected();
           },
         },
       ]
@@ -194,7 +112,7 @@ const RoomValidatedPicturesModal = ({
           <View className="mb-3">
             <Text className="text-center text-[#b00020]">{errorMessage}</Text>
             <TouchableOpacity
-              onPress={fetchInitial}
+              onPress={refresh}
               className="mt-3 px-4 py-2 rounded-md bg-[#007bff]"
             >
               <Text className="text-white font-bold text-center">Réessayer</Text>
@@ -257,7 +175,8 @@ const RoomValidatedPicturesModal = ({
             selectedPictures.includes(pic.id ?? "")
           )}
           onUpdated={async () => {
-            await fetchInitial();
+            clearSelection();
+            await refresh();
             onUpdated?.();
           }}
         />

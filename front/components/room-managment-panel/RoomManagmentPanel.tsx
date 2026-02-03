@@ -1,38 +1,45 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { saveRoom, getRooms, getRoomAnalytics } from "@/api/room.api";
 import RoomDTO from "@/api/DTO/room.dto";
-import RoomAnalyticsDTO from "@/api/DTO/roomAnalytics.dto";
 
 import RoomListModal from "@/components/room-managment-components/RoomListModal";
 import RoomModal from "@/components/room-managment-components/RoomModal";
 import RoomValidatedPicturesModal from "@/components/room-managment-components/RoomValidatedPicturesModal";
 import ProgressBar from "../ProgressBar";
+import { useRoomManagement } from "@/hooks/rooms/useRoomManagement";
 
 const RoomManagementPanel = () => {
-  const [rooms, setRooms] = useState<RoomDTO[]>([]);
-  const [modalListVisible, setModalListVisible] = useState(false);
-  const [modalRoomVisible, setModalRoomVisible] = useState(false);
-  const [modalValidatedPicturesVisible, setModalValidatedPicturesVisible] = useState(false);
-  const [validatedPicturesRoomId, setValidatedPicturesRoomId] = useState<string | null>(null);
-  const [editingRoom, setEditingRoom] = useState<RoomDTO | null>(null);
-  const [analytics, setAnalytics] = useState<RoomAnalyticsDTO | null>(null);
+  const {
+    rooms,
+    analytics,
+    modalListVisible,
+    modalRoomVisible,
+    modalValidatedPicturesVisible,
+    validatedPicturesRoomId,
+    editingRoom,
+    setModalListVisible,
+    setModalRoomVisible,
+    setModalValidatedPicturesVisible,
+    loadRooms,
+    refreshAnalytics,
+    openAddModal,
+    openEditModal,
+    openValidatedPicturesModal,
+    saveRoomAndRefresh,
+  } = useRoomManagement();
 
-  const loadRooms = async () => {
+  const handleLoadRooms = async () => {
     try {
-      const list = await getRooms();
-      setRooms(list);
-      setModalListVisible(true);
+      await loadRooms();
     } catch {
       Alert.alert("Erreur", "Impossible de récupérer les salles");
     }
   };
 
-  const loadAnalytics = async () => {
+  const handleLoadAnalytics = async () => {
     try {
-      const data = await getRoomAnalytics();
-      setAnalytics(data);
+      await refreshAnalytics();
     } catch {
       Alert.alert(
         "Erreur",
@@ -41,36 +48,14 @@ const RoomManagementPanel = () => {
     }
   };
 
-  const openAddModal = () => {
-    setEditingRoom(null);
-    setModalRoomVisible(true);
-  };
-
-  const openEditModal = (room: RoomDTO) => {
-    setEditingRoom(room);
-    setModalRoomVisible(true);
-  };
-
-  const openValidatedPicturesModal = (room: RoomDTO) => {
-    setValidatedPicturesRoomId(room.id);
-    setModalValidatedPicturesVisible(true);
-  };
-
   const handleSave = async (data: RoomDTO) => {
-    const isEdit = !!data.id;
     try {
-      await saveRoom(data as any);
-      setRooms(await getRooms());
+      const isEdit = await saveRoomAndRefresh(data);
       Alert.alert("Succès", isEdit ? "Salle modifiée" : "Salle ajoutée");
-      setModalRoomVisible(false);
     } catch {
       Alert.alert("Erreur", "Impossible de sauvegarder la salle");
     }
   };
-
-  useEffect(() => {
-    loadAnalytics();
-  }, []);
 
   return (
     <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
@@ -80,7 +65,7 @@ const RoomManagementPanel = () => {
           Gestion des salles
         </Text>
         <TouchableOpacity
-          onPress={loadAnalytics}
+          onPress={handleLoadAnalytics}
           className="bg-[#007bff] rounded-md px-4 py-2"
         >
           <MaterialIcons name="refresh" size={20} color="white" />
@@ -97,7 +82,7 @@ const RoomManagementPanel = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={loadRooms}
+          onPress={handleLoadRooms}
           className="bg-[#6c757d] px-3 py-2 rounded-md flex-1"
         >
           <Text className="text-white font-bold text-center">

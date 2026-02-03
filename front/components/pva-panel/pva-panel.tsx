@@ -1,44 +1,58 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { fetchToValidatePictures } from "@/api/picture.api";
-import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 import PvaModal from "@/components/pva-components/PvaModal";
 import PictureItem from "@/components/pva-components/PvaPictureItem";
+import { usePvaPreview } from "@/hooks/pva/usePvaPreview";
 
-const PvaPanel = () => {
-  const [picturesPvaData, setPicturesPvaData] = useState<PicturePvaDTO[]>([]);
+interface PvaPanelProps {
+  onDataChanged?: () => void;
+}
+
+const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
   const [pvaModalIsVisible, setPvaModalIsVisible] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const {
+    previewPictures,
+    isRefreshing,
+    refreshKey,
+    refresh,
+    handleValidated,
+    handleDeleted,
+  } = usePvaPreview({ previewCount: 5 });
 
-  const fetchPictures = async () => {
-    setIsRefreshing(true);
+  const handleValidatedWithRefresh = useCallback(
+    (ids: string[]) => {
+      handleValidated(ids);
+      onDataChanged?.();
+    },
+    [handleValidated, onDataChanged]
+  );
+
+  const handleDeletedWithRefresh = useCallback(
+    (ids: string[]) => {
+      handleDeleted(ids);
+      onDataChanged?.();
+    },
+    [handleDeleted, onDataChanged]
+  );
+
+  const handleUpdatedWithRefresh = useCallback(() => {
+    onDataChanged?.();
+  }, [onDataChanged]);
+
+  const handleRefresh = async () => {
     try {
-      const pics = await fetchToValidatePictures(5, 0);
-      setPicturesPvaData(pics);
-      setRefreshKey(prev => prev + 1);
-    } catch (e) {
-      console.error("Erreur rafraîchissement PVA :", e);
+      await refresh();
+    } catch {
       alert("Impossible de récupérer les images. Veuillez réessayer plus tard.");
-    } finally {
-      setIsRefreshing(false);
     }
-  };
-
-  useEffect(() => { fetchPictures(); }, []);
-
-  const previewPictures = picturesPvaData.slice(0, 5);
-
-  const handleValidated = (validatedIds: string[]) => {
-    setPicturesPvaData(prev => prev.filter(pic => !validatedIds.includes(pic.id)));
   };
 
   return (
     <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
       <View className="flex-row items-center justify-between">
         <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
-        <TouchableOpacity onPress={fetchPictures} disabled={isRefreshing} className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2">
+        <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing} className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2">
           <MaterialIcons name="refresh" size={20} color="white" />
         </TouchableOpacity>
       </View>
@@ -62,8 +76,9 @@ const PvaPanel = () => {
         visible={pvaModalIsVisible}
         onClose={() => setPvaModalIsVisible(false)}
         refreshKey={refreshKey}
-        onValidated={handleValidated}
-        onDeleted={(deletedIds: string[]) => setPicturesPvaData(prev => prev.filter(pic => !deletedIds.includes(pic.id)))}
+        onValidated={handleValidatedWithRefresh}
+        onDeleted={handleDeletedWithRefresh}
+        onUpdated={handleUpdatedWithRefresh}
       />
     </View>
   );

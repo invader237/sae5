@@ -1,22 +1,15 @@
-import { useEffect, useState } from "react";
+import React from "react";
 import { View, Text } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { getRooms } from "@/api/room.api";
 import { RoomDTO } from "@/api/DTO/room.dto";
+import { useRoomSelector } from "@/hooks/rooms/useRoomSelector";
 
-export default function RoomSelector({ onSelectRoom }) {
-  const [rooms, setRooms] = useState<RoomDTO[]>([]);
-  const [selectedId, setSelectedId] = useState("");
+type RoomSelectorProps = {
+  onSelectRoom: (room: RoomDTO | null) => void;
+};
 
-  useEffect(() => {
-    getRooms().then(setRooms);
-  }, []);
-
-  const handleSelect = (id: string) => {
-    setSelectedId(id);
-    const room = rooms.find((r) => r.id === id);
-    onSelectRoom(room || null);
-  };
+export default function RoomSelector({ onSelectRoom }: RoomSelectorProps) {
+  const { rooms, selectedId, handleSelect } = useRoomSelector({ onSelectRoom });
 
   return (
     <View className="gap-2">
