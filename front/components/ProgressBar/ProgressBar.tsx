@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { Colors, BorderRadius } from "@/constants/theme";
 
 type Props = {
   value: number;
@@ -15,18 +16,24 @@ const ProgressBar = ({ value, threshold, max, width = 96 }: Props) => {
 
   const clampedThreshold = Math.min(Math.max(threshold, 0), 100);
 
-  const color = percent >= clampedThreshold ? "#22c55e" : "#ef4444";
+  const color = percent >= clampedThreshold ? Colors.primary : Colors.danger;
 
   return (
     <View
-      style={{ width }}
-      className="h-2 bg-gray-300 rounded-full overflow-hidden"
+      style={{ 
+        width, 
+        height: 8,
+        backgroundColor: Colors.border,
+        borderRadius: BorderRadius.full,
+        overflow: 'hidden',
+      }}
     >
       <View
-        className="h-full"
         style={{
+          height: '100%',
           width: `${percent}%`,
           backgroundColor: color,
+          borderRadius: BorderRadius.full,
         }}
       />
     </View>

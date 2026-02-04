@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { Spinner} from '@/components/Spinner';
 import { useChangePasswordForm } from "@/hooks/camera/useChangePasswordForm";
+import { Colors, BorderRadius } from "@/constants/theme";
 
 type ChangePasswordFormProps = {
   token: string;
@@ -31,68 +32,109 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
   return (
     <View className="w-full mt-6">
       {errorMsg && (
-        <View className="mb-3 rounded-xl bg-red-100 border border-red-300 px-3 py-2">
-          <Text className="text-red-700 text-sm">{errorMsg}</Text>
+        <View
+          className="mb-3 rounded-xl px-3 py-2"
+          style={{
+            backgroundColor: Colors.dangerLight,
+            borderWidth: 1,
+            borderColor: Colors.danger,
+          }}
+        >
+          <Text className="text-sm" style={{ color: Colors.danger }}>
+            {errorMsg}
+          </Text>
         </View>
       )}
 
       {successMsg && (
-        <View className="mb-3 rounded-xl bg-green-100 border border-green-300 px-3 py-2">
-          <Text className="text-green-700 text-sm">{successMsg}</Text>
+        <View
+          className="mb-3 rounded-xl px-3 py-2"
+          style={{
+            backgroundColor: Colors.successLight,
+            borderWidth: 1,
+            borderColor: Colors.success,
+          }}
+        >
+          <Text className="text-sm" style={{ color: Colors.success }}>
+            {successMsg}
+          </Text>
         </View>
       )}
 
       <View className="mb-3">
-        <Text className="text-base font-semibold mb-1 text-gray-800">
+        <Text className="text-base font-semibold mb-1" style={{ color: Colors.text }}>
           Ancien mot de passe
         </Text>
         <TextInput
-          className="bg-gray-100 border border-gray-300 m-5 rounded-xl px-3 py-2 text-base"
+          className="m-5 rounded-xl px-3 py-2 text-base"
+          style={{
+            backgroundColor: Colors.inputBackground,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            color: Colors.text,
+          }}
           value={oldPassword}
           onChangeText={setOldPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={Colors.textMuted}
         />
       </View>
 
       <View className="mb-3">
-        <Text className="text-base font-semibold mb-1 text-gray-800">
+        <Text className="text-base font-semibold mb-1" style={{ color: Colors.text }}>
           Nouveau mot de passe
         </Text>
         <TextInput
-          className="bg-gray-100 border border-gray-300 m-5 rounded-xl px-3 py-2 text-base"
+          className="m-5 rounded-xl px-3 py-2 text-base"
+          style={{
+            backgroundColor: Colors.inputBackground,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            color: Colors.text,
+          }}
           value={newPassword}
           onChangeText={setNewPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={Colors.textMuted}
         />
       </View>
 
       <View className="mb-4">
-        <Text className="text-base font-semibold mb-1 text-gray-800">
+        <Text className="text-base font-semibold mb-1" style={{ color: Colors.text }}>
           Confirmation du nouveau mot de passe
         </Text>
         <TextInput
-          className="bg-gray-100 border border-gray-300 m-5 rounded-xl px-3 py-2 text-base"
+          className="m-5 rounded-xl px-3 py-2 text-base"
+          style={{
+            backgroundColor: Colors.inputBackground,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            color: Colors.text,
+          }}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={Colors.textMuted}
         />
       </View>
 
       <TouchableOpacity
-        className="bg-blue-500 rounded-xl py-3 items-center"
+        className="py-3 items-center"
+        style={{
+          backgroundColor: Colors.primary,
+          borderRadius: BorderRadius.lg,
+          opacity: loading ? 0.7 : 1,
+        }}
         disabled={loading}
         onPress={submit}
       >
         {loading ? (
-          <Spinner color="#fff" />
+          <Spinner color={Colors.white} />
         ) : (
-          <Text className="text-white font-semibold text-base">
+          <Text className="font-semibold text-base" style={{ color: Colors.onPrimary }}>
             Mettre à jour le mot de passe
           </Text>
         )}

@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { RoomDTO } from "@/api/DTO/room.dto";
 import { useRoomSelector } from "@/hooks/rooms/useRoomSelector";
+import { Colors } from "@/constants/theme";
 
 type RoomSelectorProps = {
   onSelectRoom: (room: RoomDTO | null) => void;
@@ -13,12 +14,14 @@ export default function RoomSelector({ onSelectRoom }: RoomSelectorProps) {
 
   return (
     <View className="gap-2">
-      <Text className="font-medium">Select a room</Text>
+      <Text className="font-medium" style={{ color: Colors.text }}>
+        Select a room
+      </Text>
 
       <Picker
         selectedValue={selectedId}
         onValueChange={handleSelect}
-        style={{ backgroundColor: "#eaeaea" }}
+        style={{ backgroundColor: Colors.inputBackground, color: Colors.text }}
       >
         <Picker.Item label="Choose a room..." value="" />
         {rooms.map((r) => (

@@ -3,6 +3,7 @@ import { View, Text, Modal, TouchableOpacity } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 import { usePvaEditModal } from "@/hooks/pva/usePvaEditModal";
+import { Colors, BorderRadius, Shadows } from "@/constants/theme";
 
 interface Props {
   visible: boolean;
@@ -31,10 +32,22 @@ const PvaEditModal = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View className="flex-1 justify-center items-center bg-black/50">
-        <View className="bg-white rounded-lg p-6 w-80">
-          <Text className="text-lg font-bold mb-4">Modifier les images</Text>
-          <Text className="text-sm text-gray-600 mb-4">
+      <View
+        className="flex-1 justify-center items-center"
+        style={{ backgroundColor: Colors.overlay }}
+      >
+        <View
+          className="p-6 w-80"
+          style={{
+            backgroundColor: Colors.cardBackground,
+            borderRadius: BorderRadius.lg,
+            ...Shadows.md,
+          }}
+        >
+          <Text className="text-lg font-bold mb-4" style={{ color: Colors.text }}>
+            Modifier les images
+          </Text>
+          <Text className="text-sm mb-4" style={{ color: Colors.textSecondary }}>
             {selectedPictures.length} image(s) sélectionnée(s)
           </Text>
 
@@ -50,16 +63,29 @@ const PvaEditModal = ({
 
           <TouchableOpacity
             onPress={handleConfirm}
-            className="bg-blue-500 px-4 py-2 rounded-lg"
+            className="px-4 py-2 rounded-lg"
+            style={{
+              backgroundColor: Colors.primary,
+              borderRadius: BorderRadius.md,
+            }}
           >
-            <Text className="text-white font-bold text-center">Valider</Text>
+            <Text className="font-bold text-center" style={{ color: Colors.onPrimary }}>
+              Valider
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={onClose}
-            className="mt-2 px-4 py-2 rounded-lg border border-gray-300"
+            className="mt-2 px-4 py-2 rounded-lg"
+            style={{
+              borderWidth: 1,
+              borderColor: Colors.border,
+              borderRadius: BorderRadius.md,
+            }}
           >
-            <Text className="text-center font-semibold">Annuler</Text>
+            <Text className="text-center font-semibold" style={{ color: Colors.textSecondary }}>
+              Annuler
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
