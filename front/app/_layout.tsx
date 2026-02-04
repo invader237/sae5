@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { AuthProvider } from "@/contexts/AuthContext";
 import "../global.css";
 import { View, Platform, StyleSheet, useWindowDimensions } from "react-native";
+import { Colors } from "@/constants/theme";
 import { useEffect, useState } from "react";
 
 export default function RootLayout() {
@@ -17,7 +18,16 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <View className="absolute inset-0 bg-gradient-to-b from-gray-300 via-white to-white" />
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          backgroundColor: Colors.background,
+        }}
+      />
       <View style={[styles.container, isCardStyle && styles.card]}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -33,7 +43,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: "100%",
-    backgroundColor: "#fff",
+    backgroundColor: Colors.background,
   },
   card: {
     maxWidth: 430,

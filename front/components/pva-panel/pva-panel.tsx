@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import PvaModal from "@/components/pva-components/PvaModal";
 import PictureItem from "@/components/pva-components/PvaPictureItem";
 import { usePvaPreview } from "@/hooks/pva/usePvaPreview";
+import { Colors, BorderRadius, Shadows } from "@/constants/theme";
 
 interface PvaPanelProps {
   onDataChanged?: () => void;
@@ -49,26 +50,101 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
   };
 
   return (
-    <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
+    <View 
+      className="p-5 gap-4"
+      style={{
+        backgroundColor: Colors.white,
+        borderRadius: BorderRadius.lg,
+        ...Shadows.md,
+      }}
+    >
+      {/* Header */}
       <View className="flex-row items-center justify-between">
-        <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
-        <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing} className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2">
-          <MaterialIcons name="refresh" size={20} color="white" />
+        <View>
+          <Text 
+            className="text-xs font-semibold tracking-wide uppercase mb-1"
+            style={{ color: Colors.textMuted }}
+          >
+            Validation
+          </Text>
+          <Text 
+            className="text-xl font-bold"
+            style={{ color: Colors.text }}
+          >
+            Pré-validation
+          </Text>
+        </View>
+        <TouchableOpacity 
+          onPress={handleRefresh} 
+          disabled={isRefreshing} 
+          className="flex-row items-center justify-center"
+          style={{
+            backgroundColor: Colors.primary,
+            borderRadius: BorderRadius.full,
+            width: 44,
+            height: 44,
+            opacity: isRefreshing ? 0.6 : 1,
+          }}
+        >
+          <MaterialIcons name="refresh" size={22} color={Colors.white} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={{ flexDirection: "row" }} className="px-3">
+      {/* Image Gallery */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ flexDirection: "row", paddingVertical: 4 }}
+      >
         {previewPictures.length > 0 ? previewPictures.map((pic, i) => (
-          <View key={pic.id} className="mr-3">
+          <View 
+            key={pic.id} 
+            className="mr-3"
+            style={{
+              borderRadius: BorderRadius.md,
+              overflow: 'hidden',
+            }}
+          >
             <PictureItem picture={pic} />
           </View>
         )) : (
-          <View className="w-[150px] h-[150px] border border-gray-300 rounded-lg mr-3 flex items-center justify-center">
-            <Text className="text-center">Aucune image à valider</Text>
+          <View 
+            className="flex items-center justify-center mr-3"
+            style={{
+              width: 150,
+              height: 150,
+              backgroundColor: Colors.inputBackground,
+              borderRadius: BorderRadius.md,
+            }}
+          >
+            <MaterialIcons name="image" size={32} color={Colors.textMuted} />
+            <Text 
+              className="text-center text-sm mt-2 px-3"
+              style={{ color: Colors.textMuted }}
+            >
+              Aucune image à valider
+            </Text>
           </View>
         )}
-        <TouchableOpacity onPress={() => setPvaModalIsVisible(true)} className="w-[150px] h-[150px] flex items-center justify-center rounded-lg">
-          <Text className="text-blue-500 underline">Voir plus...</Text>
+        
+        {/* See more button */}
+        <TouchableOpacity 
+          onPress={() => setPvaModalIsVisible(true)} 
+          className="flex items-center justify-center"
+          style={{
+            width: 150,
+            height: 150,
+            backgroundColor: Colors.primary,
+            borderRadius: BorderRadius.md,
+          }}
+        >
+          <MaterialIcons name="add" size={32} color={Colors.white} />
+          <Text 
+            className="font-semibold mt-1"
+            style={{ color: Colors.white }}
+          >
+            Voir plus
+          </Text>
         </TouchableOpacity>
       </ScrollView>
 

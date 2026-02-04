@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import RoomLightDTO from "@/api/DTO/roomLight.dto";
+import { Colors, BorderRadius, Shadows } from "@/constants/theme";
 
 type RoomCheckboxProps = {
   room: RoomLightDTO;
@@ -11,9 +12,14 @@ type RoomCheckboxProps = {
 
 const RoomCheckbox: React.FC<RoomCheckboxProps> = ({ room, selected, onToggle }) => (
   <TouchableOpacity
-    className={`m-1 p-4 rounded-xl shadow-sm items-center justify-center ${
-      selected ? "bg-blue-500" : "bg-white"
-    }`}
+    className="m-1 p-4 items-center justify-center"
+    style={{
+      backgroundColor: selected ? Colors.primary : Colors.cardBackground,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: selected ? Colors.primary : Colors.border,
+      ...Shadows.sm,
+    }}
     onPress={() => onToggle(room.id)}
     activeOpacity={0.8}
   >
@@ -22,7 +28,10 @@ const RoomCheckbox: React.FC<RoomCheckboxProps> = ({ room, selected, onToggle })
         <MaterialIcons name="check-circle" size={20} color="white" />
       </View>
     )}
-    <Text className={`text-center font-medium ${selected ? "text-white" : "text-gray-800"}`}>
+    <Text
+      className="text-center font-medium"
+      style={{ color: selected ? Colors.white : Colors.text }}
+    >
       {room.name}
     </Text>
   </TouchableOpacity>
@@ -36,7 +45,13 @@ type RoomListProps = {
 
 const RoomList: React.FC<RoomListProps> = ({ rooms, selectedRooms, onToggleRoom }) => (
   <View>
-    <View className="flex-row flex-wrap justify-start bg-gray-100 p-4 rounded-xl">
+    <View
+      className="flex-row flex-wrap justify-start p-4"
+      style={{
+        backgroundColor: Colors.inputBackground,
+        borderRadius: BorderRadius.lg,
+      }}
+    >
       {rooms.map((room) => (
         <View key={room.id} className="w-1/3">
           <RoomCheckbox
