@@ -8,6 +8,7 @@ import RoomModal from "@/components/room-managment-components/RoomModal";
 import RoomValidatedPicturesModal from "@/components/room-managment-components/RoomValidatedPicturesModal";
 import ProgressBar from "../ProgressBar";
 import { useRoomManagement } from "@/hooks/rooms/useRoomManagement";
+import { Colors, BorderRadius, Shadows } from "@/constants/theme";
 
 const RoomManagementPanel = () => {
   const {
@@ -58,17 +59,36 @@ const RoomManagementPanel = () => {
   };
 
   return (
-    <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
+    <View 
+      className="p-5 gap-4"
+      style={{
+        backgroundColor: Colors.white,
+        borderRadius: BorderRadius.lg,
+        ...Shadows.md,
+      }}
+    >
       {/* HEADER */}
       <View className="flex-row items-center justify-between">
-        <Text className="text-[#333] text-lg font-bold">
-          Gestion des salles
-        </Text>
+        <View>
+
+          <Text 
+            className="text-xl font-bold"
+            style={{ color: Colors.text }}
+          >
+            Gestion des salles
+          </Text>
+        </View>
         <TouchableOpacity
           onPress={handleLoadAnalytics}
-          className="bg-[#007bff] rounded-md px-4 py-2"
+          className="flex-row items-center justify-center"
+          style={{
+            backgroundColor: Colors.primary,
+            borderRadius: BorderRadius.full,
+            width: 44,
+            height: 44,
+          }}
         >
-          <MaterialIcons name="refresh" size={20} color="white" />
+          <MaterialIcons name="refresh" size={22} color={Colors.white} />
         </TouchableOpacity>
       </View>
 
@@ -76,36 +96,84 @@ const RoomManagementPanel = () => {
       <View className="flex-row gap-3">
         <TouchableOpacity
           onPress={openAddModal}
-          className="bg-[#28a745] px-3 py-2 rounded-md flex-1"
+          className="flex-1 flex-row items-center justify-center py-3"
+          style={{
+            backgroundColor: Colors.primary,
+            borderRadius: BorderRadius.full,
+          }}
         >
-          <Text className="text-white font-bold text-center">Ajouter</Text>
+          <MaterialIcons name="add" size={20} color={Colors.white} />
+          <Text className="font-bold ml-2" style={{ color: Colors.onPrimary }}>
+            Ajouter
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handleLoadRooms}
-          className="bg-[#6c757d] px-3 py-2 rounded-md flex-1"
+          className="flex-1 flex-row items-center justify-center py-3"
+          style={{
+            backgroundColor: Colors.inputBackground,
+            borderRadius: BorderRadius.full,
+                        borderWidth: 1,
+                        borderColor: Colors.border,
+          }}
         >
-          <Text className="text-white font-bold text-center">
+          <MaterialIcons name="list" size={20} color={Colors.textSecondary} />
+          <Text 
+            className="font-bold ml-2"
+            style={{ color: Colors.textSecondary 
+              
+            }}
+          >
             Voir les salles
           </Text>
         </TouchableOpacity>
       </View>
 
-      <View className="border border-gray-300" />
+      {/* DIVIDER */}
+      <View 
+        className="my-1"
+        style={{ 
+          height: 1, 
+          backgroundColor: Colors.border 
+        }} 
+      />
 
-      <View className="gap-2">
-        <Text className="text-[#333] text-medium font-small">
-          Salles a faible couverture
-        </Text>
+      {/* LOW COVERAGE SECTION */}
+      <View className="gap-3">
+        <View className="flex-row items-center">
+          <MaterialIcons name="warning" size={18} color={Colors.warning} />
+          <Text 
+            className="font-semibold ml-2"
+            style={{ color: Colors.text }}
+          >
+            Salles à faible couverture
+          </Text>
+        </View>
+        
         {analytics?.low_coverage && analytics.low_coverage.length > 0 ? (
           analytics.low_coverage.map((room) => (
-            <View key={room.id} className="p-2 rounded-md p-2">
-              <View
-                key={room.id}
-                className="flex-row justify-between items-center rounded-md mb-1"
-              >
-                <Text className="text-[#555] font-medium">{room.name}</Text>
-                <Text className="text-[#555] text-sm">
+            <View 
+              key={room.id} 
+              className="p-4"
+              style={{
+                backgroundColor: Colors.inputBackground,
+                borderRadius: BorderRadius.md,
+                borderWidth: 1,
+                borderColor: Colors.border,
+              }}
+            >
+              <View className="flex-row justify-between items-center mb-2">
+                <Text 
+                  className="font-medium"
+                  style={{ color: Colors.text }}
+                >
+                  {room.name}
+                </Text>
+                <Text 
+                  className="text-sm font-semibold"
+                  style={{ color: Colors.textSecondary }}
+                >
                   {room.validated_picture_count} / 500
                 </Text>
               </View>
@@ -118,9 +186,21 @@ const RoomManagementPanel = () => {
             </View>
           ))
         ) : (
-          <Text className="text-[#555] text-sm">
-            Aucune salle avec une faible couverture.
-          </Text>
+          <View 
+            className="p-4 flex-row items-center"
+            style={{
+              backgroundColor: Colors.primaryLight,
+              borderRadius: BorderRadius.md,
+            }}
+          >
+            <MaterialIcons name="check-circle" size={20} color={Colors.primaryDark} />
+            <Text 
+              className="text-sm ml-2"
+              style={{ color: Colors.primaryDark }}
+            >
+              Toutes les salles ont une bonne couverture !
+            </Text>
+          </View>
         )}
       </View>
 
