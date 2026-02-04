@@ -27,10 +27,16 @@ module.exports = {
       }
     },
 
+    androidStatusBar: {
+      backgroundColor: "#FFFFFF",
+      barStyle: "dark-content"
+    },
+
     web: {
       bundler: "metro",
       output: "static",
-      favicon: "./assets/images/favicon.png"
+      favicon: "./assets/images/favicon.png",
+      themeColor: "#09090B"
     },
 
     plugins: [

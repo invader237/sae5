@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import RoomDTO from "@/api/DTO/room.dto";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import ProgressBar from "@/components/ProgressBar";
+import { Colors, BorderRadius } from "@/constants/theme";
 
 type Props = {
   room: RoomDTO;
@@ -16,15 +17,21 @@ const RoomAccordionItem = (
   { room, expanded, onToggle, onEdit, onViewPictures }: Props
 ) => {
   return (
-    <View className="mb-2 border border-gray-300 rounded-lg">
+    <View
+      className="mb-2"
+      style={{ borderWidth: 1, borderColor: Colors.border, borderRadius: BorderRadius.lg }}
+    >
       <TouchableOpacity
         onPress={onToggle}
-        className="flex-row items-center px-3 py-2 bg-gray-100"
+        className="flex-row items-center px-3 py-2"
+        style={{ backgroundColor: Colors.inputBackground }}
       >
         <View className="flex-1">
           <View className="flex-row justify-between items-center">
-            <Text className="font-bold">{room.name}</Text>
-            <Text className="text-sm text-gray-600">
+            <Text className="font-bold" style={{ color: Colors.text }}>
+              {room.name}
+            </Text>
+            <Text className="text-sm" style={{ color: Colors.textSecondary }}>
               {room.validated_picture_count} / 500
             </Text>
           </View>
@@ -42,29 +49,42 @@ const RoomAccordionItem = (
         <MaterialIcons
           name={expanded ? "expand-less" : "expand-more"}
           size={24}
+          color={Colors.textMuted}
           style={{ marginLeft: 8 }}
         />
       </TouchableOpacity>
 
       {expanded && (
-        <View className="p-3 bg-white gap-2">
-          <Text>Étage : {room.floor}</Text>
-          <Text>Département : {room.departement}</Text>
-          <Text>Type : {room.type}</Text>
+        <View className="p-3 gap-2" style={{ backgroundColor: Colors.cardBackground }}>
+          <Text style={{ color: Colors.text }}>Étage : {room.floor}</Text>
+          <Text style={{ color: Colors.text }}>Département : {room.departement}</Text>
+          <Text style={{ color: Colors.text }}>Type : {room.type}</Text>
 
           <View className="flex-row gap-2 mt-3">
             <TouchableOpacity
               onPress={onEdit}
-              className="bg-[#007bff] px-3 py-2 rounded-md flex-1"
+              className="px-3 py-2 flex-1"
+              style={{
+                backgroundColor: Colors.primary,
+                borderRadius: BorderRadius.md,
+              }}
             >
-              <Text className="text-white text-center font-bold">Modifier</Text>
+              <Text className="text-center font-bold" style={{ color: Colors.onPrimary }}>
+                Modifier
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={onViewPictures}
-              className="bg-[#6c757d] px-3 py-2 rounded-md flex-1"
+              className="px-3 py-2 flex-1"
+              style={{
+                backgroundColor: Colors.textSecondary,
+                borderRadius: BorderRadius.md,
+              }}
             >
-              <Text className="text-white text-center font-bold">Voir les images</Text>
+              <Text className="text-center font-bold" style={{ color: Colors.onPrimary }}>
+                Voir les images
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

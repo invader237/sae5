@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { TouchableOpacity, Image, View, Text } from "react-native";
 import PicturePvaDTO from "@/api/DTO/picturePva.dto";
 import { usePvaThumbnail } from "@/hooks/pva/usePvaThumbnail";
+import { Colors, BorderRadius } from "@/constants/theme";
 
 interface Props {
   picture: PicturePvaDTO;
@@ -17,14 +18,13 @@ const PvaPictureItem = memo(function PictureItem({ picture, size = 150, isSelect
     <TouchableOpacity
       onPress={() => onPress?.(picture.id)}
       activeOpacity={0.8}
-      className={`
-        overflow-hidden m-1
-        ${isSelected ? "border-4 border-blue-500" : "border-0"}
-      `}
+      className="overflow-hidden m-1"
       style={{
         width: size,
         height: size,
-        borderRadius: 12, 
+        borderRadius: BorderRadius.md,
+        borderWidth: isSelected ? 3 : 0,
+        borderColor: isSelected ? Colors.info : "transparent",
       }}
     >
       {uri ? (
@@ -34,19 +34,17 @@ const PvaPictureItem = memo(function PictureItem({ picture, size = 150, isSelect
           resizeMode="cover"
         />
       ) : (
-        <View className="flex-1 bg-gray-200" />
+        <View className="flex-1" style={{ backgroundColor: Colors.inputBackground }} />
       )}
 
       <View
-        className="
-          absolute inset-0 bg-black/40
-          justify-center items-center
-        "
+        className="absolute inset-0 justify-center items-center"
+        style={{ backgroundColor: Colors.overlaySoft }}
       >
-        <Text className="text-white font-bold text-center">
+        <Text className="font-bold text-center" style={{ color: Colors.textInverted }}>
           {picture?.room?.name}
         </Text>
-        <Text className="text-white text-xs mt-0.5">
+        <Text className="text-xs mt-0.5" style={{ color: Colors.textInverted }}>
           {picture?.recognition_percentage
             ? `${(picture.recognition_percentage * 100).toFixed(1)}%`
             : "Inconnu"}

@@ -4,6 +4,7 @@ import PictureItem from "@/components/pva-components/PvaPictureItem";
 import PvaEditModal from "@/components/pva-components/PvaEditModal";
 import { usePvaPictures } from "@/hooks/pva/usePvaPictures";
 import { usePvaModalActions } from "@/hooks/pva/usePvaModalActions";
+import { Colors, BorderRadius } from "@/constants/theme";
 
 interface Props {
   visible: boolean;
@@ -89,14 +90,16 @@ const PvaModal = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-white p-4">
+      <View className="flex-1 p-4" style={{ backgroundColor: Colors.background }}>
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-2xl font-bold text-[#333]">
+          <Text className="text-2xl font-bold" style={{ color: Colors.text }}>
             Images à valider
           </Text>
           <TouchableOpacity onPress={onClose}>
-            <Text className="text-blue-500 text-lg">Fermer</Text>
+            <Text className="text-lg" style={{ color: Colors.info }}>
+              Fermer
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -123,7 +126,7 @@ const PvaModal = ({
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
           ListEmptyComponent={
-            <Text className="text-center text-[#555] mt-10">
+            <Text className="text-center mt-10" style={{ color: Colors.textSecondary }}>
               {isLoading ? "Chargement…" : "Aucune image à valider pour le moment."}
             </Text>
           }
@@ -134,9 +137,14 @@ const PvaModal = ({
           <TouchableOpacity
             onPress={validateSelected}
             disabled={selectedPictures.length === 0}
-            className={`px-4 py-2 rounded-lg ${selectedPictures.length > 0 ? "bg-blue-500" : "bg-gray-300"}`}
+            className="px-4 py-2 rounded-lg"
+            style={{
+              backgroundColor:
+                selectedPictures.length > 0 ? Colors.primary : Colors.border,
+              borderRadius: BorderRadius.md,
+            }}
           >
-            <Text className="text-white font-bold text-sm">
+            <Text className="font-bold text-sm" style={{ color: Colors.onPrimary }}>
               Valider ({selectedPictures.length})
             </Text>
           </TouchableOpacity>
@@ -144,19 +152,29 @@ const PvaModal = ({
           <TouchableOpacity
             onPress={() => setEditModalVisible(true)}
             disabled={selectedPictures.length === 0}
-            className={`px-4 py-2 rounded-lg ${
-              selectedPictures.length > 0 ? "bg-blue-500" : "bg-gray-300"
-            }`}
+            className="px-4 py-2 rounded-lg"
+            style={{
+              backgroundColor:
+                selectedPictures.length > 0 ? Colors.primary : Colors.border,
+              borderRadius: BorderRadius.md,
+            }}
           >
-            <Text className="text-white font-bold text-sm">Modifier</Text>
+            <Text className="font-bold text-sm" style={{ color: Colors.onPrimary }}>
+              Modifier
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={handleDelete}
             disabled={selectedPictures.length === 0 || isDeleting}
-            className={`px-4 py-2 rounded-lg ${selectedPictures.length > 0 ? "bg-red-500" : "bg-gray-300"}`}
+            className="px-4 py-2 rounded-lg"
+            style={{
+              backgroundColor:
+                selectedPictures.length > 0 ? Colors.danger : Colors.border,
+              borderRadius: BorderRadius.md,
+            }}
           >
-            <Text className="text-white font-bold text-sm">
+            <Text className="font-bold text-sm" style={{ color: Colors.onPrimary }}>
               {isDeleting ? "Suppression..." : "Supprimer"}
             </Text>
           </TouchableOpacity>

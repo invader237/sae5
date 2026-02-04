@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import Svg, { Polyline, Circle, Line, Text as SvgText } from "react-native-svg";
 import { AccuracyOverTimePointDTO } from "@/api/DTO/accuracyOverTimePoint.dto";
 import { useAccuracyTimeline } from "@/hooks/models/useAccuracyTimeline";
+import { Colors, BorderRadius } from "@/constants/theme";
 
 interface AccuracyTimelineProps {
   data: AccuracyOverTimePointDTO[];
@@ -27,18 +28,33 @@ const AccuracyTimeline = memo(function AccuracyTimeline({
   return (
     <View className="gap-2">
       {isTruncated && (
-        <View className="bg-blue-50 border border-blue-200 rounded-md p-2">
-          <Text className="text-xs text-blue-700 text-center">
+        <View
+          className="rounded-md p-2"
+          style={{
+            backgroundColor: Colors.infoLight,
+            borderWidth: 1,
+            borderColor: Colors.info,
+          }}
+        >
+          <Text className="text-xs text-center" style={{ color: Colors.info }}>
             Affichage des {maxDaysDisplayed} derniers jours
           </Text>
         </View>
       )}
       <View
-        className="border border-gray-200 rounded-lg overflow-hidden bg-white"
+        className="overflow-hidden"
+        style={{
+          backgroundColor: Colors.cardBackground,
+          borderWidth: 1,
+          borderColor: Colors.border,
+          borderRadius: BorderRadius.lg,
+        }}
         onLayout={handleLayout}
       >
         <View className="px-4 pt-4">
-          <Text className="text-xs text-gray-500">Précision (%)</Text>
+          <Text className="text-xs" style={{ color: Colors.textSecondary }}>
+            Précision (%)
+          </Text>
         </View>
         <View className="px-2 pb-4">
           <Svg width={chartWidth} height={chartHeight}>
@@ -51,14 +67,14 @@ const AccuracyTimeline = memo(function AccuracyTimeline({
                     y1={line.y}
                     x2={line.x2}
                     y2={line.y}
-                    stroke="#f3f4f6"
+                    stroke={Colors.borderLight}
                     strokeWidth={1}
                   />
                   <SvgText
                     x={padding - 6}
                     y={line.y + 4}
                     fontSize={10}
-                    fill="#9ca3af"
+                    fill={Colors.textMuted}
                     textAnchor="end"
                   >
                     {line.label}
@@ -70,7 +86,7 @@ const AccuracyTimeline = memo(function AccuracyTimeline({
               y1={chartHeight - padding}
               x2={chartWidth - padding}
               y2={chartHeight - padding}
-              stroke="#e5e7eb"
+              stroke={Colors.border}
               strokeWidth={1}
             />
             <Line
@@ -78,13 +94,13 @@ const AccuracyTimeline = memo(function AccuracyTimeline({
               y1={padding}
               x2={padding}
               y2={chartHeight - padding}
-              stroke="#e5e7eb"
+              stroke={Colors.border}
               strokeWidth={1}
             />
             {points && (
               <Polyline
                 points={points}
-                stroke="#4f46e5"
+                stroke={Colors.info}
                 strokeWidth={2}
                 fill="none"
               />
@@ -96,14 +112,18 @@ const AccuracyTimeline = memo(function AccuracyTimeline({
                   cx={point.x}
                   cy={point.y}
                   r={3}
-                  fill="#4f46e5"
+                  fill={Colors.info}
                 />
               ))}
           </Svg>
         </View>
         <View className="flex-row justify-between px-4 pb-3">
-          <Text className="text-xs text-gray-500">{dateRange.start}</Text>
-          <Text className="text-xs text-gray-500">{dateRange.end}</Text>
+          <Text className="text-xs" style={{ color: Colors.textSecondary }}>
+            {dateRange.start}
+          </Text>
+          <Text className="text-xs" style={{ color: Colors.textSecondary }}>
+            {dateRange.end}
+          </Text>
         </View>
       </View>
     </View>

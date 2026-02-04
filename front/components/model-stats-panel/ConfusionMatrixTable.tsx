@@ -3,6 +3,7 @@ import { View, Text, ScrollView } from "react-native";
 import { ConfusionMatrixCellDTO } from "@/api/DTO/confusionMatrixCell.dto";
 import RoomLightDTO from "@/api/DTO/roomLight.dto";
 import { useConfusionMatrix, getCellBackgroundColor } from "@/hooks/models/useConfusionMatrix";
+import { Colors, BorderRadius } from "@/constants/theme";
 
 interface ConfusionMatrixTableProps {
   matrix: ConfusionMatrixCellDTO[];
@@ -26,8 +27,15 @@ const ConfusionMatrixTable = memo(function ConfusionMatrixTable({
   return (
     <View className="gap-2">
       {isTruncated && (
-        <View className="bg-yellow-50 border border-yellow-200 rounded-md p-2">
-          <Text className="text-xs text-yellow-700 text-center">
+        <View
+          className="rounded-md p-2"
+          style={{
+            backgroundColor: Colors.warningLight,
+            borderWidth: 1,
+            borderColor: Colors.warning,
+          }}
+        >
+          <Text className="text-xs text-center" style={{ color: Colors.warning }}>
             Affichage limité aux {maxRoomsDisplayed} premières salles (
             {totalRooms} au total)
           </Text>
@@ -37,15 +45,33 @@ const ConfusionMatrixTable = memo(function ConfusionMatrixTable({
         <View className="items-center">
           {/* Header row */}
           <View className="flex-row">
-            <View className="w-20 h-10 border border-gray-300 bg-gray-100 justify-center items-center">
-              <Text className="text-xs">Réel ↓</Text>
+            <View
+              className="w-20 h-10 justify-center items-center"
+              style={{
+                borderWidth: 1,
+                borderColor: Colors.border,
+                backgroundColor: Colors.inputBackground,
+              }}
+            >
+              <Text className="text-xs" style={{ color: Colors.textSecondary }}>
+                Réel ↓
+              </Text>
             </View>
             {displayedRoomIds.map((rid) => (
               <View
                 key={rid}
-                className="w-16 h-10 border border-gray-300 bg-gray-100 justify-center items-center"
+                className="w-16 h-10 justify-center items-center"
+                style={{
+                  borderWidth: 1,
+                  borderColor: Colors.border,
+                  backgroundColor: Colors.inputBackground,
+                }}
               >
-                <Text className="text-xs text-center" numberOfLines={1}>
+                <Text
+                  className="text-xs text-center"
+                  style={{ color: Colors.textSecondary }}
+                  numberOfLines={1}
+                >
                   {roomMap.get(rid) ?? rid.slice(0, 4)}
                 </Text>
               </View>
@@ -55,8 +81,15 @@ const ConfusionMatrixTable = memo(function ConfusionMatrixTable({
           {/* Data rows */}
           {displayedRoomIds.map((actualId) => (
             <View key={actualId} className="flex-row">
-              <View className="w-20 h-12 border border-gray-300 bg-gray-100 justify-center px-1">
-                <Text className="text-xs" numberOfLines={2}>
+              <View
+                className="w-20 h-12 justify-center px-1"
+                style={{
+                  borderWidth: 1,
+                  borderColor: Colors.border,
+                  backgroundColor: Colors.inputBackground,
+                }}
+              >
+                <Text className="text-xs" style={{ color: Colors.textSecondary }} numberOfLines={2}>
                   {roomMap.get(actualId) ?? actualId.slice(0, 6)}
                 </Text>
               </View>
@@ -72,10 +105,16 @@ const ConfusionMatrixTable = memo(function ConfusionMatrixTable({
                 return (
                   <View
                     key={predictedId}
-                    className="w-16 h-12 border border-gray-300 justify-center items-center"
-                    style={{ backgroundColor: bgColor }}
+                    className="w-16 h-12 justify-center items-center"
+                    style={{
+                      borderWidth: 1,
+                      borderColor: Colors.border,
+                      backgroundColor: bgColor,
+                    }}
                   >
-                    <Text className="text-sm font-semibold">{count}</Text>
+                    <Text className="text-sm font-semibold" style={{ color: Colors.text }}>
+                      {count}
+                    </Text>
                   </View>
                 );
               })}
@@ -85,12 +124,22 @@ const ConfusionMatrixTable = memo(function ConfusionMatrixTable({
       </ScrollView>
       <View className="flex-row items-center gap-4 mt-2">
         <View className="flex-row items-center gap-1">
-          <View className="w-4 h-4 bg-green-400 rounded" />
-          <Text className="text-xs text-gray-600">Correct</Text>
+          <View
+            className="w-4 h-4 rounded"
+            style={{ backgroundColor: Colors.success, borderRadius: BorderRadius.sm }}
+          />
+          <Text className="text-xs" style={{ color: Colors.textSecondary }}>
+            Correct
+          </Text>
         </View>
         <View className="flex-row items-center gap-1">
-          <View className="w-4 h-4 bg-red-400 rounded" />
-          <Text className="text-xs text-gray-600">Erreur</Text>
+          <View
+            className="w-4 h-4 rounded"
+            style={{ backgroundColor: Colors.danger, borderRadius: BorderRadius.sm }}
+          />
+          <Text className="text-xs" style={{ color: Colors.textSecondary }}>
+            Erreur
+          </Text>
         </View>
       </View>
     </View>

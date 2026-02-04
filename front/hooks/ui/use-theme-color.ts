@@ -8,14 +8,20 @@ import { useColorScheme } from '@/hooks/ui/use-color-scheme';
 
 export function useThemeColor(
   props: { light?: string; dark?: string },
-  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
+  colorName: keyof typeof Colors
 ) {
   const theme = useColorScheme() ?? 'light';
   const colorFromProps = props[theme];
 
   if (colorFromProps) {
     return colorFromProps;
-  } else {
-    return Colors[theme][colorName];
   }
+
+  // Support both nested theme objects and flat color maps.
+  const themedColors = (Colors as any)[theme];
+  if (themedColors && colorName in themedColors) {
+    return themedColors[colorName];
+  }
+
+  return (Colors as any)[colorName];
 }
