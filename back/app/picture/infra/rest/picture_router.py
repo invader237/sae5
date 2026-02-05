@@ -9,12 +9,13 @@ from fastapi import (
     Form,
     Path as FastAPIPath,
     Body,
+    Request,
 )
 from PIL import Image
 import io
 from fastapi.responses import StreamingResponse
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional, List
 import uuid
 from datetime import datetime, timezone
 
@@ -96,6 +97,17 @@ class PictureController:
             response_model=list[PicturePvaDTO],
             methods=["GET"],
         )
+        # Activation visualisations
+        self.router.add_api_route(
+            "/activations/{token}",
+            self.list_activation_images,
+            methods=["GET"],
+        )
+        self.router.add_api_route(
+            "/activations/{token}/image/{filename}",
+            self.get_activation_image,
+            methods=["GET"],
+        )
 
     def get_pictures(
         self,
@@ -106,6 +118,7 @@ class PictureController:
 
     async def import_picture(
         self,
+        request: Request,
         type: Literal["analyse", "database"] | None = Query(
             None,
             alias="type",
@@ -116,6 +129,12 @@ class PictureController:
             alias="type",
             description="Type d'import (form)",
         ),
+        layers: Optional[str] = Query(
+            None,
+            description="Comma-separated layer names to visualize "
+            "(e.g. avgpool,fc)"
+            ". If omitted, defaults to a light set.",
+        ),
         file: UploadFile | None = File(None),
         image: UploadFile | None = File(None),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
@@ -125,7 +144,6 @@ class PictureController:
         history_catalog=Depends(get_history_catalog),
         user: AuthenticatedUser | None = Depends(optional_user()),
     ):
-        # Supporte file ou image comme clé multipart
         upload_file = file or image
         if upload_file is None:
             raise HTTPException(
@@ -133,7 +151,6 @@ class PictureController:
                 detail="Champ 'file' manquant (ou 'image')",
             )
 
-        # Accepte le type via query ou form
         import_type_value = type or type_form
         if import_type_value is None:
             raise HTTPException(
@@ -142,10 +159,7 @@ class PictureController:
             )
 
         if upload_file.content_type not in {
-            "image/jpeg",
-            "image/png",
-            "image/jpg",
-        }:
+                "image/jpeg", "image/png", "image/jpg"}:
             raise HTTPException(
                 status_code=400,
                 detail="Type de fichier non supporté",
@@ -159,39 +173,54 @@ class PictureController:
 
         contents = await upload_file.read()
 
-        # Redimensionner l'image à 384x384 avant de la sauvegarder
-        image = Image.open(io.BytesIO(contents)).convert("RGB")
-        image = image.resize((384, 384))
+        # Resize to 384x384 for consistent inference
+        img = Image.open(io.BytesIO(contents)).convert("RGB")
+        img = img.resize((384, 384))
 
-        # Sauvegarder l'image redimensionnée en qualité maximale
         buffer = io.BytesIO()
-        image.save(buffer, format="JPEG", quality=100, optimize=True)
-        dest_path.write_bytes(buffer.getvalue())
+        img.save(buffer, format="JPEG", quality=100, optimize=True)
+        resized_bytes = buffer.getvalue()
 
-        # Utiliser les bytes redimensionnés pour l'inférence
-        contents = buffer.getvalue()
+        # Persist the resized image
+        dest_path.write_bytes(resized_bytes)
 
-        # Inference synchrone avant sauvegarde
+        # Parse layers query
+        activation_layers: Optional[List[str]] = None
+        if layers:
+            # "avgpool,fc" -> ["avgpool", "fc"]
+            activation_layers = [
+                x.strip() for x in layers.split(",") if x.strip()]
+            if not activation_layers:
+                activation_layers = None
+
+        # Inference + activations
         try:
             inference_result = predict_image(
-                image_bytes=contents,
+                image_bytes=resized_bytes,
                 top_k=5,
                 confidence_threshold=0.0,
                 catalog=model_catalog,
+                activation_layers=activation_layers,
+                save_activations_to=str(
+                    UPLOAD_DIR),  # IMPORTANT: same base as controller routes
+                max_activation_channels=64,
             )
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Inference failed: {e}"
             )
 
-        # Extraction : privilégie le champ canonique 'top_score' si présent,
-        # sinon tombe back sur le parsing défensif de la première prédiction.
+        # Make URLs easier for front: include base URL
+        base_url = str(request.base_url).rstrip("/")
+        if isinstance(inference_result, dict):
+            inference_result["activation_base_url"] = base_url
+
+        # Extract top_score
         recognition_percentage = None
         try:
             if inference_result.get("top_score") is not None:
                 recognition_percentage = float(
-                    inference_result.get("top_score")
-                )
+                    inference_result.get("top_score"))
             else:
                 preds = inference_result.get("predictions") or []
                 if len(preds) > 0:
@@ -203,16 +232,12 @@ class PictureController:
         except Exception:
             recognition_percentage = None
 
-        print(inference_result.get("top_label"))
-        print(room_catalog.find_by_name(inference_result.get("top_label")))
-
         room_obj = room_catalog.find_by_name(inference_result.get("top_label"))
         picture_payload = {
             "path": str(dest_path),
-            "analyzed_by": inference_result.get("model_version")
-            or inference_result.get("model")
-            or None,
-            "room": room_obj,  # passer l'objet Room
+            "analyzed_by": inference_result.get(
+                "model_version") or inference_result.get("model") or None,
+            "room": room_obj,
             "recognition_percentage": recognition_percentage,
             "analyse_date": datetime.now(timezone.utc),
             "validation_date": None,
@@ -221,10 +246,8 @@ class PictureController:
         }
 
         picture = Picture(**picture_payload)
-
         picture = picture_catalog.save(picture)
 
-        # Sauvegarde de l'historique uniquement si l'utilisateur est connecté
         if user is not None:
             try:
                 active_model = model_catalog.find_active_model()
@@ -241,8 +264,7 @@ class PictureController:
                 )
             except Exception as e:
                 print(
-                    f"[WARNING] Erreur lors de la sauvegarde historique: {e}"
-                )
+                    f"[WARNING] Erreur lors de la sauvegarde historique: {e}")
 
         return inference_result
 
@@ -250,28 +272,23 @@ class PictureController:
         self,
         limit: int = Query(50, ge=1, le=100),
         offset: int = Query(0, ge=0),
-        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        picture_catalog: PictureCatalog = Depends(
+            get_picture_catalog),
     ):
         pictures = picture_catalog.find_by_not_validated(
-            limit=limit,
-            offset=offset
-        )
-
-        return [
-            picture_to_picturePvaDTO_mapper.apply(picture)
-            for picture in pictures
-        ]
+            limit=limit, offset=offset)
+        return [picture_to_picturePvaDTO_mapper.apply(
+            picture) for picture in pictures]
 
     async def validate_pictures(
         self,
         pictures: list[PicturePvaDTO],
-        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
-        user: AuthenticatedUser = Depends(require_role("admin")),
+        picture_catalog: PictureCatalog = Depends(
+            get_picture_catalog),
+        user: AuthenticatedUser = Depends(
+            require_role("admin")),
     ):
         validation_date = datetime.now(timezone.utc)
-
-        print(f"Validating {len(pictures)} pictures at {validation_date}")
-
         updated_pictures = []
 
         for picture in pictures:
@@ -281,15 +298,12 @@ class PictureController:
                 picture_obj.is_validated = True
                 updated = picture_catalog.save(picture_obj)
                 updated_pictures.append(
-                    picture_to_pictureDTO_mapper.apply(updated)
-                )
+                    picture_to_pictureDTO_mapper.apply(updated))
             except Exception as e:
                 raise HTTPException(
                     status_code=400,
-                    detail=(
-                        f"Erreur lors de la validation de {picture.id}: "
-                        f"{str(e)}"
-                    ),
+                    detail=f"Erreur lors de la validation de {
+                        picture.id}: {str(e)}",
                 )
 
         return updated_pictures
@@ -297,16 +311,13 @@ class PictureController:
     async def recover_picture(
         self,
         picture_id: uuid.UUID = FastAPIPath(
-            ..., description="ID de la picture à récupérer"
-        ),
-        type: Literal["thumbnail", "full"] = Query(
-            "full",
-            description="Type d'image à récupérer",
-        ),
-        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+            ..., description="ID de la picture à récupérer"),
+        type: Literal["thumbnail", "full"] =
+        Query("full", description="Type d'image à récupérer"),
+        picture_catalog: PictureCatalog =
+        Depends(get_picture_catalog),
     ):
         picture = picture_catalog.find_by_id(picture_id)
-
         image = Image.open(picture.path)
 
         if type == "thumbnail":
@@ -322,24 +333,54 @@ class PictureController:
             image = image.convert("RGB")
 
         buffer = io.BytesIO()
-        image.save(
-            buffer,
-            format="JPEG",
-            quality=quality,
-            optimize=True,
-                )
+        image.save(buffer, format="JPEG", quality=quality, optimize=True)
         buffer.seek(0)
 
         return StreamingResponse(buffer, media_type="image/jpeg")
 
+    async def list_activation_images(self, token: str):
+        act_dir = UPLOAD_DIR / "activations" / token
+        if not act_dir.exists() or not act_dir.is_dir():
+            raise HTTPException(status_code=404,
+                                detail="Activation token not found")
+
+        files = []
+        for p in sorted(act_dir.iterdir()):
+            if p.is_file() and p.suffix.lower() in (".png", ".jpg", ".jpeg"):
+                files.append({
+                    "name": p.name,
+                    "url": f"/pictures/activations/{token}/image/{p.name}",
+                })
+
+        return {"token": token, "images": files}
+
+    async def get_activation_image(self, token: str, filename: str):
+        act_file = UPLOAD_DIR / "activations" / token / filename
+        if not act_file.exists() or not act_file.is_file():
+            raise HTTPException(
+                status_code=404, detail="Activation image not found")
+
+        # Choose media type by extension
+        ext = act_file.suffix.lower()
+        if ext in (".jpg", ".jpeg"):
+            media_type = "image/jpeg"
+        else:
+            media_type = "image/png"
+
+        try:
+            f = act_file.open("rb")
+            return StreamingResponse(f, media_type=media_type)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
     async def delete_pictures_pva(
         self,
         pictures: list[PicturePvaDTO] = Body(...),
-        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        picture_catalog: PictureCatalog = Depends(
+            get_picture_catalog),
         user: AuthenticatedUser = Depends(require_role("admin")),
     ):
         deleted_pictures = []
-
         for picture in pictures:
             try:
                 pic_obj = picture_catalog.find_by_id(picture.id)
@@ -348,18 +389,14 @@ class PictureController:
                     try:
                         Path(pic_obj.path).unlink()
                     except Exception as e:
-                        print(
-                            f"Erreur lors de la suppression du fichier "
-                            f"{pic_obj.path}: {e}"
-                        )
+                        print(f"Erreur lors de la suppression du fichier {
+                            pic_obj.path}: {e}")
                     deleted_pictures.append(picture.id)
             except Exception as e:
                 raise HTTPException(
                     status_code=400,
-                    detail=(
-                        f"Erreur lors de la suppression de {picture.id}: "
-                        f"{str(e)}"
-                    ),
+                    detail=f"Erreur lors de la suppression de {
+                        picture.id}: {str(e)}",
                 )
 
         return {"deleted_pictures": deleted_pictures}
@@ -379,41 +416,35 @@ class PictureController:
                 if not picture.room or not picture.room.id:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"room.id manquant pour {picture.id}"
-                    )
+                        detail=f"room.id manquant pour {picture.id}")
 
                 room = room_catalog.find_by_id(picture.room.id)
                 if not room:
                     raise HTTPException(
-                        status_code=404,
-                        detail=f"Salle '{picture.room.id}' non trouvée"
-                    )
+                        status_code=404, detail=f"Salle '{
+                            picture.room.id}' non trouvée"
+                            )
 
                 pic = picture_catalog.find_by_id(picture.id)
                 if not pic:
                     raise HTTPException(
-                        status_code=404,
-                        detail=f"Image '{picture.id}' non trouvée"
-                    )
+                        status_code=404, detail=f"Image '{
+                            picture.id}' non trouvée"
+                            )
 
                 pic.room = room
-
                 pic.validation_date = validation_date
                 pic.is_validated = True
 
                 updated = picture_catalog.save(pic)
-
                 updated_pictures.append(
-                    picture_to_picturePvaDTO_mapper.apply(updated)
-                )
+                    picture_to_picturePvaDTO_mapper.apply(updated))
 
             except Exception as e:
                 raise HTTPException(
                     status_code=400,
-                    detail=(
-                        f"Erreur lors de la mise à jour de {picture.id}: "
-                        f"{str(e)}"
-                    ),
+                    detail=f"Erreur lors de la mise à jour de {
+                        picture.id}: {str(e)}",
                 )
 
         return updated_pictures
@@ -421,32 +452,24 @@ class PictureController:
     async def get_validated_pictures_by_room(
         self,
         room_id: uuid.UUID = FastAPIPath(
-            ..., description="ID de la salle (room_id)"
-        ),
+            ..., description="ID de la salle (room_id)"),
         limit: int = Query(500, ge=1, le=500),
         offset: int = Query(0, ge=0),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
         user: AuthenticatedUser = Depends(require_role("admin")),
     ):
         pictures = picture_catalog.find_validated_by_room_id(
-            room_id=room_id,
-            limit=limit,
-            offset=offset,
-        )
+            room_id=room_id, limit=limit, offset=offset)
 
         pictures = sorted(
             pictures,
-            key=lambda p: (
-                p.validation_date
-                or datetime.min.replace(tzinfo=timezone.utc)
-            ),
+            key=lambda p: (p.validation_date or datetime.min.replace(
+                tzinfo=timezone.utc)),
             reverse=True,
         )
 
-        return [
-            picture_to_picturePvaDTO_mapper.apply(picture)
-            for picture in pictures
-        ]
+        return [picture_to_picturePvaDTO_mapper.apply(
+            picture) for picture in pictures]
 
 
 picture_controller = PictureController()
