@@ -388,14 +388,12 @@ class PictureController:
                     try:
                         Path(pic_obj.path).unlink()
                     except Exception as e:
-                        print(f"Erreur lors de la suppression du fichier {
-                            pic_obj.path}: {e}")
+                        print(f"Erreur suppression {pic_obj.path}: {e}")
                     deleted_pictures.append(picture.id)
             except Exception as e:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Erreur lors de la suppression de {
-                        picture.id}: {str(e)}",
+                    detail=f"Erreur suppression {picture.id}: {str(e)}",
                 )
 
         return {"deleted_pictures": deleted_pictures}
@@ -420,16 +418,14 @@ class PictureController:
                 room = room_catalog.find_by_id(picture.room.id)
                 if not room:
                     raise HTTPException(
-                        status_code=404, detail=f"Salle '{
-                            picture.room.id}' non trouvée"
-                            )
+                        status_code=404,
+                        detail=f"Salle '{picture.room.id}' non trouvée")
 
                 pic = picture_catalog.find_by_id(picture.id)
                 if not pic:
                     raise HTTPException(
-                        status_code=404, detail=f"Image '{
-                            picture.id}' non trouvée"
-                            )
+                        status_code=404,
+                        detail=f"Image '{picture.id}' non trouvée")
 
                 pic.room = room
                 pic.validation_date = validation_date
@@ -442,8 +438,7 @@ class PictureController:
             except Exception as e:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Erreur lors de la mise à jour de {
-                        picture.id}: {str(e)}",
+                    detail=f"Erreur maj de {picture.id}: {str(e)}",
                 )
 
         return updated_pictures
