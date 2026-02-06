@@ -302,9 +302,8 @@ class PictureController:
             except Exception as e:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Erreur lors de la validation de {
-                        picture.id}: {str(e)}",
-                )
+                    detail=f"Erreur validation de {picture.id}: {str(e)}",
+                    )
 
         return updated_pictures
 
