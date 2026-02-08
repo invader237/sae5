@@ -93,6 +93,12 @@ class PictureController:
             methods=["GET"],
         )
         self.router.add_api_route(
+            "/pva/status",
+            self.toggle_pva_status,
+            response_model=dict,
+            methods=["PATCH"],
+        )
+        self.router.add_api_route(
             "/pva",
             self.delete_pictures_pva,
             response_model=dict,
@@ -298,6 +304,20 @@ class PictureController:
             picture) for picture in pictures]
 
     async def get_pva_status(self):
+        return {"enabled": settings.PVA_ENABLED}
+
+    async def toggle_pva_status(
+        self,
+        body: dict = Body(...),
+        user: AuthenticatedUser = Depends(require_role("admin")),
+    ):
+        enabled = body.get("enabled")
+        if enabled is None or not isinstance(enabled, bool):
+            raise HTTPException(
+                status_code=422,
+                detail="Le champ 'enabled' (bool) est requis.",
+            )
+        settings.PVA_ENABLED = enabled
         return {"enabled": settings.PVA_ENABLED}
 
     async def count_picture_to_validate(

@@ -134,6 +134,11 @@ export async function fetchPvaStatus(): Promise<{ enabled: boolean }> {
   return response.data;
 }
 
+export async function togglePvaStatus(enabled: boolean): Promise<{ enabled: boolean }> {
+  const response = await axiosInstance.patch<{ enabled: boolean }>('/pictures/pva/status', { enabled });
+  return response.data;
+}
+
 export async function fetchPvaToValidateCount(): Promise<number> {
   const response = await axiosInstance.get<{ count: number }>('/pictures/to-validate/count');
   return response.data.count;

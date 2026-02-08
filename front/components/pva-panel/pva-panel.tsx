@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Switch } from "react-native";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import PvaModal from "@/components/pva-components/PvaModal";
 import PictureItem from "@/components/pva-components/PvaPictureItem";
@@ -13,7 +13,7 @@ interface PvaPanelProps {
 
 const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
   const [pvaModalIsVisible, setPvaModalIsVisible] = useState(false);
-  const { pvaEnabled, pendingCount, refresh: refreshStatus } = usePvaStatus();
+  const { pvaEnabled, pendingCount, isToggling, toggle, refresh: refreshStatus } = usePvaStatus();
   const {
     previewPictures,
     isRefreshing,
@@ -60,8 +60,15 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
       <View className="bg-white p-4 border border-gray-300 rounded-lg gap-2">
         <View className="flex-row items-center justify-between">
           <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
-          <View className="bg-gray-200 rounded-full px-3 py-1">
-            <Text className="text-gray-500 text-xs font-semibold">Désactivée</Text>
+          <View className="flex-row items-center gap-2">
+            <Text className="text-gray-400 text-xs">Désactivée</Text>
+            <Switch
+              value={pvaEnabled}
+              onValueChange={toggle}
+              disabled={isToggling}
+              trackColor={{ false: "#d1d5db", true: "#3b82f6" }}
+              thumbColor={pvaEnabled ? "#fff" : "#f4f3f4"}
+            />
           </View>
         </View>
         <Text className="text-gray-400 text-sm">
