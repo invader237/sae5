@@ -87,6 +87,12 @@ class PictureController:
             methods=["GET"],
         )
         self.router.add_api_route(
+            "/pva/status",
+            self.get_pva_status,
+            response_model=dict,
+            methods=["GET"],
+        )
+        self.router.add_api_route(
             "/pva",
             self.delete_pictures_pva,
             response_model=dict,
@@ -290,6 +296,9 @@ class PictureController:
             limit=limit, offset=offset)
         return [picture_to_picturePvaDTO_mapper.apply(
             picture) for picture in pictures]
+
+    async def get_pva_status(self):
+        return {"enabled": settings.PVA_ENABLED}
 
     async def count_picture_to_validate(
         self,
