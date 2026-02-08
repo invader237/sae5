@@ -69,6 +69,12 @@ class PictureController:
             methods=["GET"],
         )
         self.router.add_api_route(
+            "/to-validate/count",
+            self.count_picture_to_validate,
+            response_model=dict,
+            methods=["GET"],
+        )
+        self.router.add_api_route(
             "/validate",
             self.validate_pictures,
             response_model=list[PictureDTO],
@@ -284,6 +290,15 @@ class PictureController:
             limit=limit, offset=offset)
         return [picture_to_picturePvaDTO_mapper.apply(
             picture) for picture in pictures]
+
+    async def count_picture_to_validate(
+        self,
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+    ):
+        if not settings.PVA_ENABLED:
+            return {"count": 0}
+
+        return {"count": picture_catalog.count_not_validated()}
 
     async def validate_pictures(
         self,
