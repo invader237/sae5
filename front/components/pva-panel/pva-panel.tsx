@@ -5,6 +5,7 @@ import PvaModal from "@/components/pva-components/PvaModal";
 import PictureItem from "@/components/pva-components/PvaPictureItem";
 import { usePvaPreview } from "@/hooks/pva/usePvaPreview";
 import { Colors, BorderRadius, Shadows } from "@/constants/theme";
+import { usePvaStatus } from "@/hooks/pva/usePvaStatus";
 
 interface PvaPanelProps {
   onDataChanged?: () => void;
@@ -12,6 +13,7 @@ interface PvaPanelProps {
 
 const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
   const [pvaModalIsVisible, setPvaModalIsVisible] = useState(false);
+  const { pvaEnabled, pendingCount, refresh: refreshStatus } = usePvaStatus();
   const {
     previewPictures,
     isRefreshing,
@@ -24,30 +26,50 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
   const handleValidatedWithRefresh = useCallback(
     (ids: string[]) => {
       handleValidated(ids);
+      refreshStatus();
       onDataChanged?.();
     },
-    [handleValidated, onDataChanged]
+    [handleValidated, refreshStatus, onDataChanged]
   );
 
   const handleDeletedWithRefresh = useCallback(
     (ids: string[]) => {
       handleDeleted(ids);
+      refreshStatus();
       onDataChanged?.();
     },
-    [handleDeleted, onDataChanged]
+    [handleDeleted, refreshStatus, onDataChanged]
   );
 
   const handleUpdatedWithRefresh = useCallback(() => {
+    refreshStatus();
     onDataChanged?.();
-  }, [onDataChanged]);
+  }, [refreshStatus, onDataChanged]);
 
   const handleRefresh = async () => {
     try {
       await refresh();
+      await refreshStatus();
     } catch {
       alert("Impossible de récupérer les images. Veuillez réessayer plus tard.");
     }
   };
+
+  if (!pvaEnabled) {
+    return (
+      <View className="bg-white p-4 border border-gray-300 rounded-lg gap-2">
+        <View className="flex-row items-center justify-between">
+          <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
+          <View className="bg-gray-200 rounded-full px-3 py-1">
+            <Text className="text-gray-500 text-xs font-semibold">Désactivée</Text>
+          </View>
+        </View>
+        <Text className="text-gray-400 text-sm">
+          La pré-validation admin est désactivée. Les images envoyées ne sont pas enregistrées.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View 

@@ -129,7 +129,15 @@ async function resizeImageWeb(blob: Blob, maxSize: number): Promise<Blob> {
       }
     });
   }
+export async function fetchPvaStatus(): Promise<{ enabled: boolean }> {
+  const response = await axiosInstance.get<{ enabled: boolean }>('/pictures/pva/status');
+  return response.data;
+}
 
+export async function fetchPvaToValidateCount(): Promise<number> {
+  const response = await axiosInstance.get<{ count: number }>('/pictures/to-validate/count');
+  return response.data.count;
+}
 export async function fetchToValidatePictures( limit: number = 50, offset: number = 0): Promise<PicturePvaDTO[]> {
   try {
     const response = await axiosInstance.get<PicturePvaDTO[]>( '/pictures/to-validate',
