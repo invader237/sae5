@@ -9,6 +9,7 @@ import json
 import re
 from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
 from app.model.domain.DTO.scratchLayersDTO import ScratchLayersDTO
+from app.model.domain.DTO.customLayersDTO import CustomLayersDTO, CustomLayerDTO
 from typing import Literal, Optional
 
 UPLOAD_DIR = Path("./")
@@ -103,7 +104,8 @@ class ModelTraining:
     def init_model(
         self,
         modelType: Literal["base", "scratch"] = "base",
-        scratch_layers: Optional[ScratchLayersDTO] = None
+        scratch_layers: Optional[ScratchLayersDTO] = None,
+        custom_layers: Optional[CustomLayersDTO] = None
     ):
         if self.dataset is None:
             raise ValueError(
@@ -121,7 +123,11 @@ class ModelTraining:
 
         elif modelType == "scratch":
             print("[DEBUG] Initializing model from scratch")
-            model = self._build_scratch_model(scratch_layers)
+            if (custom_layers is not None
+                    and len(custom_layers.layers) > 0):
+                model = self._build_custom_model(custom_layers)
+            else:
+                model = self._build_scratch_model(scratch_layers)
         else:
             raise ValueError(f"Unknown model name: {self.model_name}")
 
@@ -186,6 +192,185 @@ class ModelTraining:
         model = nn.Sequential(*layers)
         print(f"[DEBUG] Built scratch model with layers: {layers_config}")
         return model
+
+    def _build_custom_model(
+        self,
+        custom_layers: CustomLayersDTO
+    ) -> nn.Module:
+        """
+        Construit un modèle CNN from scratch à partir de couches custom
+        définies par l'utilisateur.
+        Ajoute automatiquement les couches de finalisation
+        (AdaptiveAvgPool2d + Flatten + Linear → num_classes)
+        pour garantir une sortie compatible avec la classification.
+        """
+        # Mapping des types de couches vers les classes PyTorch
+        LAYER_BUILDERS = {
+            "Conv2d": lambda p: nn.Conv2d(
+                p.get("in_channels", 3),
+                p.get("out_channels", 32),
+                p.get("kernel_size", 3),
+                stride=p.get("stride", 1),
+                padding=p.get("padding", 1),
+            ),
+            "ConvTranspose2d": lambda p: nn.ConvTranspose2d(
+                p.get("in_channels", 64),
+                p.get("out_channels", 32),
+                p.get("kernel_size", 3),
+                stride=p.get("stride", 1),
+                padding=p.get("padding", 1),
+            ),
+            "MaxPool2d": lambda p: nn.MaxPool2d(
+                kernel_size=p.get("kernel_size", 2),
+                stride=p.get("stride", 2),
+            ),
+            "AvgPool2d": lambda p: nn.AvgPool2d(
+                kernel_size=p.get("kernel_size", 2),
+                stride=p.get("stride", 2),
+            ),
+            "AdaptiveAvgPool2d": lambda p: nn.AdaptiveAvgPool2d(
+                p.get("output_size", 1),
+            ),
+            "AdaptiveMaxPool2d": lambda p: nn.AdaptiveMaxPool2d(
+                p.get("output_size", 1),
+            ),
+            "Linear": lambda p: nn.Linear(
+                p.get("in_features", 128),
+                p.get("out_features", 64),
+            ),
+            "ReLU": lambda p: nn.ReLU(),
+            "LeakyReLU": lambda p: nn.LeakyReLU(
+                negative_slope=p.get("negative_slope", 0.01),
+            ),
+            "Sigmoid": lambda p: nn.Sigmoid(),
+            "Tanh": lambda p: nn.Tanh(),
+            "Dropout": lambda p: nn.Dropout(
+                p=p.get("p", 0.5),
+            ),
+            "Dropout2d": lambda p: nn.Dropout2d(
+                p=p.get("p", 0.5),
+            ),
+            "BatchNorm2d": lambda p: nn.BatchNorm2d(
+                num_features=p.get("num_features", 32),
+            ),
+            "BatchNorm1d": lambda p: nn.BatchNorm1d(
+                num_features=p.get("num_features", 128),
+            ),
+            "Flatten": lambda p: nn.Flatten(),
+        }
+
+        # Types de couches qui FORCENT le mode spatial (4D)
+        FORCE_SPATIAL = {
+            "Conv2d", "ConvTranspose2d",
+            "MaxPool2d", "AvgPool2d",
+            "AdaptiveAvgPool2d", "AdaptiveMaxPool2d",
+            "BatchNorm2d", "Dropout2d",
+        }
+
+        # Types de couches qui FORCENT le mode plat (2D)
+        FORCE_FLAT = {
+            "Linear", "Flatten", "BatchNorm1d",
+        }
+
+        # Types transparents : ne changent pas le mode
+        # ReLU, LeakyReLU, Sigmoid, Tanh, Dropout
+
+        torch_layers = []
+        for layer_dto in custom_layers.layers:
+            builder = LAYER_BUILDERS.get(layer_dto.type)
+            if builder is None:
+                raise ValueError(
+                    f"Type de couche inconnu : {layer_dto.type}"
+                )
+            torch_layers.append(builder(layer_dto.params))
+
+        if not torch_layers:
+            raise ValueError(
+                "Au moins une couche doit être définie "
+                "pour l'entraînement custom."
+            )
+
+        # Traquer le mode spatial/plat à travers toute la pile
+        is_spatial = True  # L'entrée est une image (4D)
+        for ldto in custom_layers.layers:
+            if ldto.type in FORCE_SPATIAL:
+                is_spatial = True
+            elif ldto.type in FORCE_FLAT:
+                is_spatial = False
+            # Les autres couches (activations, Dropout) ne changent
+            # pas le mode
+
+        # Déterminer le nombre de canaux/features en sortie
+        last_out = self._infer_output_channels(custom_layers.layers)
+
+        if is_spatial:
+            # La sortie est encore un tenseur spatial →
+            # ajouter pooling + flatten + classification
+            torch_layers.append(nn.AdaptiveAvgPool2d((1, 1)))
+            torch_layers.append(nn.Flatten())
+            torch_layers.append(nn.Linear(last_out, self.num_classes))
+            print(
+                f"[DEBUG] Auto-finalized (spatial): "
+                f"AdaptiveAvgPool2d + Flatten "
+                f"+ Linear({last_out} → {self.num_classes})"
+            )
+        else:
+            # La sortie est déjà plate →
+            # ajouter seulement le classifieur si nécessaire
+            last_type = custom_layers.layers[-1].type
+            if last_type == "Linear":
+                out_f = custom_layers.layers[-1].params.get(
+                    "out_features", 64
+                )
+                if out_f != self.num_classes:
+                    torch_layers.append(
+                        nn.Linear(out_f, self.num_classes)
+                    )
+                    print(
+                        f"[DEBUG] Auto-finalized (flat): "
+                        f"Linear({out_f} → {self.num_classes})"
+                    )
+            else:
+                torch_layers.append(
+                    nn.Linear(last_out, self.num_classes)
+                )
+                print(
+                    f"[DEBUG] Auto-finalized (flat): "
+                    f"Linear({last_out} → {self.num_classes})"
+                )
+
+        model = nn.Sequential(*torch_layers)
+        print(
+            f"[DEBUG] Built custom model with "
+            f"{len(torch_layers)} layers (incl. auto-finalization)"
+        )
+        return model
+
+    def _infer_output_channels(
+        self,
+        layers_dtos: list
+    ) -> int:
+        """
+        Infère le nombre de canaux (mode spatial) ou features (mode plat)
+        en sortie, en propageant depuis l'entrée RGB (3 canaux).
+        """
+        channels = 3  # RGB input
+        features = channels
+
+        for ldto in layers_dtos:
+            t = ldto.type
+            p = ldto.params
+
+            if t in ("Conv2d", "ConvTranspose2d"):
+                channels = p.get("out_channels", 32)
+                features = channels
+            elif t == "Flatten":
+                features = channels
+            elif t == "Linear":
+                features = p.get("out_features", 64)
+            # Toutes les autres couches ne changent pas la dimension
+
+        return features
 
     # 6️⃣ Create DataLoader
     def create_dataloader(self, batch_size=8, shuffle=True):
@@ -306,7 +491,8 @@ class ModelTraining:
         self.build_dataset(rooms)
         self.init_model(
             modelTrainingDTO.type,
-            scratch_layers=modelTrainingDTO.scratchLayers
+            scratch_layers=modelTrainingDTO.scratchLayers,
+            custom_layers=modelTrainingDTO.customLayers
         )
         self.model.to(self.device)
 
