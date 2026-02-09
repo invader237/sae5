@@ -6,6 +6,7 @@ import ParameterLabel from "@/components/model-training-components/ParameterLabe
 import InfoModal from "@/components/model-training-components/ParameterInfoModal";
 import RoomList from "@/components/model-training-components/RoomList";
 import LayerSelector from "@/components/model-training-components/LayerSelector";
+import CustomLayerBuilder from "@/components/model-training-components/CustomLayerBuilder";
 import { useModelTraining } from "@/hooks/models/useModelTraining";
 import { Colors, BorderRadius, Shadows } from "@/constants/theme";
 
@@ -31,11 +32,14 @@ const ModelTrainingPanel = () => {
     trainingConfig,
     scratchLayers,
     canTrain,
+    useCustomArchitecture,
+    customLayers,
     refreshRooms,
     toggleRoom,
     updateConfig,
     setTrainingType,
     toggleScratchLayer,
+    toggleCustomArchitecture,
     train,
   } = useModelTraining();
 
@@ -175,7 +179,65 @@ const ModelTrainingPanel = () => {
           <Text className="text-base font-semibold mb-3" style={{ color: Colors.text }}>
             Architecture du modèle
           </Text>
-          <LayerSelector layers={scratchLayers} onToggleLayer={toggleScratchLayer} />
+
+          {/* Toggle architecture simple / custom */}
+          <View className="flex-row gap-2 mb-3">
+            <TouchableOpacity
+              onPress={() => { if (useCustomArchitecture) toggleCustomArchitecture(); }}
+              className={`flex-1 flex-row items-center justify-center py-2.5 rounded-lg border-2 ${
+                !useCustomArchitecture
+                  ? "border-[#007bff] bg-blue-50"
+                  : "border-gray-300 bg-white"
+              }`}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons
+                name="toggle-off"
+                size={18}
+                color={!useCustomArchitecture ? "#007bff" : "#9ca3af"}
+              />
+              <Text
+                className={`ml-1.5 font-medium text-sm ${
+                  !useCustomArchitecture ? "text-[#007bff]" : "text-gray-500"
+                }`}
+              >
+                Architecture simple
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => { if (!useCustomArchitecture) toggleCustomArchitecture(); }}
+              className={`flex-1 flex-row items-center justify-center py-2.5 rounded-lg border-2 ${
+                useCustomArchitecture
+                  ? "border-[#007bff] bg-blue-50"
+                  : "border-gray-300 bg-white"
+              }`}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons
+                name="tune"
+                size={18}
+                color={useCustomArchitecture ? "#007bff" : "#9ca3af"}
+              />
+              <Text
+                className={`ml-1.5 font-medium text-sm ${
+                  useCustomArchitecture ? "text-[#007bff]" : "text-gray-500"
+                }`}
+              >
+                Architecture custom
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Sélecteur simple (ancien) */}
+          {!useCustomArchitecture && (
+            <LayerSelector layers={scratchLayers} onToggleLayer={toggleScratchLayer} />
+          )}
+
+          {/* Constructeur custom (nouveau) */}
+          {useCustomArchitecture && (
+            <CustomLayerBuilder customLayers={customLayers} />
+          )}
         </View>
       )}
 
@@ -289,17 +351,12 @@ const ModelTrainingPanel = () => {
 
       {/* MESSAGE D'ERREUR SI AUCUNE COUCHE */}
       {trainingConfig.type === "scratch" && !canTrain && (
-        <View
-          className="rounded-lg p-3 flex-row items-center"
-          style={{
-            backgroundColor: Colors.dangerLight,
-            borderWidth: 1,
-            borderColor: Colors.danger,
-          }}
-        >
-          <MaterialIcons name="error-outline" size={20} color={Colors.danger} />
-          <Text className="ml-2 flex-1" style={{ color: Colors.danger }}>
-            Veuillez sélectionner au moins une couche pour l&apos;entraînement from scratch.
+        <View className="bg-red-50 border border-red-300 rounded-lg p-3 flex-row items-center">
+          <MaterialIcons name="error-outline" size={20} color="#dc2626" />
+          <Text className="text-red-700 ml-2 flex-1">
+            {useCustomArchitecture
+              ? "Veuillez ajouter au moins une couche pour l'entraînement custom."
+              : "Veuillez sélectionner au moins une couche pour l'entraînement from scratch."}
           </Text>
         </View>
       )}
