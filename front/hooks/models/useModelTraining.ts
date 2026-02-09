@@ -5,6 +5,7 @@ import ModelTrainingDTO from "@/api/DTO/modelTraining.dto";
 import { ScratchLayersDTO } from "@/api/DTO/scratchLayers.dto";
 import RoomLightDTO from "@/api/DTO/roomLight.dto";
 import { DEFAULT_SCRATCH_LAYERS } from "./modelTraining.config";
+import { useCustomLayers } from "./useCustomLayers";
 
 
 type TrainingType = "base" | "scratch";
@@ -14,6 +15,9 @@ export function useModelTraining() {
   const [rooms, setRooms] = useState<RoomLightDTO[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [scratchLayers, setScratchLayers] = useState<ScratchLayersDTO>(DEFAULT_SCRATCH_LAYERS);
+  const [useCustomArchitecture, setUseCustomArchitecture] = useState(false);
+
+  const customLayers = useCustomLayers();
 
   const [trainingConfig, setTrainingConfig] = useState<ModelTrainingDTO>({
     type: "base",
@@ -70,11 +74,19 @@ export function useModelTraining() {
     updateConfig("type", type);
   }, [updateConfig]);
 
+  const toggleCustomArchitecture = useCallback(() => {
+    setUseCustomArchitecture((prev) => !prev);
+  }, []);
+
   const hasAtLeastOneLayer = useCallback((layers: ScratchLayersDTO): boolean => {
     return layers.conv1 || layers.conv2 || layers.fc1;
   }, []);
 
-  const canTrain = trainingConfig.type === "base" || hasAtLeastOneLayer(scratchLayers);
+  const canTrain =
+    trainingConfig.type === "base" ||
+    (useCustomArchitecture
+      ? customLayers.hasLayers
+      : hasAtLeastOneLayer(scratchLayers));
 
   const toggleScratchLayer = useCallback(<K extends keyof ScratchLayersDTO>(
     layerKey: K
@@ -92,16 +104,22 @@ export function useModelTraining() {
   const train = useCallback(async () => {
     setIsTraining(true);
     try {
-      // Inclure scratchLayers uniquement pour le mode scratch
       const payload: ModelTrainingDTO = {
         ...trainingConfig,
-        scratchLayers: trainingConfig.type === "scratch" ? scratchLayers : undefined,
+        scratchLayers:
+          trainingConfig.type === "scratch" && !useCustomArchitecture
+            ? scratchLayers
+            : undefined,
+        customLayers:
+          trainingConfig.type === "scratch" && useCustomArchitecture
+            ? customLayers.toDTO()
+            : undefined,
       };
       await trainModel(payload);
     } finally {
       setIsTraining(false);
     }
-  }, [trainingConfig, scratchLayers]);
+  }, [trainingConfig, scratchLayers, useCustomArchitecture, customLayers]);
 
   return {
     isTraining,
@@ -110,11 +128,14 @@ export function useModelTraining() {
     trainingConfig,
     scratchLayers,
     canTrain,
+    useCustomArchitecture,
+    customLayers,
     refreshRooms,
     toggleRoom,
     updateConfig,
     setTrainingType,
     toggleScratchLayer,
+    toggleCustomArchitecture,
     train,
   };
 }
