@@ -55,29 +55,6 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
     }
   };
 
-  if (!pvaEnabled) {
-    return (
-      <View className="bg-white p-4 border border-gray-300 rounded-lg gap-2">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
-          <View className="flex-row items-center gap-2">
-            <Text className="text-gray-400 text-xs">Désactivée</Text>
-            <Switch
-              value={pvaEnabled}
-              onValueChange={toggle}
-              disabled={isToggling}
-              trackColor={{ false: "#d1d5db", true: "#3b82f6" }}
-              thumbColor={pvaEnabled ? "#fff" : "#f4f3f4"}
-            />
-          </View>
-        </View>
-        <Text className="text-gray-400 text-sm">
-          La pré-validation admin est désactivée. Les images envoyées ne sont pas enregistrées.
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View 
       className="p-5 gap-4"
@@ -89,35 +66,64 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
     >
       {/* Header */}
       <View className="flex-row items-center justify-between">
-        <View>
-          <Text 
-            className="text-xs font-semibold tracking-wide uppercase mb-1"
-            style={{ color: Colors.textMuted }}
-          >
-            Validation
-          </Text>
-          <Text 
-            className="text-xl font-bold"
-            style={{ color: Colors.text }}
-          >
-            Pré-validation
-          </Text>
+        <View className="flex-row items-center gap-3">
+          <View>
+            <Text 
+              className="text-xs font-semibold tracking-wide uppercase mb-1"
+              style={{ color: Colors.textMuted }}
+            >
+              Validation
+            </Text>
+            <Text 
+              className="text-xl font-bold"
+              style={{ color: Colors.text }}
+            >
+              Pré-validation
+            </Text>
+          </View>
+          {pendingCount > 0 && (
+            <View 
+              className="rounded-full min-w-[24px] h-6 items-center justify-center px-1.5"
+              style={{ backgroundColor: Colors.danger }}
+            >
+              <Text className="text-xs font-bold" style={{ color: Colors.white }}>{pendingCount}</Text>
+            </View>
+          )}
         </View>
-        <TouchableOpacity 
-          onPress={handleRefresh} 
-          disabled={isRefreshing} 
-          className="flex-row items-center justify-center"
-          style={{
-            backgroundColor: Colors.primary,
-            borderRadius: BorderRadius.full,
-            width: 44,
-            height: 44,
-            opacity: isRefreshing ? 0.6 : 1,
-          }}
-        >
-          <MaterialIcons name="refresh" size={22} color={Colors.white} />
-        </TouchableOpacity>
+        <View className="flex-row items-center gap-3">
+          <Switch
+            value={pvaEnabled}
+            onValueChange={toggle}
+            disabled={isToggling}
+            trackColor={{ false: Colors.border, true: Colors.primary }}
+            thumbColor={Colors.white}
+          />
+          <TouchableOpacity 
+            onPress={handleRefresh} 
+            disabled={isRefreshing} 
+            className="flex-row items-center justify-center"
+            style={{
+              backgroundColor: Colors.primary,
+              borderRadius: BorderRadius.full,
+              width: 44,
+              height: 44,
+              opacity: isRefreshing ? 0.6 : 1,
+            }}
+          >
+            <MaterialIcons name="refresh" size={22} color={Colors.white} />
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {/* Info when PVA disabled */}
+      {!pvaEnabled && (
+        <Text 
+          className="text-sm"
+          style={{ color: Colors.textMuted }}
+        >
+          La pré-validation admin est désactivée. Les images envoyées ne sont pas enregistrées.
+        </Text>
+      )}
 
       {/* Image Gallery */}
       <ScrollView 

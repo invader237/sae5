@@ -1,13 +1,12 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Image, Pressable, } from "react-native";
+import { Image, Pressable, Modal, View, TouchableOpacity, ScrollView } from "react-native";
 import axiosInstance, { baseURL } from "@/api/axiosConfig";
 
-import { Modal, View, TouchableOpacity, ScrollView } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spinner } from '@/components/Spinner';
-import { InferenceResultDTO } from '@/api/DTO/inference.dto';
-import { Colors, BorderRadius, Shadows } from '@/constants/theme';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Spinner } from "@/components/Spinner";
+import { InferenceResultDTO } from "@/api/DTO/inference.dto";
+import { Colors, BorderRadius, Shadows } from "@/constants/theme";
 
 type ActivationItem = {
   layer: string;
@@ -245,119 +244,66 @@ export function InferenceResultModal({
             </View>
           ) : (
             <>
-              {/* Model Info */}
-              <View className="mb-4">
-                <ThemedText className="text-sm" lightColor={Colors.text}>
-                  Modèle: {inferenceResult.model_version}
-                </ThemedText>
-                <ThemedText className="text-sm" lightColor={Colors.text}>
-                  Temps: {inferenceResult.time_ms.toFixed(0)}ms
-                </ThemedText>
-                <ThemedText className="text-sm" lightColor={Colors.text}>
-                  Score: {((inferenceResult.top_prediction?.score ?? inferenceResult.predictions[0].score) * 100).toFixed(1)}%
-                </ThemedText>
-              </View>
-
-              {/* Top prediction emphasized */}
-              {topPrediction ? (
-                <View className="mb-6 p-4">
-                  <ThemedText
-                    type="title"
-                    className="text-5xl text-center"
-                    lightColor={Colors.text}
-                  >
-                    {topPrediction.label}
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Model Info */}
+                <View className="mb-4">
+                  <ThemedText className="text-sm" lightColor={Colors.text}>
+                    Modèle: {inferenceResult.model_version}
+                  </ThemedText>
+                  <ThemedText className="text-sm" lightColor={Colors.text}>
+                    Temps: {inferenceResult.time_ms.toFixed(0)}ms
+                  </ThemedText>
+                  <ThemedText className="text-sm" lightColor={Colors.text}>
+                    Score: {((inferenceResult.top_prediction?.score ?? inferenceResult.predictions[0].score) * 100).toFixed(1)}%
                   </ThemedText>
                 </View>
-              ) : (
-                <>
-                  {showMore && (
-                    <ScrollView showsVerticalScrollIndicator={false}>
-                      <ThemedText type="subtitle" className="mb-3" lightColor={Colors.text}>
-                        Autres prédictions
-                      </ThemedText>
 
-                      {otherPredictions.map((pred, index) => (
-                        <View key={index} className="mb-3">
-                          <View className="flex-row justify-between items-center mb-1">
-                            <ThemedText className="font-medium" lightColor={Colors.text}>{pred.label}</ThemedText>
-                            <ThemedText className="text-sm" lightColor={Colors.text}>{formatScore(pred.score)}</ThemedText>
-                          </View>
+                {/* Top prediction emphasized */}
+                {topPrediction ? (
+                  <View className="mb-6 p-4">
+                    <ThemedText
+                      type="title"
+                      className="text-5xl text-center"
+                      lightColor={Colors.text}
+                    >
+                      {topPrediction.label}
+                    </ThemedText>
+                  </View>
+                ) : (
+                  <>
+                    {showMore && (
+                      <ScrollView showsVerticalScrollIndicator={false}>
+                        <ThemedText type="subtitle" className="mb-3" lightColor={Colors.text}>
+                          Autres prédictions
+                        </ThemedText>
 
-                          {/* Progress Bar */}
-                          <View
-                            className="h-2 rounded-full overflow-hidden"
-                            style={{ backgroundColor: Colors.border }}
-                          >
-                            <View
-                              className="h-full"
-                              style={{
-                                width: `${pred.score * 100}%`,
-                                backgroundColor: getScoreColor(pred.score),
-                              }}
-                            />
-                          </View>
-                        </View>
-                      ))}
-                    </ScrollView>
-                  )}
-
-                  {/* Buttons */}
-                  {otherPredictions.length > 0 && (
-                    <>
-                      {showMore && (
-                        <View style={{ marginTop: 8 }}>
-                          <ThemedText
-                            type="subtitle"
-                            className="mb-3"
-                            lightColor={Colors.light.text}
-                          >
-                            Autres prédictions
-                          </ThemedText>
-
-                          {otherPredictions.map((pred, index) => (
-                            <View key={index} style={{ marginBottom: 12 }}>
-                              <View
-                                style={{
-                                  flexDirection: "row",
-                                  justifyContent: "space-between",
-                                  marginBottom: 6,
-                                }}
-                              >
-                                <ThemedText
-                                  className="font-medium"
-                                  lightColor={Colors.text}
-                                >
-                                  {pred.label}
-                                </ThemedText>
-                                <ThemedText
-                                  className="text-sm"
-                                  lightColor={Colors.text}
-                                >
-                                  {formatScore(pred.score)}
-                                </ThemedText>
-                              </View>
-
-                              <View
-                                style={{
-                                  height: 8,
-                                  backgroundColor: "#e5e7eb",
-                                  borderRadius: 999,
-                                  overflow: "hidden",
-                                }}
-                              >
-                                <View
-                                  className={`h-full ${getScoreColor(
-                                    pred.score,
-                                  )}`}
-                                  style={{ width: `${pred.score * 100}%` }}
-                                />
-                              </View>
+                        {otherPredictions.map((pred, index) => (
+                          <View key={index} className="mb-3">
+                            <View className="flex-row justify-between items-center mb-1">
+                              <ThemedText className="font-medium" lightColor={Colors.text}>{pred.label}</ThemedText>
+                              <ThemedText className="text-sm" lightColor={Colors.text}>{formatScore(pred.score)}</ThemedText>
                             </View>
-                          ))}
-                        </View>
-                      )}
 
+                            {/* Progress Bar */}
+                            <View
+                              className="h-2 rounded-full overflow-hidden"
+                              style={{ backgroundColor: Colors.border }}
+                            >
+                              <View
+                                className="h-full"
+                                style={{
+                                  width: `${pred.score * 100}%`,
+                                  backgroundColor: getScoreColor(pred.score),
+                                }}
+                              />
+                            </View>
+                          </View>
+                        ))}
+                      </ScrollView>
+                    )}
+
+                    {/* Buttons */}
+                    {otherPredictions.length > 0 && (
                       <TouchableOpacity
                         style={{
                           marginTop: 10,
@@ -379,135 +325,116 @@ export function InferenceResultModal({
                             : "Voir plus de résultats"}
                         </ThemedText>
                       </TouchableOpacity>
-                    </>
-                  )}
+                    )}
 
-                  {/* Activations toggle */}
-                  {hasActivations && (
-                    <TouchableOpacity
-                      style={{
-                        marginBottom: 12,
-                        paddingVertical: 12,
-                        paddingHorizontal: 12,
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: "rgba(255,255,255,0.25)",
-                      }}
-                      onPress={async () => {
-                        const next = !showActivations;
-                        setShowActivations(next);
-                        if (!next) {
-                          setShowHeatmaps(false);
-                        }
-                        if (next && activations.length === 0) {
-                          await loadActivations();
-                        }
-                      }}
-                    >
-                      <ThemedText
-                        className="text-center font-semibold"
-                        lightColor={Colors.primary}
+                    {/* Activations toggle */}
+                    {hasActivations && (
+                      <TouchableOpacity
+                        style={{
+                          marginBottom: 12,
+                          paddingVertical: 12,
+                          paddingHorizontal: 12,
+                          borderRadius: 12,
+                          borderWidth: 1,
+                          borderColor: "rgba(255,255,255,0.25)",
+                        }}
+                        onPress={async () => {
+                          const next = !showActivations;
+                          setShowActivations(next);
+                          if (!next) {
+                            setShowHeatmaps(false);
+                          }
+                          if (next && activations.length === 0) {
+                            await loadActivations();
+                          }
+                        }}
                       >
-                        {showActivations
-                          ? "Masquer activations"
-                          : "Voir activations"}
-                      </ThemedText>
-                    </TouchableOpacity>
-                  )}
-
-                  {/* Close */}
-                  <TouchableOpacity
-                    className="mt-2 mb-3 py-3 px-3 rounded-lg"
-                    style={{
-                      borderWidth: 1,
-                      borderColor: Colors.border,
-                      borderRadius: BorderRadius.lg,
-                    }}
-                    onPress={() => setShowMore((v) => !v)}
-                  >
-                    <ThemedText className="text-white text-center font-semibold">
-                      Fermer
-                    </ThemedText>
-                  </TouchableOpacity>
-
-                  {/* Activations viewer */}
-                  {showActivations && (
-                    <View style={{ marginTop: 6 }}>
-                      <ThemedText
-                        type="subtitle"
-                        className="mb-2"
-                        lightColor={Colors.light.text}
-                      >
-                        Activations par couche
-                      </ThemedText>
-
-                      {activationsLoading ? (
-                        <Spinner />
-                      ) : overlays.length === 0 ? (
                         <ThemedText
-                          className="text-sm"
-                          lightColor={Colors.text}
+                          className="text-center font-semibold"
+                          lightColor={Colors.primary}
                         >
-                          Aucune activation disponible.
+                          {showActivations
+                            ? "Masquer activations"
+                            : "Voir activations"}
                         </ThemedText>
-                      ) : (
-                        <>
+                      </TouchableOpacity>
+                    )}
+
+                    {/* Activations viewer */}
+                    {showActivations && (
+                      <View style={{ marginTop: 6 }}>
+                        <ThemedText
+                          type="subtitle"
+                          className="mb-2"
+                          lightColor={Colors.light.text}
+                        >
+                          Activations par couche
+                        </ThemedText>
+
+                        {activationsLoading ? (
+                          <Spinner />
+                        ) : overlays.length === 0 ? (
                           <ThemedText
-                            className="text-xs mb-2"
+                            className="text-sm"
                             lightColor={Colors.text}
                           >
-                            Overlays
+                            Aucune activation disponible.
                           </ThemedText>
+                        ) : (
+                          <>
+                            <ThemedText
+                              className="text-xs mb-2"
+                              lightColor={Colors.text}
+                            >
+                              Overlays
+                            </ThemedText>
 
-                          {renderActivationStrip(overlays)}
+                            {renderActivationStrip(overlays)}
 
-                          {/* Heatmaps */}
-                          {heatmaps.length > 0 && (
-                            <View style={{ marginTop: 10 }}>
-                              <TouchableOpacity
-                                style={{
-                                  paddingVertical: 10,
-                                  paddingHorizontal: 12,
-                                  borderRadius: 12,
-                                  borderWidth: 1,
-                                  borderColor: "rgba(255,255,255,0.25)",
-                                  alignSelf: "flex-start",
-                                }}
-                                onPress={() => setShowHeatmaps((v) => !v)}
-                              >
-                                <ThemedText
-                                  className="font-semibold"
-                                  lightColor={Colors.primary}
+                            {/* Heatmaps */}
+                            {heatmaps.length > 0 && (
+                              <View style={{ marginTop: 10 }}>
+                                <TouchableOpacity
+                                  style={{
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 12,
+                                    borderRadius: 12,
+                                    borderWidth: 1,
+                                    borderColor: "rgba(255,255,255,0.25)",
+                                    alignSelf: "flex-start",
+                                  }}
+                                  onPress={() => setShowHeatmaps((v) => !v)}
                                 >
-                                  {showHeatmaps
-                                    ? "Masquer heatmaps"
-                                    : "Voir heatmaps"}
-                                </ThemedText>
-                              </TouchableOpacity>
-
-                              {showHeatmaps && (
-                                <View style={{ marginTop: 10 }}>
                                   <ThemedText
-                                    className="text-xs mb-2"
-                                    lightColor={Colors.text}
+                                    className="font-semibold"
+                                    lightColor={Colors.primary}
                                   >
-                                    Heatmaps
+                                    {showHeatmaps
+                                      ? "Masquer heatmaps"
+                                      : "Voir heatmaps"}
                                   </ThemedText>
-                                  {renderActivationStrip(heatmaps)}
-                                </View>
-                              )}
-                            </View>
-                          )}
-                        </>
-                      )}
-                    </View>
-                  )}
-                </>
-              )}
-            </ScrollView>
-          </ThemedView>
-        </View>
-      </Modal>
+                                </TouchableOpacity>
+
+                                {showHeatmaps && (
+                                  <View style={{ marginTop: 10 }}>
+                                    <ThemedText
+                                      className="text-xs mb-2"
+                                      lightColor={Colors.text}
+                                    >
+                                      Heatmaps
+                                    </ThemedText>
+                                    {renderActivationStrip(heatmaps)}
+                                  </View>
+                                )}
+                              </View>
+                            )}
+                          </>
+                        )}
+                      </View>
+                    )}
+                  </>
+                )}
+              </ScrollView>
 
               {/* Footer */}
               <View className="mt-2">
@@ -516,15 +443,15 @@ export function InferenceResultModal({
                   style={{ backgroundColor: Colors.primary }}
                   className="py-3 rounded-lg"
                 >
-                  <ThemedText className="text-center font-semibold" style={{color: Colors.white}}>
+                  <ThemedText className="text-center font-semibold" style={{ color: Colors.white }}>
                     Fermer
                   </ThemedText>
                 </TouchableOpacity>
               </View>
             </>
           )}
-          </ThemedView>
-        </View>
-      </Modal>
+        </ThemedView>
+      </View>
+    </Modal>
   );
 }

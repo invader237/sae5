@@ -13,12 +13,8 @@ export function usePvaStatus() {
       const status = await fetchPvaStatus();
       setPvaEnabled(status.enabled);
 
-      if (status.enabled) {
-        const count = await fetchPvaToValidateCount();
-        setPendingCount(count);
-      } else {
-        setPendingCount(0);
-      }
+      const count = await fetchPvaToValidateCount();
+      setPendingCount(count);
     } catch (error) {
       console.error("Erreur chargement statut PVA :", error);
     } finally {
@@ -31,12 +27,8 @@ export function usePvaStatus() {
     try {
       const result = await togglePvaStatus(!pvaEnabled);
       setPvaEnabled(result.enabled);
-      if (result.enabled) {
-        const count = await fetchPvaToValidateCount();
-        setPendingCount(count);
-      } else {
-        setPendingCount(0);
-      }
+      const count = await fetchPvaToValidateCount();
+      setPendingCount(count);
     } catch (error) {
       console.error("Erreur toggle PVA :", error);
     } finally {

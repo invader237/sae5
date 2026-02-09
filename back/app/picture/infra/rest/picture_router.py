@@ -324,9 +324,6 @@ class PictureController:
         self,
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
     ):
-        if not settings.PVA_ENABLED:
-            return {"count": 0}
-
         return {"count": picture_catalog.count_not_validated()}
 
     async def validate_pictures(
