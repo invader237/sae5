@@ -25,6 +25,9 @@ class PictureSQLAlchemyAdapter(PictureCatalog):
     def find_by_not_validated(self, limit: int = 10, offset: int = 0):
         return self.repository.find_by_not_validated(limit, offset)
 
+    def count_not_validated(self) -> int:
+        return self.repository.count_not_validated()
+
     def find_validated_by_room_id(
         self,
         room_id: Union[str, UUID],

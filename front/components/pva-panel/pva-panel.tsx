@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Switch } from "react-native";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import PvaModal from "@/components/pva-components/PvaModal";
 import PictureItem from "@/components/pva-components/PvaPictureItem";
 import { usePvaPreview } from "@/hooks/pva/usePvaPreview";
+import { usePvaStatus } from "@/hooks/pva/usePvaStatus";
 
 interface PvaPanelProps {
   onDataChanged?: () => void;
@@ -11,6 +12,7 @@ interface PvaPanelProps {
 
 const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
   const [pvaModalIsVisible, setPvaModalIsVisible] = useState(false);
+  const { pvaEnabled, pendingCount, isToggling, toggle, refresh: refreshStatus } = usePvaStatus();
   const {
     previewPictures,
     isRefreshing,
@@ -23,26 +25,30 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
   const handleValidatedWithRefresh = useCallback(
     (ids: string[]) => {
       handleValidated(ids);
+      refreshStatus();
       onDataChanged?.();
     },
-    [handleValidated, onDataChanged]
+    [handleValidated, refreshStatus, onDataChanged]
   );
 
   const handleDeletedWithRefresh = useCallback(
     (ids: string[]) => {
       handleDeleted(ids);
+      refreshStatus();
       onDataChanged?.();
     },
-    [handleDeleted, onDataChanged]
+    [handleDeleted, refreshStatus, onDataChanged]
   );
 
   const handleUpdatedWithRefresh = useCallback(() => {
+    refreshStatus();
     onDataChanged?.();
-  }, [onDataChanged]);
+  }, [refreshStatus, onDataChanged]);
 
   const handleRefresh = async () => {
     try {
       await refresh();
+      await refreshStatus();
     } catch {
       alert("Impossible de récupérer les images. Veuillez réessayer plus tard.");
     }
@@ -51,11 +57,33 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
   return (
     <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
       <View className="flex-row items-center justify-between">
-        <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
-        <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing} className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2">
-          <MaterialIcons name="refresh" size={20} color="white" />
-        </TouchableOpacity>
+        <View className="flex-row items-center gap-2">
+          <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
+          {pendingCount > 0 && (
+            <View className="bg-red-500 rounded-full min-w-[24px] h-6 items-center justify-center px-1.5">
+              <Text className="text-white text-xs font-bold">{pendingCount}</Text>
+            </View>
+          )}
+        </View>
+        <View className="flex-row items-center gap-2">
+          <Switch
+            value={pvaEnabled}
+            onValueChange={toggle}
+            disabled={isToggling}
+            trackColor={{ false: "#d1d5db", true: "#3b82f6" }}
+            thumbColor={pvaEnabled ? "#fff" : "#f4f3f4"}
+          />
+          <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing} className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2">
+            <MaterialIcons name="refresh" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {!pvaEnabled && (
+        <Text className="text-gray-400 text-sm">
+          La pré-validation admin est désactivée. Les images envoyées ne sont pas enregistrées.
+        </Text>
+      )}
 
       <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={{ flexDirection: "row" }} className="px-3">
         {previewPictures.length > 0 ? previewPictures.map((pic, i) => (

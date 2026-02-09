@@ -20,6 +20,8 @@ class PictureCatalog(Protocol):
         offset: int,
     ) -> Collection[Picture]: ...
 
+    def count_not_validated(self) -> int: ...
+
     def find_validated_by_room_id(
         self,
         room_id: Union[str, UUID],

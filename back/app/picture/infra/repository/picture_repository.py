@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import Union
 from uuid import UUID
 from app.picture.domain.entity.picture import Picture as PictureModel
@@ -68,6 +69,15 @@ class PictureRepository:
             .limit(limit)
             .offset(offset)
             .all()
+        )
+
+    def count_not_validated(self) -> int:
+        return (
+            self.db.query(func.count(PictureModel.image_id))
+            .filter(PictureModel.is_validated.is_(False))
+            .filter(PictureModel.room_id.isnot(None))
+            .scalar()
+            or 0
         )
 
     def find_validated_by_room_id(

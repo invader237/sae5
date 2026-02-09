@@ -43,6 +43,7 @@ from app.model.infra.factory.model_factory import get_model_catalog
 from app.model.domain.catalog.model_catalog import ModelCatalog
 from app.history.infra.factory.history_factory import get_history_catalog
 from app.history.domain.entity.history import History
+from app.config import settings
 
 UPLOAD_DIR = Path("uploads")
 
@@ -68,6 +69,12 @@ class PictureController:
             methods=["GET"],
         )
         self.router.add_api_route(
+            "/to-validate/count",
+            self.count_picture_to_validate,
+            response_model=dict,
+            methods=["GET"],
+        )
+        self.router.add_api_route(
             "/validate",
             self.validate_pictures,
             response_model=list[PictureDTO],
@@ -78,6 +85,18 @@ class PictureController:
             self.recover_picture,
             response_model=bytes,
             methods=["GET"],
+        )
+        self.router.add_api_route(
+            "/pva/status",
+            self.get_pva_status,
+            response_model=dict,
+            methods=["GET"],
+        )
+        self.router.add_api_route(
+            "/pva/status",
+            self.toggle_pva_status,
+            response_model=dict,
+            methods=["PATCH"],
         )
         self.router.add_api_route(
             "/pva",
@@ -181,8 +200,9 @@ class PictureController:
         img.save(buffer, format="JPEG", quality=100, optimize=True)
         resized_bytes = buffer.getvalue()
 
-        # Persist the resized image
-        dest_path.write_bytes(resized_bytes)
+        if settings.PVA_ENABLED:
+            # Persist the resized image
+            dest_path.write_bytes(resized_bytes)
 
         # Parse layers query
         activation_layers: Optional[List[str]] = None
@@ -232,39 +252,42 @@ class PictureController:
         except Exception:
             recognition_percentage = None
 
-        room_obj = room_catalog.find_by_name(inference_result.get("top_label"))
-        picture_payload = {
-            "path": str(dest_path),
-            "analyzed_by": inference_result.get(
-                "model_version") or inference_result.get("model") or None,
-            "room": room_obj,
-            "recognition_percentage": recognition_percentage,
-            "analyse_date": datetime.now(timezone.utc),
-            "validation_date": None,
-            "is_validated": False,
-            "room_id": room_obj.room_id if room_obj else None,
-        }
+        if settings.PVA_ENABLED:
+            room_obj = room_catalog.find_by_name(
+                inference_result.get("top_label"))
+            picture_payload = {
+                "path": str(dest_path),
+                "analyzed_by": inference_result.get(
+                    "model_version") or inference_result.get("model") or None,
+                "room": room_obj,
+                "recognition_percentage": recognition_percentage,
+                "analyse_date": datetime.now(timezone.utc),
+                "validation_date": None,
+                "is_validated": False,
+                "room_id": room_obj.room_id if room_obj else None,
+            }
 
-        picture = Picture(**picture_payload)
-        picture = picture_catalog.save(picture)
+            picture = Picture(**picture_payload)
+            picture = picture_catalog.save(picture)
 
-        if user is not None:
-            try:
-                active_model = model_catalog.find_active_model()
-                model_id = active_model.model_id if active_model else None
-                room_id = room_obj.room_id if room_obj else None
-                history_catalog.save(
-                    History(
-                        room=room_obj,
-                        room_id=room_id,
-                        image_id=picture.image_id,
-                        model_id=model_id,
-                        user_id=user.user_id,
+            if user is not None:
+                try:
+                    active_model = model_catalog.find_active_model()
+                    model_id = active_model.model_id if active_model else None
+                    room_id = room_obj.room_id if room_obj else None
+                    history_catalog.save(
+                        History(
+                            room=room_obj,
+                            room_id=room_id,
+                            image_id=picture.image_id,
+                            model_id=model_id,
+                            user_id=user.user_id,
+                        )
                     )
-                )
-            except Exception as e:
-                print(
-                    f"[WARNING] Erreur lors de la sauvegarde historique: {e}")
+                except Exception as e:
+                    print(
+                        "[WARNING] Erreur lors de la sauvegarde historique: "
+                        f"{e}")
 
         return inference_result
 
@@ -279,6 +302,29 @@ class PictureController:
             limit=limit, offset=offset)
         return [picture_to_picturePvaDTO_mapper.apply(
             picture) for picture in pictures]
+
+    async def get_pva_status(self):
+        return {"enabled": settings.PVA_ENABLED}
+
+    async def toggle_pva_status(
+        self,
+        body: dict = Body(...),
+        user: AuthenticatedUser = Depends(require_role("admin")),
+    ):
+        enabled = body.get("enabled")
+        if enabled is None or not isinstance(enabled, bool):
+            raise HTTPException(
+                status_code=422,
+                detail="Le champ 'enabled' (bool) est requis.",
+            )
+        settings.PVA_ENABLED = enabled
+        return {"enabled": settings.PVA_ENABLED}
+
+    async def count_picture_to_validate(
+        self,
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+    ):
+        return {"count": picture_catalog.count_not_validated()}
 
     async def validate_pictures(
         self,
