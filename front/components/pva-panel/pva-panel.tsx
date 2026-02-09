@@ -54,29 +54,6 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
     }
   };
 
-  if (!pvaEnabled) {
-    return (
-      <View className="bg-white p-4 border border-gray-300 rounded-lg gap-2">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-[#333] text-lg font-bold">Pré-validation</Text>
-          <View className="flex-row items-center gap-2">
-            <Text className="text-gray-400 text-xs">Désactivée</Text>
-            <Switch
-              value={pvaEnabled}
-              onValueChange={toggle}
-              disabled={isToggling}
-              trackColor={{ false: "#d1d5db", true: "#3b82f6" }}
-              thumbColor={pvaEnabled ? "#fff" : "#f4f3f4"}
-            />
-          </View>
-        </View>
-        <Text className="text-gray-400 text-sm">
-          La pré-validation admin est désactivée. Les images envoyées ne sont pas enregistrées.
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
       <View className="flex-row items-center justify-between">
@@ -89,9 +66,6 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
           )}
         </View>
         <View className="flex-row items-center gap-2">
-          <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing} className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2">
-            <MaterialIcons name="refresh" size={20} color="white" />
-          </TouchableOpacity>
           <Switch
             value={pvaEnabled}
             onValueChange={toggle}
@@ -99,8 +73,17 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
             trackColor={{ false: "#d1d5db", true: "#3b82f6" }}
             thumbColor={pvaEnabled ? "#fff" : "#f4f3f4"}
           />
+          <TouchableOpacity onPress={handleRefresh} disabled={isRefreshing} className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2">
+            <MaterialIcons name="refresh" size={20} color="white" />
+          </TouchableOpacity>
         </View>
       </View>
+
+      {!pvaEnabled && (
+        <Text className="text-gray-400 text-sm">
+          La pré-validation admin est désactivée. Les images envoyées ne sont pas enregistrées.
+        </Text>
+      )}
 
       <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={{ flexDirection: "row" }} className="px-3">
         {previewPictures.length > 0 ? previewPictures.map((pic, i) => (
