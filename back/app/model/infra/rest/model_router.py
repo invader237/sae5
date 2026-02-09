@@ -18,6 +18,9 @@ from app.model.domain.DTO.modelStatsSummaryDTO import ModelStatsSummaryDTO
 from app.model.domain.DTO.modelStatsDetailedDTO import ModelStatsDetailedDTO
 from app.model.domain.service.model_stats_service import ModelStatsService
 from app.model.infra.factory.model_factory import get_model_stats_service
+from app.model.domain.service.layers_catalog_service import (
+    LayersCatalogService,
+)
 from uuid import UUID
 
 
@@ -66,6 +69,12 @@ class ModelController:
             "/{model_id}/stats/detailed",
             self.get_model_stats_detailed,
             response_model=ModelStatsDetailedDTO,
+            methods=["GET"],
+        )
+
+        self.router.add_api_route(
+            "/layers-catalog",
+            self.get_layers_catalog,
             methods=["GET"],
         )
 
@@ -157,6 +166,21 @@ class ModelController:
         user: AuthenticatedUser = Depends(require_role("admin")),
     ) -> ModelStatsDetailedDTO:
         return model_stats_service.get_detailed(model_id)
+
+    def get_layers_catalog(
+        self,
+        user: AuthenticatedUser = Depends(require_role("admin")),
+    ):
+        """Retourne le catalogue de couches PyTorch disponibles"""
+        try:
+            service = LayersCatalogService()
+            return service.get_all_layers()
+        except Exception as e:
+            print(f"[ERROR] Erreur lors du chargement du catalogue : {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(e),
+            )
 
 
 model_controller = ModelController()
