@@ -1,0 +1,149 @@
+[
+  {
+    "type": "Conv2d",
+    "category": "convolution",
+    "label": "Conv2D",
+    "description": "Couche de convolution 2D",
+    "params": {
+      "in_channels": { "type": "int", "default": 3, "min": 1, "description": "Nombre de canaux en entrée" },
+      "out_channels": { "type": "int", "default": 32, "min": 1, "description": "Nombre de canaux en sortie" },
+      "kernel_size": { "type": "int", "default": 3, "min": 1, "description": "Taille du noyau de convolution" },
+      "stride": { "type": "int", "default": 1, "min": 1, "description": "Pas de la convolution" },
+      "padding": { "type": "int", "default": 1, "min": 0, "description": "Padding autour de l'entrée" }
+    }
+  },
+  {
+    "type": "ConvTranspose2d",
+    "category": "convolution",
+    "label": "ConvTranspose2D",
+    "description": "Convolution transposée 2D (déconvolution)",
+    "params": {
+      "in_channels": { "type": "int", "default": 64, "min": 1, "description": "Nombre de canaux en entrée" },
+      "out_channels": { "type": "int", "default": 32, "min": 1, "description": "Nombre de canaux en sortie" },
+      "kernel_size": { "type": "int", "default": 3, "min": 1, "description": "Taille du noyau" },
+      "stride": { "type": "int", "default": 1, "min": 1, "description": "Pas de la convolution" },
+      "padding": { "type": "int", "default": 1, "min": 0, "description": "Padding autour de l'entrée" }
+    }
+  },
+  {
+    "type": "MaxPool2d",
+    "category": "pooling",
+    "label": "MaxPooling 2D",
+    "description": "Réduit la taille spatiale en gardant la valeur maximale",
+    "params": {
+      "kernel_size": { "type": "int", "default": 2, "min": 1, "description": "Taille de la fenêtre de pooling" },
+      "stride": { "type": "int", "default": 2, "min": 1, "description": "Pas du pooling" }
+    }
+  },
+  {
+    "type": "AvgPool2d",
+    "category": "pooling",
+    "label": "AvgPooling 2D",
+    "description": "Réduit la taille spatiale en calculant la moyenne",
+    "params": {
+      "kernel_size": { "type": "int", "default": 2, "min": 1, "description": "Taille de la fenêtre de pooling" },
+      "stride": { "type": "int", "default": 2, "min": 1, "description": "Pas du pooling" }
+    }
+  },
+  {
+    "type": "AdaptiveAvgPool2d",
+    "category": "pooling",
+    "label": "Adaptive AvgPooling 2D",
+    "description": "Pooling adaptatif qui produit une taille de sortie fixe",
+    "params": {
+      "output_size": { "type": "int", "default": 1, "min": 1, "description": "Taille spatiale de sortie" }
+    }
+  },
+  {
+    "type": "AdaptiveMaxPool2d",
+    "category": "pooling",
+    "label": "Adaptive MaxPooling 2D",
+    "description": "MaxPooling adaptatif qui produit une taille de sortie fixe",
+    "params": {
+      "output_size": { "type": "int", "default": 1, "min": 1, "description": "Taille spatiale de sortie" }
+    }
+  },
+  {
+    "type": "Linear",
+    "category": "linear",
+    "label": "Fully Connected (Linear)",
+    "description": "Couche entièrement connectée",
+    "params": {
+      "in_features": { "type": "int", "default": 128, "min": 1, "description": "Nombre de features en entrée" },
+      "out_features": { "type": "int", "default": 64, "min": 1, "description": "Nombre de features en sortie" }
+    }
+  },
+  {
+    "type": "ReLU",
+    "category": "activation",
+    "label": "ReLU",
+    "description": "Fonction d'activation ReLU (max(0, x))",
+    "params": {}
+  },
+  {
+    "type": "LeakyReLU",
+    "category": "activation",
+    "label": "Leaky ReLU",
+    "description": "ReLU avec pente négative pour les valeurs < 0",
+    "params": {
+      "negative_slope": { "type": "float", "default": 0.01, "min": 0.0, "description": "Pente pour les valeurs négatives" }
+    }
+  },
+  {
+    "type": "Sigmoid",
+    "category": "activation",
+    "label": "Sigmoid",
+    "description": "Fonction d'activation sigmoïde",
+    "params": {}
+  },
+  {
+    "type": "Tanh",
+    "category": "activation",
+    "label": "Tanh",
+    "description": "Fonction d'activation tangente hyperbolique",
+    "params": {}
+  },
+  {
+    "type": "Dropout",
+    "category": "regularization",
+    "label": "Dropout",
+    "description": "Désactive aléatoirement des neurones pendant l'entraînement",
+    "params": {
+      "p": { "type": "float", "default": 0.5, "min": 0.0, "max": 1.0, "description": "Probabilité de désactivation" }
+    }
+  },
+  {
+    "type": "Dropout2d",
+    "category": "regularization",
+    "label": "Dropout 2D",
+    "description": "Désactive des canaux entiers (spatial dropout)",
+    "params": {
+      "p": { "type": "float", "default": 0.5, "min": 0.0, "max": 1.0, "description": "Probabilité de désactivation" }
+    }
+  },
+  {
+    "type": "BatchNorm2d",
+    "category": "normalization",
+    "label": "Batch Normalization 2D",
+    "description": "Normalise les activations par batch pour stabiliser l'entraînement",
+    "params": {
+      "num_features": { "type": "int", "default": 32, "min": 1, "description": "Nombre de canaux à normaliser" }
+    }
+  },
+  {
+    "type": "BatchNorm1d",
+    "category": "normalization",
+    "label": "Batch Normalization 1D",
+    "description": "Normalise les features 1D par batch",
+    "params": {
+      "num_features": { "type": "int", "default": 128, "min": 1, "description": "Nombre de features à normaliser" }
+    }
+  },
+  {
+    "type": "Flatten",
+    "category": "utility",
+    "label": "Flatten",
+    "description": "Aplatit les dimensions spatiales en un vecteur 1D",
+    "params": {}
+  }
+]
