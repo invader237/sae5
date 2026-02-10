@@ -276,13 +276,19 @@ class ModelTraining:
         # ReLU, LeakyReLU, Sigmoid, Tanh, Dropout
 
         torch_layers = []
-        for layer_dto in custom_layers.layers:
+        for i, layer_dto in enumerate(custom_layers.layers):
             builder = LAYER_BUILDERS.get(layer_dto.type)
             if builder is None:
                 raise ValueError(
-                    f"Type de couche inconnu : {layer_dto.type}"
+                    f"Type de couche inconnu : '{layer_dto.type}'."
                 )
-            torch_layers.append(builder(layer_dto.params))
+            try:
+                torch_layers.append(builder(layer_dto.params))
+            except Exception as e:
+                raise ValueError(
+                    f"Erreur sur la couche n°{i + 1} ({layer_dto.type}) : "
+                    f"{e}"
+                )
 
         if not torch_layers:
             raise ValueError(
