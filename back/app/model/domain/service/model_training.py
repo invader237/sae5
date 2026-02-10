@@ -9,7 +9,9 @@ import json
 import re
 from app.model.domain.DTO.modelTrainingDTO import ModelTrainingDTO
 from app.model.domain.DTO.scratchLayersDTO import ScratchLayersDTO
-from app.model.domain.DTO.customLayersDTO import CustomLayersDTO, CustomLayerDTO
+from app.model.domain.DTO.customLayersDTO import (
+    CustomLayersDTO
+)
 from typing import Literal, Optional
 
 UPLOAD_DIR = Path("./")
