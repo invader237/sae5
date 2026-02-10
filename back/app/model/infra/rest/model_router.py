@@ -139,12 +139,49 @@ class ModelController:
         """Lance l'entraînement du modèle"""
         try:
             model_training.train(model_training_dto)
-            return {"message": "Entraînement lancé avec succès"}
+            return {"message": "Entraînement terminé avec succès"}
+        except ValueError as e:
+            print(f"[ERROR] Erreur de configuration : {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
+        except RuntimeError as e:
+            msg = str(e)
+            print(f"[ERROR] Erreur runtime lors de l'entraînement : {msg}")
+            # Rendre les erreurs PyTorch plus lisibles
+            if "mat1 and mat2 shapes cannot be multiplied" in msg:
+                detail = (
+                    "Les dimensions entre les couches sont incompatibles. "
+                    "Vérifiez les paramètres in_channels/out_channels "
+                    "et in_features/out_features de vos couches."
+                )
+            elif "spatial targets supported" in msg:
+                detail = (
+                    "Le modèle produit une sortie incompatible avec "
+                    "la classification. Vérifiez l'architecture "
+                    "de vos couches."
+                )
+            elif "negative dimensions" in msg or "invalid argument" in msg:
+                detail = (
+                    "Les paramètres des couches produisent des dimensions "
+                    "invalides. Vérifiez les valeurs de kernel_size, "
+                    "stride et padding."
+                )
+            else:
+                detail = f"Erreur lors de l'entraînement : {msg}"
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=detail,
+            )
         except Exception as e:
-            print(f"[ERROR] Erreur lors de l'entraînement : {e}")
+            print(f"[ERROR] Erreur inattendue : {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=str(e),
+                detail=(
+                    "Une erreur inattendue est survenue lors de "
+                    "l'entraînement. Consultez les logs du serveur."
+                ),
             )
 
     def get_model_stats_summary(

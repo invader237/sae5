@@ -27,6 +27,8 @@ const ModelTrainingPanel = () => {
   const [infoModal, setInfoModal] = useState<"epochs" | "batch" | "lr" | null>(null);
   const {
     isTraining,
+    trainingError,
+    trainingSuccess,
     rooms,
     selectedRooms,
     trainingConfig,
@@ -40,6 +42,8 @@ const ModelTrainingPanel = () => {
     setTrainingType,
     toggleScratchLayer,
     toggleCustomArchitecture,
+    dismissError,
+    dismissSuccess,
     train,
   } = useModelTraining();
 
@@ -358,6 +362,44 @@ const ModelTrainingPanel = () => {
               ? "Veuillez ajouter au moins une couche pour l'entraînement custom."
               : "Veuillez sélectionner au moins une couche pour l'entraînement from scratch."}
           </Text>
+        </View>
+      )}
+
+      {/* ERREUR D'ENTRAÎNEMENT */}
+      {trainingError && (
+        <View className="bg-red-50 border border-red-300 rounded-lg p-3">
+          <View className="flex-row items-start">
+            <MaterialIcons name="error" size={22} color="#dc2626" />
+            <View className="flex-1 ml-2">
+              <Text className="text-red-800 font-semibold mb-1">
+                Échec de l&apos;entraînement
+              </Text>
+              <Text className="text-red-700 text-sm">{trainingError}</Text>
+            </View>
+            <TouchableOpacity onPress={dismissError} className="p-1">
+              <MaterialIcons name="close" size={20} color="#dc2626" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* SUCCÈS D'ENTRAÎNEMENT */}
+      {trainingSuccess && (
+        <View className="bg-green-50 border border-green-300 rounded-lg p-3">
+          <View className="flex-row items-start">
+            <MaterialIcons name="check-circle" size={22} color="#16a34a" />
+            <View className="flex-1 ml-2">
+              <Text className="text-green-800 font-semibold mb-1">
+                Entraînement terminé
+              </Text>
+              <Text className="text-green-700 text-sm">
+                Le modèle a été entraîné et sauvegardé avec succès.
+              </Text>
+            </View>
+            <TouchableOpacity onPress={dismissSuccess} className="p-1">
+              <MaterialIcons name="close" size={20} color="#16a34a" />
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 

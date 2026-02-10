@@ -6,12 +6,15 @@ import { ScratchLayersDTO } from "@/api/DTO/scratchLayers.dto";
 import RoomLightDTO from "@/api/DTO/roomLight.dto";
 import { DEFAULT_SCRATCH_LAYERS } from "./modelTraining.config";
 import { useCustomLayers } from "./useCustomLayers";
+import axios from "axios";
 
 
 type TrainingType = "base" | "scratch";
 
 export function useModelTraining() {
   const [isTraining, setIsTraining] = useState(false);
+  const [trainingError, setTrainingError] = useState<string | null>(null);
+  const [trainingSuccess, setTrainingSuccess] = useState(false);
   const [rooms, setRooms] = useState<RoomLightDTO[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [scratchLayers, setScratchLayers] = useState<ScratchLayersDTO>(DEFAULT_SCRATCH_LAYERS);
@@ -101,8 +104,18 @@ export function useModelTraining() {
     });
   }, []);
 
+  const dismissError = useCallback(() => {
+    setTrainingError(null);
+  }, []);
+
+  const dismissSuccess = useCallback(() => {
+    setTrainingSuccess(false);
+  }, []);
+
   const train = useCallback(async () => {
     setIsTraining(true);
+    setTrainingError(null);
+    setTrainingSuccess(false);
     try {
       const payload: ModelTrainingDTO = {
         ...trainingConfig,
@@ -116,6 +129,20 @@ export function useModelTraining() {
             : undefined,
       };
       await trainModel(payload);
+      setTrainingSuccess(true);
+    } catch (error: unknown) {
+      let message = "Une erreur inattendue est survenue lors de l'entraînement.";
+      if (axios.isAxiosError(error)) {
+        const detail = error.response?.data?.detail;
+        if (typeof detail === "string" && detail.length > 0) {
+          message = detail;
+        } else if (error.response?.status === 500) {
+          message = "Erreur serveur lors de l'entraînement. Vérifiez la configuration des couches.";
+        } else if (error.code === "ECONNABORTED" || error.code === "ERR_NETWORK") {
+          message = "Impossible de contacter le serveur. Vérifiez votre connexion.";
+        }
+      }
+      setTrainingError(message);
     } finally {
       setIsTraining(false);
     }
@@ -123,6 +150,8 @@ export function useModelTraining() {
 
   return {
     isTraining,
+    trainingError,
+    trainingSuccess,
     rooms,
     selectedRooms,
     trainingConfig,
@@ -136,6 +165,8 @@ export function useModelTraining() {
     setTrainingType,
     toggleScratchLayer,
     toggleCustomArchitecture,
+    dismissError,
+    dismissSuccess,
     train,
   };
 }
