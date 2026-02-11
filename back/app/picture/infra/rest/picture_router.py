@@ -246,7 +246,11 @@ class PictureController:
 
         picture = Picture(
             path=str(dest_path),
-            analyzed_by=inference_result.get("model_version") or inference_result.get("model") or None,
+            analyzed_by=(
+                inference_result.get("model_version")
+                or inference_result.get("model")
+                or None
+            ),
             room=room_obj,
             recognition_percentage=recognition_percentage,
             analyse_date=datetime.now(timezone.utc),
