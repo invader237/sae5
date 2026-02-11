@@ -14,7 +14,7 @@ from app.room.infra.factory.room_factory import get_room_catalog
 from app.room.domain.DTO.roomLightDTO import RoomLightDTO
 from app.room.domain.DTO.roomDTO import RoomDTO
 from app.room.domain.DTO.roomAnalyticsDTO import RoomAnalyticsDTO
-from app.authentification.core.admin_required import (
+from app.auth.core.admin_required import (
     require_role,
     AuthenticatedUser,
 )
@@ -66,6 +66,7 @@ class RoomController:
     def get_rooms(
         self,
         room_catalog: RoomCatalog = Depends(get_room_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         rooms = room_catalog.find_all()
         return [room_to_roomDTO_mapper.apply(room) for room in rooms]
@@ -73,6 +74,7 @@ class RoomController:
     def get_pva_rooms(
         self,
         room_catalog: RoomCatalog = Depends(get_room_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         rooms = room_catalog.find_all()
         return [room_to_roomLightDTO_mapper.apply(r) for r in rooms]
@@ -112,6 +114,7 @@ class RoomController:
     def get_analytics(
         self,
         room_catalog: RoomCatalog = Depends(get_room_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         rooms = room_catalog.low_picture_coverage_rooms()
         analytics = RoomAnalyticsDTO()
@@ -124,6 +127,7 @@ class RoomController:
     def get_rooms_for_training(
         self,
         room_catalog: RoomCatalog = Depends(get_room_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         rooms = room_catalog.find_rooms_with_validated_pictures()
         return [room_to_roomLightDTO_mapper.apply(r) for r in rooms]

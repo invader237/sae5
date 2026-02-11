@@ -13,7 +13,7 @@ from fastapi import (
 )
 from PIL import Image
 import io
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse
 from pathlib import Path
 from typing import Literal, Optional, List
 import uuid
@@ -34,7 +34,7 @@ from app.room.infra.factory.room_factory import get_room_catalog
 from app.room.domain.catalog.room_catalog import RoomCatalog
 from app.model.domain.service.predict import predict_image
 from app.model.infra.factory.model_factory import get_model_loader
-from app.authentification.core.admin_required import (
+from app.auth.core.admin_required import (
     require_role,
     AuthenticatedUser,
     optional_user,
@@ -112,6 +112,7 @@ class PictureController:
     def get_pictures(
         self,
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         pictures = picture_catalog.find_all()
         return [picture_to_pictureDTO_mapper.apply(p) for p in pictures]
@@ -179,10 +180,19 @@ class PictureController:
 
         buffer = io.BytesIO()
         img.save(buffer, format="JPEG", quality=100, optimize=True)
-        resized_bytes = buffer.getvalue()
-
-        # Persist the resized image
         dest_path.write_bytes(resized_bytes)
+
+        thumbnail = image.copy()
+        thumbnail.thumbnail((150, 150), Image.Resampling.LANCZOS)
+        thumb_buffer = io.BytesIO()
+        thumbnail.save(
+            thumb_buffer, format="JPEG", quality=70, optimize=True
+        )
+        thumb_path = UPLOAD_DIR / f"{dest_path.stem}_thumb.jpg"
+        thumb_path.write_bytes(thumb_buffer.getvalue())
+
+        # Utiliser les bytes redimensionnés pour l'inférence
+        contents = buffer.getvalue()
 
         # Parse layers query
         activation_layers: Optional[List[str]] = None
@@ -233,19 +243,22 @@ class PictureController:
             recognition_percentage = None
 
         room_obj = room_catalog.find_by_name(inference_result.get("top_label"))
-        picture_payload = {
-            "path": str(dest_path),
-            "analyzed_by": inference_result.get(
-                "model_version") or inference_result.get("model") or None,
-            "room": room_obj,
-            "recognition_percentage": recognition_percentage,
-            "analyse_date": datetime.now(timezone.utc),
-            "validation_date": None,
-            "is_validated": False,
-            "room_id": room_obj.room_id if room_obj else None,
-        }
 
-        picture = Picture(**picture_payload)
+        picture = Picture(
+            path=str(dest_path),
+            analyzed_by=(
+                inference_result.get("model_version")
+                or inference_result.get("model")
+                or None
+            ),
+            room=room_obj,
+            recognition_percentage=recognition_percentage,
+            analyse_date=datetime.now(timezone.utc),
+            validation_date=None,
+            is_validated=False,
+            room_id=room_obj.room_id if room_obj else None,
+        )
+
         picture = picture_catalog.save(picture)
 
         if user is not None:
@@ -274,6 +287,7 @@ class PictureController:
         offset: int = Query(0, ge=0),
         picture_catalog: PictureCatalog = Depends(
             get_picture_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         pictures = picture_catalog.find_by_not_validated(
             limit=limit, offset=offset)
@@ -317,25 +331,25 @@ class PictureController:
         Depends(get_picture_catalog),
     ):
         picture = picture_catalog.find_by_id(picture_id)
-        image = Image.open(picture.path)
+
+        if not picture:
+            raise HTTPException(status_code=404, detail="Image introuvable")
 
         if type == "thumbnail":
-            max_size = (150, 150)
-            quality = 70
+            file_path = (
+                Path(picture.path).parent
+                / f"{Path(picture.path).stem}_thumb.jpg"
+            )
         else:
-            max_size = (384, 384)
-            quality = 90
+            file_path = Path(picture.path)
 
-        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+        if not file_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Fichier {file_path} introuvable",
+            )
 
-        if image.mode != "RGB":
-            image = image.convert("RGB")
-
-        buffer = io.BytesIO()
-        image.save(buffer, format="JPEG", quality=quality, optimize=True)
-        buffer.seek(0)
-
-        return StreamingResponse(buffer, media_type="image/jpeg")
+        return FileResponse(str(file_path), media_type="image/jpeg")
 
     async def list_activation_images(self, token: str):
         act_dir = UPLOAD_DIR / "activations" / token
@@ -450,7 +464,7 @@ class PictureController:
         limit: int = Query(500, ge=1, le=500),
         offset: int = Query(0, ge=0),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
-        user: AuthenticatedUser = Depends(require_role("admin")),
+        user: AuthenticatedUser = Depends(require_role("admin", "watcher")),
     ):
         pictures = picture_catalog.find_validated_by_room_id(
             room_id=room_id, limit=limit, offset=offset)

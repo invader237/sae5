@@ -6,7 +6,7 @@ from app.history.domain.mapper.history_to_dto_mapper import (
     history_to_dto_mapper,
 )
 from app.history.infra.factory.history_factory import get_history_catalog
-from app.authentification.core.admin_required import (
+from app.auth.core.admin_required import (
     require_role,
     AuthenticatedUser,
 )
