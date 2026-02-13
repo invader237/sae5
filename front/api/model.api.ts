@@ -5,6 +5,7 @@ import type {
   ModelStatsSummaryDTO,
   ModelStatsDetailedDTO,
 } from './DTO/modelStats.dto';
+import type { LayerCatalogItem } from './DTO/layerCatalog.dto';
 
 export const fetchModels = async (): Promise<ModelDTO[]> => {
   try {
@@ -67,6 +68,16 @@ export const fetchModelStatsDetailed = async (
     return response.data;
   } catch (error) {
     console.error('Error fetching model stats detailed:', error);
+    throw error;
+  }
+};
+
+export const fetchLayersCatalog = async (): Promise<LayerCatalogItem[]> => {
+  try {
+    const response = await axiosInstance.get('/models/layers-catalog');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching layers catalog:', error);
     throw error;
   }
 };
