@@ -23,6 +23,10 @@ from app.picture.infra.factory.picture_factory import get_picture_catalog
 from app.database import get_session
 from app.model.domain.service.model_namer import ModelNamer
 from app.model.domain.service.model_stats_service import ModelStatsService
+from app.model.domain.catalog.layers_catalog import LayersCatalog
+from app.model.infra.layer_service.layer_service_adapter import (
+    LayerServiceAdapter,
+)
 
 
 def get_model_catalog(db: Session = Depends(get_session)) -> ModelCatalog:
@@ -74,3 +78,7 @@ def get_model_stats_service(
         model_stats_catalog=model_stats_catalog,
         room_catalog=room_catalog,
     )
+
+
+def get_layers_catalog() -> LayersCatalog:
+    return LayerServiceAdapter()
