@@ -1,18 +1,13 @@
 import React, { useMemo, useState, useEffect } from "react";
-import {
-  Modal,
-  View,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Pressable,
-} from "react-native";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Spinner } from "@/components/Spinner";
-import { InferenceResultDTO } from "@/api/DTO/inference.dto";
+import { Image, Pressable, } from "react-native";
 import axiosInstance, { baseURL } from "@/api/axiosConfig";
-import { Colors } from "@/constants/theme";
+
+import { Modal, View, TouchableOpacity, ScrollView } from 'react-native';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { Spinner } from '@/components/Spinner';
+import { InferenceResultDTO } from '@/api/DTO/inference.dto';
+import { Colors, BorderRadius, Shadows } from '@/constants/theme';
 
 type ActivationItem = {
   layer: string;
@@ -62,9 +57,9 @@ export function InferenceResultModal({
   }, [visible]);
 
   const getScoreColor = (score: number) => {
-    if (score >= 0.8) return "bg-green-500";
-    if (score >= 0.6) return "bg-yellow-500";
-    return "bg-red-500";
+    if (score >= 0.8) return Colors.success;
+    if (score >= 0.6) return Colors.warning;
+    return Colors.danger;
   };
 
   const formatScore = (score: number) => `${(score * 100).toFixed(1)}%`;
@@ -214,91 +209,97 @@ export function InferenceResultModal({
   };
 
   return (
-    <>
-      <Modal
-        visible={visible}
-        transparent
-        animationType="fade"
-        onRequestClose={onClose}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View
+        className="flex-1 justify-center items-center p-4"
+        style={{ backgroundColor: Colors.overlay }}
       >
-        <View
+        <ThemedView
+          lightColor={Colors.background}
+          className="p-6 w-full max-w-md max-h-[80%]"
           style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            padding: 16,
-            justifyContent: "center",
-            alignItems: "center",
+            backgroundColor: Colors.cardBackground,
+            borderRadius: BorderRadius.lg,
+            ...Shadows.md,
           }}
         >
-          <ThemedView
-            lightColor={Colors.light.background}
-            style={{
-              width: "100%",
-              maxWidth: 420,
-              maxHeight: "80%",
-              borderRadius: 16,
-              overflow: "hidden",
-              backgroundColor: Colors.dark.background,
-            }}
-          >
-            <ScrollView
-              showsVerticalScrollIndicator
-              contentContainerStyle={{
-                padding: 18,
-                paddingBottom: 18,
-              }}
-            >
-              {/* Header */}
-              <View style={{ marginBottom: 14 }}>
-                <ThemedText
-                  type="title"
-                  className="text-lg"
-                  lightColor={Colors.light.text}
-                >
-                  Résultat d&apos;analyse
+          {/* Header */}
+          <View className="flex-row justify-between items-center mb-4">
+            <ThemedText type="title" className="text-lg" lightColor={Colors.text}>
+              Résultat d&apos;analyse
+            </ThemedText>
+          </View>
+
+          {/* Loading state: show spinner and a small message */}
+          {isLoading || !inferenceResult ? (
+            <View className="flex-1 items-center justify-center py-8">
+              <Spinner />
+              <ThemedText className="mt-3" lightColor={Colors.textSecondary}>
+                Analyse en cours…
+              </ThemedText>
+            </View>
+          ) : (
+            <>
+              {/* Model Info */}
+              <View className="mb-4">
+                <ThemedText className="text-sm" lightColor={Colors.text}>
+                  Modèle: {inferenceResult.model_version}
+                </ThemedText>
+                <ThemedText className="text-sm" lightColor={Colors.text}>
+                  Temps: {inferenceResult.time_ms.toFixed(0)}ms
+                </ThemedText>
+                <ThemedText className="text-sm" lightColor={Colors.text}>
+                  Score: {((inferenceResult.top_prediction?.score ?? inferenceResult.predictions[0].score) * 100).toFixed(1)}%
                 </ThemedText>
               </View>
 
-              {/* Loading */}
-              {isLoading || !inferenceResult ? (
-                <View style={{ paddingVertical: 30, alignItems: "center" }}>
-                  <Spinner />
-                  <ThemedText className="mt-3 text-gray-600">
-                    Analyse en cours…
+              {/* Top prediction emphasized */}
+              {topPrediction ? (
+                <View className="mb-6 p-4">
+                  <ThemedText
+                    type="title"
+                    className="text-5xl text-center"
+                    lightColor={Colors.text}
+                  >
+                    {topPrediction.label}
                   </ThemedText>
                 </View>
               ) : (
                 <>
-                  {/* Model Info */}
-                  <View style={{ marginBottom: 14 }}>
-                    <ThemedText className="text-sm" lightColor={Colors.text}>
-                      Modèle: {inferenceResult.model_version}
-                    </ThemedText>
-                    <ThemedText className="text-sm" lightColor={Colors.text}>
-                      Temps: {inferenceResult.time_ms.toFixed(0)}ms
-                    </ThemedText>
-                    <ThemedText className="text-sm" lightColor={Colors.text}>
-                      Score:{" "}
-                      {(
-                        (inferenceResult.top_prediction?.score ??
-                          inferenceResult.predictions?.[0]?.score ??
-                          0) * 100
-                      ).toFixed(1)}
-                      %
-                    </ThemedText>
-                  </View>
-
-                  {/* Top prediction */}
-                  {topPrediction && (
-                    <View style={{ paddingVertical: 10, marginBottom: 8 }}>
-                      <ThemedText
-                        type="title"
-                        className="text-5xl text-center"
-                        lightColor={Colors.light.text}
-                      >
-                        {topPrediction.label}
+                  {showMore && (
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                      <ThemedText type="subtitle" className="mb-3" lightColor={Colors.text}>
+                        Autres prédictions
                       </ThemedText>
-                    </View>
+
+                      {otherPredictions.map((pred, index) => (
+                        <View key={index} className="mb-3">
+                          <View className="flex-row justify-between items-center mb-1">
+                            <ThemedText className="font-medium" lightColor={Colors.text}>{pred.label}</ThemedText>
+                            <ThemedText className="text-sm" lightColor={Colors.text}>{formatScore(pred.score)}</ThemedText>
+                          </View>
+
+                          {/* Progress Bar */}
+                          <View
+                            className="h-2 rounded-full overflow-hidden"
+                            style={{ backgroundColor: Colors.border }}
+                          >
+                            <View
+                              className="h-full"
+                              style={{
+                                width: `${pred.score * 100}%`,
+                                backgroundColor: getScoreColor(pred.score),
+                              }}
+                            />
+                          </View>
+                        </View>
+                      ))}
+                    </ScrollView>
                   )}
 
                   {/* Buttons */}
@@ -416,13 +417,13 @@ export function InferenceResultModal({
 
                   {/* Close */}
                   <TouchableOpacity
-                    onPress={onClose}
+                    className="mt-2 mb-3 py-3 px-3 rounded-lg"
                     style={{
-                      backgroundColor: Colors.primary,
-                      paddingVertical: 14,
-                      borderRadius: 12,
-                      marginBottom: 14,
+                      borderWidth: 1,
+                      borderColor: Colors.border,
+                      borderRadius: BorderRadius.lg,
                     }}
+                    onPress={() => setShowMore((v) => !v)}
                   >
                     <ThemedText className="text-white text-center font-semibold">
                       Fermer
@@ -508,54 +509,22 @@ export function InferenceResultModal({
         </View>
       </Modal>
 
-      {/* Zoom modal */}
-      <Modal
-        visible={!!selected}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSelected(null)}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.85)",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 16,
-          }}
-        >
-          {selected && (
-            <>
-              <ThemedText
-                style={{ color: "white", marginBottom: 10, fontWeight: "700" }}
-              >
-                {selected.name} {selected.type ? `• ${selected.type}` : ""}
-              </ThemedText>
-
-              <Image
-                source={{ uri: `${baseURL}${selected.url}` }}
-                style={{ width: "100%", height: "70%" }}
-                resizeMode="contain"
-              />
-
-              <TouchableOpacity
-                onPress={() => setSelected(null)}
-                style={{
-                  marginTop: 16,
-                  paddingVertical: 10,
-                  paddingHorizontal: 18,
-                  borderRadius: 10,
-                  backgroundColor: "rgba(255,255,255,0.12)",
-                }}
-              >
-                <ThemedText style={{ color: "white", fontWeight: "700" }}>
-                  Fermer
-                </ThemedText>
-              </TouchableOpacity>
+              {/* Footer */}
+              <View className="mt-2">
+                <TouchableOpacity
+                  onPress={onClose}
+                  style={{ backgroundColor: Colors.primary }}
+                  className="py-3 rounded-lg"
+                >
+                  <ThemedText className="text-center font-semibold" style={{color: Colors.white}}>
+                    Fermer
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
             </>
           )}
+          </ThemedView>
         </View>
       </Modal>
-    </>
   );
 }

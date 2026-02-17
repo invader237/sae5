@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Modal, Pressable } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useModelSelector } from "@/hooks/models/useModelSelector";
+import { Colors, BorderRadius, Shadows } from "@/constants/theme";
 
 interface ModelSelectorProps {
   controller?: ReturnType<typeof useModelSelector>;
@@ -22,23 +23,54 @@ export default function ModelSelector({ controller }: ModelSelectorProps) {
 
   return (
     <>
-      <View className="bg-white p-4 border border-gray-300 rounded-lg gap-4">
+      <View 
+        className="p-5 gap-4"
+        style={{
+          backgroundColor: Colors.white,
+          borderRadius: BorderRadius.lg,
+          ...Shadows.md,
+        }}
+      >
+        {/* Header */}
         <View className="flex-row items-center justify-between">
-          <Text className="text-[#333] text-lg font-bold">Modèle</Text>
+          <View>
+            <Text 
+              className="text-xl font-bold"
+              style={{ color: Colors.text }}
+            >
+              Modèle
+            </Text>
+          </View>
 
           <TouchableOpacity
             onPress={refreshModels}
-            className="bg-[#007bff] rounded-md flex-row items-center justify-center px-4 py-2"
+            className="flex-row items-center justify-center"
+            style={{
+              backgroundColor: Colors.primary,
+              borderRadius: BorderRadius.full,
+              width: 44,
+              height: 44,
+            }}
           >
-            <MaterialIcons name="refresh" size={20} color="white" />
+            <MaterialIcons name="refresh" size={22} color={Colors.white} />
           </TouchableOpacity>
         </View>
 
-        <View className="border border-gray-300 rounded-md overflow-hidden">
+        {/* Picker */}
+        <View 
+          className="overflow-hidden cursor-pointer"
+          style={{
+            backgroundColor: Colors.inputBackground,
+            borderRadius: BorderRadius.md,
+            borderWidth: 1,
+            borderColor: Colors.border,
+          }}
+        >
           <Picker
             selectedValue={model ?? ""}
             onValueChange={handleSelect}
             className="h-12 mx-2"
+            style={{ color: Colors.text }}
           >
               {!model && (
                 <Picker.Item
@@ -57,7 +89,11 @@ export default function ModelSelector({ controller }: ModelSelectorProps) {
           </Picker>
         </View>
 
-        <Text className="text-[#333] text-base">
+        {/* Description */}
+        <Text 
+          className="text-sm leading-5"
+          style={{ color: Colors.textSecondary }}
+        >
           Sélectionnez un modèle dans la liste déroulante ci-dessus.
         </Text>
       </View>
@@ -69,24 +105,59 @@ export default function ModelSelector({ controller }: ModelSelectorProps) {
         animationType="fade"
         onRequestClose={cancel}
       >
-        <View className="flex-1 justify-center items-center bg-black bg-opacity-40">
-          <View className="bg-white p-6 rounded-lg w-11/12 max-w-md">
-            <Text className="text-lg font-bold mb-4">Confirmation</Text>
-            <Text className="mb-6">Voulez-vous vraiment changer de modèle ?</Text>
+        <View 
+          className="flex-1 justify-center items-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+        >
+          <View 
+            className="w-11/12 max-w-md p-6"
+            style={{
+              backgroundColor: Colors.white,
+              borderRadius: BorderRadius.xl,
+              ...Shadows.lg,
+            }}
+          >
+            <Text 
+              className="text-xl font-bold mb-2"
+              style={{ color: Colors.text }}
+            >
+              Confirmation
+            </Text>
+            <Text 
+              className="mb-6"
+              style={{ color: Colors.textSecondary }}
+            >
+              Voulez-vous vraiment changer de modèle ?
+            </Text>
 
-            <View className="flex-row justify-end gap-4">
+            <View className="flex-row justify-end gap-3">
               <Pressable
                 onPress={cancel}
-                className="px-4 py-2 rounded-md bg-gray-300"
+                className="px-6 py-3"
+                style={{
+                  backgroundColor: Colors.inputBackground,
+                  borderRadius: BorderRadius.full,
+                }}
               >
-                <Text>Annuler</Text>
+                <Text 
+                  className="font-semibold"
+                  style={{ color: Colors.textSecondary }}
+                >
+                  Annuler
+                </Text>
               </Pressable>
 
               <Pressable
                 onPress={confirm}
-                className="px-4 py-2 rounded-md bg-[#007bff]"
+                className="px-6 py-3"
+                style={{
+                  backgroundColor: Colors.primary,
+                  borderRadius: BorderRadius.full,
+                }}
               >
-                <Text className="text-white">Confirmer</Text>
+                <Text className="font-semibold" style={{ color: Colors.onPrimary }}>
+                  Confirmer
+                </Text>
               </Pressable>
             </View>
           </View>

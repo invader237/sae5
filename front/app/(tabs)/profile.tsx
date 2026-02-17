@@ -12,6 +12,7 @@ import { Spinner } from "@/components/Spinner";
 import { AuthForm } from "@/components/authentification/AuthForm";
 import { ChangePasswordForm } from "@/components/authentification/ChangePasswordForm";
 import { useAuth } from "@/hooks/auth/useAuth";
+import { Colors, BorderRadius, Shadows } from "@/constants/theme";
 
 export default function ProfileScreen() {
   const { user, token, isLoading, login, logout } = useAuth();
@@ -19,50 +20,88 @@ export default function ProfileScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
+      <View 
+        className="flex-1 items-center justify-center"
+        style={{ backgroundColor: Colors.background }}
+      >
         <Spinner />
-        <Text className="mt-2 text-gray-500">Chargement du profil…</Text>
+        <Text className="mt-2" style={{ color: Colors.textSecondary }}>
+          Chargement du profil…
+        </Text>
       </View>
     );
   }
 
   if (!user || !token) {
     return (
-      <View className="flex-1 bg-gray-50 items-center justify-center px-6">
+      <View 
+        className="flex-1 items-center justify-center px-6"
+        style={{ backgroundColor: Colors.background }}
+      >
         <AuthForm onAuthenticated={login} />
       </View>
     );
   }
 
+  const profileInitial = (user.name || user.email || "?").trim().charAt(0).toUpperCase();
+
   return (
     <>
       <ScrollView
-        className="flex-1 bg-gray-50"
-        contentContainerStyle={{ padding: 24 }}
+        className="flex-1"
+        style={{ backgroundColor: Colors.background }}
+        contentContainerStyle={{ padding: 24, paddingBottom: 120 }}
       >
         <View className="gap-6">
           {/* HEADER */}
-          <View className="items-center">
-            <Text className="text-3xl font-extrabold text-gray-800">
+          <View className="items-center mb-2">
+            <Text 
+              className="text-3xl font-bold"
+              style={{ color: Colors.text }}
+            >
               Profil
             </Text>
-            <Text className="text-gray-500 mt-1">
+            <Text 
+              className="mt-1"
+              style={{ color: Colors.textSecondary }}
+            >
               Gestion de votre compte
             </Text>
           </View>
 
           {/* USER CARD */}
-          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+          <View 
+            className="p-5"
+            style={{
+              backgroundColor: Colors.white,
+              borderRadius: BorderRadius.xl,
+              ...Shadows.md,
+            }}
+          >
             <View className="flex-row items-center gap-4">
-              <View className="w-14 h-14 rounded-full bg-blue-100 items-center justify-center">
-                <MaterialIcons name="person" size={28} color="#3b82f6" />
+              <View 
+                className="w-14 h-14 items-center justify-center"
+                style={{
+                  borderRadius: BorderRadius.full,
+                  backgroundColor: Colors.primary,
+                }}
+              >
+                <Text className="text-xl font-bold" style={{ color: Colors.onPrimary }}>
+                  {profileInitial}
+                </Text>
               </View>
 
               <View className="flex-1">
-                <Text className="text-lg font-semibold text-gray-800">
+                <Text 
+                  className="text-lg font-semibold"
+                  style={{ color: Colors.text }}
+                >
                   {user.name}
                 </Text>
-                <Text className="text-gray-500 text-sm">
+                <Text 
+                  className="text-sm"
+                  style={{ color: Colors.textSecondary }}
+                >
                   {user.email}
                 </Text>
               </View>
@@ -70,29 +109,55 @@ export default function ProfileScreen() {
           </View>
 
           {/* ACTIONS */}
-          <View className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm gap-4">
-            <Text className="text-base font-semibold text-gray-800">
+          <View 
+            className="p-5 gap-4"
+            style={{
+              backgroundColor: Colors.white,
+              borderRadius: BorderRadius.xl,
+              ...Shadows.md,
+            }}
+          >
+            <Text 
+              className="text-base font-semibold"
+              style={{ color: Colors.text }}
+            >
               Sécurité
             </Text>
 
             <TouchableOpacity
               onPress={() => setShowPasswordModal(true)}
-              className="flex-row items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 border border-blue-200"
+              className="flex-row items-center gap-3 px-4 py-3"
+              style={{
+                backgroundColor: Colors.white,
+                borderRadius: BorderRadius.lg,
+                borderWidth: 1,
+                borderColor: Colors.border,
+              }}
               activeOpacity={0.85}
             >
-              <MaterialIcons name="lock" size={22} color="#3b82f6" />
-              <Text className="text-blue-600 font-semibold">
+              <MaterialIcons name="lock" size={22} color={Colors.primaryDark} />
+              <Text 
+                className="font-semibold"
+                style={{ color: Colors.primaryDark }}
+              >
                 Modifier le mot de passe
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={logout}
-              className="flex-row items-center gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200"
+              className="flex-row items-center gap-3 px-4 py-3"
+              style={{
+                backgroundColor: Colors.dangerLight,
+                borderRadius: BorderRadius.lg,
+              }}
               activeOpacity={0.85}
             >
-              <MaterialIcons name="logout" size={22} color="#ef4444" />
-              <Text className="text-red-600 font-semibold">
+              <MaterialIcons name="logout" size={22} color={Colors.danger} />
+              <Text 
+                className="font-semibold"
+                style={{ color: Colors.danger }}
+              >
                 Se déconnecter
               </Text>
             </TouchableOpacity>
@@ -106,9 +171,22 @@ export default function ProfileScreen() {
         animationType="fade"
         onRequestClose={() => setShowPasswordModal(false)}
       >
-        <View className="flex-1 bg-black bg-opacity-40 items-center justify-center px-6">
-          <View className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <Text className="text-xl font-bold text-gray-800 mb-4">
+        <View 
+          className="flex-1 items-center justify-center px-6"
+          style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+        >
+          <View 
+            className="p-6 w-full max-w-md"
+            style={{
+              backgroundColor: Colors.white,
+              borderRadius: BorderRadius.xl,
+              ...Shadows.lg,
+            }}
+          >
+            <Text 
+              className="text-xl font-bold mb-4"
+              style={{ color: Colors.text }}
+            >
               Changer le mot de passe
             </Text>
 
@@ -116,9 +194,18 @@ export default function ProfileScreen() {
 
             <TouchableOpacity
               onPress={() => setShowPasswordModal(false)}
-              className="mt-5 py-3 rounded-xl bg-gray-100 items-center"
+              className="mt-5 py-3 items-center"
+              style={{
+                backgroundColor: Colors.inputBackground,
+                borderRadius: BorderRadius.lg,
+              }}
             >
-              <Text className="text-gray-700 font-semibold">Fermer</Text>
+              <Text 
+                className="font-semibold"
+                style={{ color: Colors.textSecondary }}
+              >
+                Fermer
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

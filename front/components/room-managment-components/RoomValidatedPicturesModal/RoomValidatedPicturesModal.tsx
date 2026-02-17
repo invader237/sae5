@@ -6,6 +6,7 @@ import PvaEditModal from "@/components/pva-components/PvaEditModal";
 import { Spinner } from "@/components/Spinner";
 import { useValidatedPicturesByRoom } from "@/hooks/rooms/useValidatedPicturesByRoom";
 import { useValidatedPicturesActions } from "@/hooks/rooms/useValidatedPicturesActions";
+import { Colors, BorderRadius } from "@/constants/theme";
 
 export type RoomValidatedPicturesModalMode = "gestion" | "display";
 
@@ -98,24 +99,36 @@ const RoomValidatedPicturesModal = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-white p-4">
+      <View className="flex-1 p-4" style={{ backgroundColor: Colors.background }}>
         {isLoading && <Spinner overlay />}
 
         <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-2xl font-bold text-[#333]">Images validées</Text>
+          <Text className="text-2xl font-bold" style={{ color: Colors.text }}>
+            Images validées
+          </Text>
           <TouchableOpacity onPress={onClose}>
-            <Text className="text-blue-500 text-lg">Fermer</Text>
+            <Text className="text-lg" style={{ color: Colors.primary }}>
+              Fermer
+            </Text>
           </TouchableOpacity>
         </View>
 
         {errorMessage && (
           <View className="mb-3">
-            <Text className="text-center text-[#b00020]">{errorMessage}</Text>
+            <Text className="text-center" style={{ color: Colors.danger }}>
+              {errorMessage}
+            </Text>
             <TouchableOpacity
               onPress={refresh}
-              className="mt-3 px-4 py-2 rounded-md bg-[#007bff]"
+              className="mt-3 px-4 py-2"
+              style={{
+                backgroundColor: Colors.primary,
+                borderRadius: BorderRadius.md,
+              }}
             >
-              <Text className="text-white font-bold text-center">Réessayer</Text>
+              <Text className="font-bold text-center" style={{ color: Colors.onPrimary }}>
+                Réessayer
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -136,7 +149,7 @@ const RoomValidatedPicturesModal = ({
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
           ListEmptyComponent={
-            <Text className="text-center text-[#555] mt-10">
+            <Text className="text-center mt-10" style={{ color: Colors.textSecondary }}>
               {isLoading ? "Chargement..." : "Aucune image validée pour le moment."}
             </Text>
           }
@@ -147,21 +160,27 @@ const RoomValidatedPicturesModal = ({
             <TouchableOpacity
               onPress={() => setEditModalVisible(true)}
               disabled={selectedPictures.length === 0}
-              className={`px-4 py-2 rounded-lg ${
-                selectedPictures.length > 0 ? "bg-blue-500" : "bg-gray-300"
-              }`}
+              className="px-4 py-2 rounded-lg"
+              style={{
+                backgroundColor:
+                  selectedPictures.length > 0 ? Colors.primary : Colors.border,
+              }}
             >
-              <Text className="text-white font-bold text-sm">Modifier</Text>
+              <Text className="font-bold text-sm" style={{ color: Colors.onPrimary }}>
+                Modifier
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleDelete}
               disabled={selectedPictures.length === 0 || isDeleting}
-              className={`px-4 py-2 rounded-lg ${
-                selectedPictures.length > 0 ? "bg-red-500" : "bg-gray-300"
-              }`}
+              className="px-4 py-2 rounded-lg"
+              style={{
+                backgroundColor:
+                  selectedPictures.length > 0 ? Colors.danger : Colors.border,
+              }}
             >
-              <Text className="text-white font-bold text-sm">
+              <Text className="font-bold text-sm" style={{ color: Colors.onPrimary }}>
                 {isDeleting ? "Suppression..." : "Supprimer"}
               </Text>
             </TouchableOpacity>

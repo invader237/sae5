@@ -8,6 +8,7 @@ import PvaPanel from "@/components/pva-panel";
 import RoomManagmentPanel from "@/components/room-managment-panel";
 import ModelTrainingPanel from "@/components/model-training-panel";
 import { useModelSelector } from "@/hooks/models/useModelSelector";
+import { Colors } from "@/constants/theme";
 
 export default function AdminPanel() {
   const { isAdmin, isLoading } = useAuth();
@@ -24,9 +25,21 @@ export default function AdminPanel() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-white p-6 gap-4">
-      <View className="gap-4">
-      <Text className="text-[24px] font-bold text-[#007bff] mb-4">Panneau Admin</Text>
+    <ScrollView 
+      className="flex-1" 
+      style={{ backgroundColor: Colors.background }}
+      contentContainerStyle={{ padding: 20, paddingBottom: 140 }}
+    >
+      <View className="gap-5">
+        {/* Header avec style moderne */}
+        <View className="mb-2">
+          <Text 
+            className="text-3xl font-bold"
+            style={{ color: Colors.text }}
+          >
+            Panneau Admin
+          </Text>
+        </View>
 
       <ModelSelector controller={modelSelector} />
 
@@ -37,11 +50,9 @@ export default function AdminPanel() {
 
       <PvaPanel onDataChanged={triggerStatsRefresh} />
 
-      <RoomManagmentPanel />
+        <RoomManagmentPanel />
 
-      <ModelTrainingPanel />
-
-      <View className="h-[200px]" />
+        <ModelTrainingPanel />
       </View>
     </ScrollView>
   );

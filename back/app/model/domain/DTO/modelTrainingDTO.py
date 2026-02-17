@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import Literal, Optional
 from app.room.domain.DTO.roomLightDTO import RoomLightDTO
 from app.model.domain.DTO.scratchLayersDTO import ScratchLayersDTO
+from app.model.domain.DTO.customLayersDTO import CustomLayersDTO
 
 
 class ModelTrainingDTO(BaseModel):
@@ -11,3 +12,4 @@ class ModelTrainingDTO(BaseModel):
     learningRate: float
     roomList: list[RoomLightDTO]
     scratchLayers: Optional[ScratchLayersDTO] = None
+    customLayers: Optional[CustomLayersDTO] = None

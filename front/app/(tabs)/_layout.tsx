@@ -1,18 +1,44 @@
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { BlurView } from "expo-blur";
-import { Tabs } from "expo-router";
+﻿import { Tabs } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { View, Pressable } from "react-native";
 import "../../global.css";
 import { useAuth } from "@/hooks/auth/useAuth";
+import { Colors, BorderRadius, Shadows } from "@/constants/theme";
+import { Camera, History, Shield, User } from "lucide-react-native";
 
-type IconName = React.ComponentProps<typeof IconSymbol>["name"];
+type TabIconProps = {
+  icon: React.ComponentType<{ size?: number; color?: string }>;
+  color: string;
+};
 
-function TabIcon({ name, color }: { name: IconName; color: string }) {
+function TabIcon({ icon: Icon, color }: TabIconProps) {
+  const ICON_SIZE = 22;
+
   return (
-    <View className="items-center justify-center">
-      <IconSymbol name={name} size={28} color={color} />
+    <View
+      className="items-center justify-center"
+      style={{ padding: 0, height: "100%", justifyContent: "center", alignItems: "center" }}
+    >
+      <Icon size={ICON_SIZE} color={color} />
     </View>
+  );
+}
+
+function CenterTabButton({ children, onPress }: { children: React.ReactNode; onPress?: (event: any) => void }) {
+  return (
+    <Pressable
+      onPress={(event) => onPress?.(event)}
+      className="items-center justify-center"
+      style={{
+        width: 80,
+        height: 40,
+        borderRadius: BorderRadius.full,
+        backgroundColor: Colors.primary,
+        ...Shadows.lg,
+      }}
+    >
+      {children}
+    </Pressable>
   );
 }
 
@@ -23,57 +49,70 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#0A84FF",
-        tabBarInactiveTintColor: "rgba(255,255,255,0.65)",
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarShowLabel: true,
         tabBarStyle: {
-          height: 85,
-          backgroundColor: "rgba(0,0,0,0.2)",
-          borderTopWidth: 0,
-          position: "absolute",
+          minHeight: 72,
+          backgroundColor: Colors.white,
+          borderTopWidth: 1,
+          borderTopColor: Colors.border,
+          position: "relative",
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          marginTop: 2,
+          marginBottom: 6,
+        },
+        tabBarIconStyle: {
+          marginTop: 6,
         },
         tabBarBackground: () => (
-          <BlurView intensity={40} tint="dark" style={{ flex: 1 }} />
+          <View 
+            style={{ 
+              flex: 1, 
+              backgroundColor: Colors.white,
+            }} 
+          />
         ),
-        tabBarLabelStyle: { fontSize: 13, fontWeight: "600" },
+        tabBarItemStyle: {
+          paddingTop: 0,
+          alignItems: "center",
+          justifyContent: "center",
+        },
       }}
     >
       <Tabs.Screen
         name="history"
         options={{
           title: "Historique",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="clock.fill" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon icon={History} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="index"
+name="index"
         options={{
           title: "Caméra",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="camera.fill" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon icon={Camera} color={color} />,
+        }}
+      />
+
+            <Tabs.Screen
+        name="admin-panel"
+        options={{
+          href: isAdmin ? "/admin-panel" : null,
+          title: "Admin",
+          tabBarIcon: ({ color }) => <TabIcon icon={Shield} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profil",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="person.crop.circle" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon icon={User} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="admin-panel"
-        options={{
-          href: isAdmin ? "/admin-panel" : null,
-          title: "Admin",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="shield.lefthalf.fill" color={color} />
-          ),
-        }}
-      />
+
     </Tabs>
   );
 }

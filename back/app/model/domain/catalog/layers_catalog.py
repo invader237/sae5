@@ -1,0 +1,11 @@
+from typing import Protocol, Any
+
+
+class LayersCatalog(Protocol):
+    def get_all_layers(self) -> list[dict[str, Any]]: ...
+
+    def get_layer_by_type(
+        self, layer_type: str
+    ) -> dict[str, Any] | None: ...
+
+    def get_valid_types(self) -> list[str]: ...

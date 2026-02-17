@@ -1,11 +1,12 @@
 import React from 'react';
-import { Pressable, View, Text } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { CameraView } from 'expo-camera';
 import { InferenceResultModal } from '@/components/InferenceResultModal';
 import { RealTimeOverlay } from '@/components/RealTimeOverlay';
 import { useCameraInference } from '@/hooks/camera/useCameraInference';
+import { Colors, BorderRadius } from '@/constants/theme';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -25,12 +26,27 @@ export default function HomeScreen() {
 
   return (
     <View
-      className="flex-1 bg-white px-6 pt-4"
-      style={{ paddingBottom: insets.bottom + tabBarHeight + 12 }}
+      className="flex-1 px-6 pt-4"
+      style={{
+        backgroundColor: Colors.background,
+        paddingBottom: insets.bottom + tabBarHeight + 12,
+      }}
     >
-      <Text className="text-[24px] font-bold text-[#007bff] mb-2">Caméra</Text>
+      <Text
+        className="text-[24px] font-bold mb-2"
+        style={{ color: Colors.text }}
+      >
+        Caméra
+      </Text>
 
-      <View className="flex-1 rounded-xl overflow-hidden border border-neutral-200/50 relative">
+      <View
+        className="flex-1 overflow-hidden relative"
+        style={{
+          borderRadius: BorderRadius.lg,
+          borderWidth: 1,
+          borderColor: Colors.border,
+        }}
+      >
         {isGranted ? (
           <CameraView
             {...cameraProps}
@@ -39,7 +55,7 @@ export default function HomeScreen() {
           />
         ) : (
           <View className="flex-1 items-center justify-center p-4 gap-3">
-            <Text className="text-center text-[#555]">
+            <Text className="text-center" style={{ color: Colors.textSecondary }}>
               Autorisez l&apos;accès à la caméra pour afficher l&apos;aperçu.
             </Text>
           </View>
@@ -51,28 +67,36 @@ export default function HomeScreen() {
       </View>
 
       {isGranted && (
-        <Pressable
+        <TouchableOpacity
           onPress={() => setIsStreaming((s) => !s)}
-          className={`mt-5 h-12 px-5 rounded-xl items-center justify-center ${
-            isStreaming ? 'bg-[#FF3B30]' : 'bg-[#007bff]'
-          }`}
-          style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+          activeOpacity={0.9}
+          className="mt-5 h-12 px-5 items-center justify-center"
+          style={{
+            borderRadius: BorderRadius.lg,
+            backgroundColor: isStreaming ? Colors.danger : Colors.primary,
+          }}
         >
-          <Text className="text-white text-lg font-semibold">
+          <Text className="text-lg font-semibold" style={{ color: Colors.white }}>
             {isStreaming ? "Arrêter l'envoi" : "Démarrer l'envoi"}
           </Text>
-        </Pressable>
+        </TouchableOpacity>
       )}
 
-      <Pressable
+      <TouchableOpacity
         onPress={pickImage}
-        className={`${isGranted ? 'mt-3' : 'mt-5'} h-12 px-5 rounded-xl items-center justify-center bg-[#5856D6]`}
-        style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+        activeOpacity={0.9}
+        className="mt-3 h-12 px-5 items-center justify-center"
+        style={{
+          borderRadius: BorderRadius.lg,
+          backgroundColor: Colors.white,
+          borderWidth: 1,
+          borderColor: Colors.primary,
+        }}
       >
-        <Text className="text-white text-lg font-semibold">
-          📷 Sélectionner une photo
+        <Text className="text-lg font-semibold" style={{ color: Colors.primary }}>
+          Importer depuis la galerie
         </Text>
-      </Pressable>
+      </TouchableOpacity>
 
       <InferenceResultModal
         visible={modalVisible}
