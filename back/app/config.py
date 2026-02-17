@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: int
     APP_NAME: str
+    PVA_ENABLED: bool = True
 
     @property
     def database_url(self):
