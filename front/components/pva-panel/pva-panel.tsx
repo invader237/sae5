@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Switch } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Switch, Platform } from "react-native";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import PvaModal from "@/components/pva-components/PvaModal";
 import PictureItem from "@/components/pva-components/PvaPictureItem";
 import { usePvaPreview } from "@/hooks/pva/usePvaPreview";
 import { Colors, BorderRadius, Shadows } from "@/constants/theme";
+import WebSwitch from "@/components/ui/WebSwitch";
 import { usePvaStatus } from "@/hooks/pva/usePvaStatus";
 
 interface PvaPanelProps {
@@ -91,13 +92,23 @@ const PvaPanel = ({ onDataChanged }: PvaPanelProps) => {
           )}
         </View>
         <View className="flex-row items-center gap-3">
-          <Switch
-            value={pvaEnabled}
-            onValueChange={toggle}
-            disabled={isToggling}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
-            thumbColor={Colors.white}
-          />
+          {Platform.OS === "web" ? (
+            <WebSwitch
+              value={pvaEnabled}
+              onValueChange={toggle}
+              disabled={isToggling}
+              trackColor={{ false: Colors.border, true: Colors.primary }}
+              thumbColor={Colors.white}
+            />
+          ) : (
+            <Switch
+              value={pvaEnabled}
+              onValueChange={toggle}
+              disabled={isToggling}
+              trackColor={{ false: Colors.border, true: Colors.primary }}
+              thumbColor={Colors.white}
+            />
+          )}
           <TouchableOpacity 
             onPress={handleRefresh} 
             disabled={isRefreshing} 
