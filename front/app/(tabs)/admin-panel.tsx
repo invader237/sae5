@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { Redirect } from "expo-router";
 import ModelSelector from "@/components/model-selector";
+import ModelActivationVisualization from "@/components/model-activation-visualization";
 import ModelStatsPanel from "@/components/model-stats-panel";
 import PvaPanel from "@/components/pva-panel";
 import RoomManagmentPanel from "@/components/room-managment-panel";
@@ -25,30 +26,29 @@ export default function AdminPanel() {
   }
 
   return (
-    <ScrollView 
-      className="flex-1" 
+    <ScrollView
+      className="flex-1"
       style={{ backgroundColor: Colors.background }}
       contentContainerStyle={{ padding: 20, paddingBottom: 140 }}
     >
       <View className="gap-5">
         {/* Header avec style moderne */}
         <View className="mb-2">
-          <Text 
-            className="text-3xl font-bold"
-            style={{ color: Colors.text }}
-          >
+          <Text className="text-3xl font-bold" style={{ color: Colors.text }}>
             Panneau Admin
           </Text>
         </View>
 
-      <ModelSelector controller={modelSelector} />
+        <ModelSelector controller={modelSelector} />
 
-      <ModelStatsPanel
-        modelId={modelSelector.model}
-        refreshKey={statsRefreshKey}
-      />
+        <ModelActivationVisualization />
 
-      <PvaPanel onDataChanged={triggerStatsRefresh} />
+        <ModelStatsPanel
+          modelId={modelSelector.model}
+          refreshKey={statsRefreshKey}
+        />
+
+        <PvaPanel onDataChanged={triggerStatsRefresh} />
 
         <RoomManagmentPanel />
 
