@@ -22,6 +22,8 @@ from app.model.domain.catalog.layers_catalog import LayersCatalog
 from app.model.infra.factory.model_factory import (
     get_layers_catalog,
 )
+from typing import Any, Dict, List
+from app.model.domain.service.predict import load_model
 from uuid import UUID
 
 
@@ -78,6 +80,19 @@ class ModelController:
             self.get_layers_catalog,
             methods=["GET"],
         )
+
+        self.router.add_api_route(
+            "/active/layers",
+            self.get_active_model_layers,
+            methods=["GET"],
+        )
+
+        self.router.add_api_route(
+            "/active/layers/preset",
+            self.get_active_model_layers_preset,
+            methods=["GET"],
+        )
+
 
     def get_models(
         self,
@@ -223,6 +238,77 @@ class ModelController:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(e),
             )
+        
+    def _recommended_layers(self, all_layers: List[str], size: int = 8) -> List[str]:
+        preset8 = [
+            "conv1",
+            "layer1.0.conv1",
+            "layer1.2.conv3",
+            "layer2.0.conv1",
+            "layer2.3.conv3",
+            "layer3.0.conv1",
+            "layer3.5.conv3",
+            "layer4.2.conv3",
+        ]
+        preset5 = [
+            "conv1",
+            "layer2.0.conv1",
+            "layer3.0.conv1",
+            "layer4.2.conv3",
+            "avgpool",
+        ]
+
+        preset = preset5 if size <= 5 else preset8
+        return [x for x in preset if x in all_layers]
+
+
+    def get_active_model_layers(
+        self,
+        model_catalog: ModelCatalog = Depends(get_model_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin")),
+    ) -> Dict[str, Any]:
+        active = model_catalog.find_active_model()
+        if not active:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No active model",
+            )
+
+        # Active model path is used as model_version in your codebase
+        model_version = active.path
+        model = load_model(model_version)
+
+        all_layers = [name for name, _ in model.named_modules() if name]
+        recommended = self._recommended_layers(all_layers, size=8)
+
+        return {
+            "model_version": model_version,
+            "layers": all_layers,
+            "recommended": recommended,
+        }
+
+
+    def get_active_model_layers_preset(
+        self,
+        size: int = 8,
+        model_catalog: ModelCatalog = Depends(get_model_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin")),
+    ) -> Dict[str, Any]:
+        active = model_catalog.find_active_model()
+        if not active:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No active model",
+            )
+
+        model_version = active.path
+        model = load_model(model_version)
+        all_layers = [name for name, _ in model.named_modules() if name]
+
+        return {
+            "model_version": model_version,
+            "recommended": self._recommended_layers(all_layers, size=size),
+        }
 
 
 model_controller = ModelController()

@@ -9,15 +9,16 @@ from fastapi import (
     Form,
     Path as FastAPIPath,
     Body,
-    Request,
 )
-from PIL import Image
-import io
 from fastapi.responses import StreamingResponse
+from PIL import Image
 from pathlib import Path
 from typing import Literal, Optional, List
+import io
 import uuid
 from datetime import datetime, timezone
+
+from pydantic import BaseModel
 
 from app.picture.domain.mapper.picture_to_pictureDTO_mapper import (
     picture_to_pictureDTO_mapper,
@@ -30,27 +31,43 @@ from app.picture.domain.DTO.pictureDTO import PictureDTO
 from app.picture.domain.DTO.picturePvaDTO import PicturePvaDTO
 from app.picture.domain.catalog.picture_catalog import PictureCatalog
 from app.picture.infra.factory.picture_factory import get_picture_catalog
+
 from app.room.infra.factory.room_factory import get_room_catalog
 from app.room.domain.catalog.room_catalog import RoomCatalog
-from app.model.domain.service.predict import predict_image
-from app.model.infra.factory.model_factory import get_model_loader
+
+from app.model.domain.service.predict import (
+    predict_image,
+    load_model,
+    PREPROCESS_CACHE,
+)
+from app.model.domain.service.activations import generate_activations
+from app.model.infra.factory.model_factory import get_model_catalog
+from app.model.domain.catalog.model_catalog import ModelCatalog
+
 from app.authentification.core.admin_required import (
     require_role,
     AuthenticatedUser,
     optional_user,
 )
-from app.model.infra.factory.model_factory import get_model_catalog
-from app.model.domain.catalog.model_catalog import ModelCatalog
+
 from app.history.infra.factory.history_factory import get_history_catalog
 from app.history.domain.entity.history import History
 from app.config import settings
 
+
 UPLOAD_DIR = Path("uploads")
+
+
+class ActivationsRequestDTO(BaseModel):
+    layers: Optional[List[str]] = None
+    include_heatmaps: bool = True
+    include_overlays: bool = True
 
 
 class PictureController:
     def __init__(self):
         self.router = APIRouter(prefix="/pictures", tags=["pictures"])
+
         self.router.add_api_route(
             "/",
             self.get_pictures,
@@ -116,7 +133,8 @@ class PictureController:
             response_model=list[PicturePvaDTO],
             methods=["GET"],
         )
-        # Activation visualisations
+
+        # Activation visualisations (static files)
         self.router.add_api_route(
             "/activations/{token}",
             self.list_activation_images,
@@ -128,6 +146,13 @@ class PictureController:
             methods=["GET"],
         )
 
+        # Activations generation (decoupled from inference)
+        self.router.add_api_route(
+            "/{picture_id}/activations",
+            self.generate_picture_activations,
+            methods=["POST"],
+        )
+
     def get_pictures(
         self,
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
@@ -137,28 +162,20 @@ class PictureController:
 
     async def import_picture(
         self,
-        request: Request,
-        type: Literal["analyse", "database"] | None = Query(
+        type: Optional[Literal["analyse", "database"]] = Query(
             None,
             alias="type",
             description="Type d'import",
         ),
-        type_form: Literal["analyse", "database"] | None = Form(
+        type_form: Optional[Literal["analyse", "database"]] = Form(
             None,
             alias="type",
             description="Type d'import (form)",
-        ),
-        layers: Optional[str] = Query(
-            None,
-            description="Comma-separated layer names to visualize "
-            "(e.g. avgpool,fc)"
-            ". If omitted, defaults to a light set.",
         ),
         file: UploadFile | None = File(None),
         image: UploadFile | None = File(None),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
         room_catalog: RoomCatalog = Depends(get_room_catalog),
-        model_loader=Depends(get_model_loader),
         model_catalog: ModelCatalog = Depends(get_model_catalog),
         history_catalog=Depends(get_history_catalog),
         user: AuthenticatedUser | None = Depends(optional_user()),
@@ -177,8 +194,7 @@ class PictureController:
                 detail="Paramètre 'type' requis (analyse|database)",
             )
 
-        if upload_file.content_type not in {
-                "image/jpeg", "image/png", "image/jpg"}:
+        if upload_file.content_type not in {"image/jpeg", "image/png", "image/jpg"}:
             raise HTTPException(
                 status_code=400,
                 detail="Type de fichier non supporté",
@@ -204,51 +220,29 @@ class PictureController:
             # Persist the resized image
             dest_path.write_bytes(resized_bytes)
 
-        # Parse layers query
-        activation_layers: Optional[List[str]] = None
-        if layers:
-            # "avgpool,fc" -> ["avgpool", "fc"]
-            activation_layers = [
-                x.strip() for x in layers.split(",") if x.strip()]
-            if not activation_layers:
-                activation_layers = None
-
-        # Inference + activations
+        # Inference only (no activations here)
         try:
             inference_result = predict_image(
                 image_bytes=resized_bytes,
                 top_k=5,
                 confidence_threshold=0.0,
                 catalog=model_catalog,
-                activation_layers=activation_layers,
-                save_activations_to=str(
-                    UPLOAD_DIR),  # IMPORTANT: same base as controller routes
-                max_activation_channels=64,
             )
-        except Exception as e:
+        except Exception as exc:
             raise HTTPException(
-                status_code=500, detail=f"Inference failed: {e}"
+                status_code=500,
+                detail=f"Inference failed: {exc}",
             )
 
-        # Make URLs easier for front: include base URL
-        base_url = str(request.base_url).rstrip("/")
-        if isinstance(inference_result, dict):
-            inference_result["activation_base_url"] = base_url
-
-        # Extract top_score
         recognition_percentage = None
         try:
-            if inference_result.get("top_score") is not None:
-                recognition_percentage = float(
-                    inference_result.get("top_score"))
+            top_score = inference_result.get("top_score")
+            if top_score is not None:
+                recognition_percentage = float(top_score)
             else:
                 preds = inference_result.get("predictions") or []
-                if len(preds) > 0:
-                    top = preds[0]
-                    for k in ("probability", "score", "confidence", "prob"):
-                        if k in top:
-                            recognition_percentage = float(top[k])
-                            break
+                if preds:
+                    recognition_percentage = float(preds[0].get("score", 0.0))
         except Exception:
             recognition_percentage = None
 
@@ -291,17 +285,79 @@ class PictureController:
 
         return inference_result
 
+    async def generate_picture_activations(
+        self,
+        picture_id: uuid.UUID = FastAPIPath(
+            ...,
+            description="ID de l'image (picture_id)",
+        ),
+        payload: ActivationsRequestDTO = Body(...),
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        model_catalog: ModelCatalog = Depends(get_model_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin")),
+    ):
+        picture = picture_catalog.find_by_id(picture_id)
+        if not picture:
+            raise HTTPException(status_code=404, detail="Picture not found")
+
+        try:
+            image_bytes = Path(picture.path).read_bytes()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Cannot read picture file")
+
+        active_model = model_catalog.find_active_model()
+        if not active_model:
+            raise HTTPException(
+                status_code=500,
+                detail="No active model configured",
+            )
+
+        model_version = active_model.path
+        model = load_model(model_version)
+
+        pc = PREPROCESS_CACHE.get(model_version, {}).copy()
+        input_size = int(pc.get("size", active_model.input_size))
+        mean = pc.get("mean")
+        std = pc.get("std")
+
+        layers_list: Optional[List[str]] = payload.layers or None
+        include_heatmaps: bool = bool(payload.include_heatmaps)
+        include_overlays: bool = bool(payload.include_overlays)
+
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+        try:
+            activations_payload = generate_activations(
+                model=model,
+                image_bytes=image_bytes,
+                input_size=input_size,
+                mean=mean,
+                std=std,
+                layers=layers_list,
+                include_heatmaps=include_heatmaps,
+                include_overlays=include_overlays,
+                uploads_dir=str(UPLOAD_DIR),
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Activations failed: {exc}",
+            )
+
+        return {
+            "picture_id": str(picture_id),
+            "model_version": model_version,
+            "activations": activations_payload,
+        }
+
     async def find_picture_to_validate(
         self,
         limit: int = Query(50, ge=1, le=100),
         offset: int = Query(0, ge=0),
-        picture_catalog: PictureCatalog = Depends(
-            get_picture_catalog),
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
     ):
-        pictures = picture_catalog.find_by_not_validated(
-            limit=limit, offset=offset)
-        return [picture_to_picturePvaDTO_mapper.apply(
-            picture) for picture in pictures]
+        pictures = picture_catalog.find_by_not_validated(limit=limit, offset=offset)
+        return [picture_to_picturePvaDTO_mapper.apply(p) for p in pictures]
 
     async def get_pva_status(self):
         return {"enabled": settings.PVA_ENABLED}
@@ -329,10 +385,8 @@ class PictureController:
     async def validate_pictures(
         self,
         pictures: list[PicturePvaDTO],
-        picture_catalog: PictureCatalog = Depends(
-            get_picture_catalog),
-        user: AuthenticatedUser = Depends(
-            require_role("admin")),
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
+        user: AuthenticatedUser = Depends(require_role("admin")),
     ):
         validation_date = datetime.now(timezone.utc)
         updated_pictures = []
@@ -343,24 +397,26 @@ class PictureController:
                 picture_obj.validation_date = validation_date
                 picture_obj.is_validated = True
                 updated = picture_catalog.save(picture_obj)
-                updated_pictures.append(
-                    picture_to_pictureDTO_mapper.apply(updated))
-            except Exception as e:
+                updated_pictures.append(picture_to_pictureDTO_mapper.apply(updated))
+            except Exception:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Erreur validation de {picture.id}: {str(e)}",
-                    )
+                    detail=f"Validation failed: {picture.id}",
+                )
 
         return updated_pictures
 
     async def recover_picture(
         self,
         picture_id: uuid.UUID = FastAPIPath(
-            ..., description="ID de la picture à récupérer"),
-        type: Literal["thumbnail", "full"] =
-        Query("full", description="Type d'image à récupérer"),
-        picture_catalog: PictureCatalog =
-        Depends(get_picture_catalog),
+            ...,
+            description="ID de la picture à récupérer",
+        ),
+        type: Literal["thumbnail", "full"] = Query(
+            "full",
+            description="Type d'image à récupérer",
+        ),
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
     ):
         picture = picture_catalog.find_by_id(picture_id)
         image = Image.open(picture.path)
@@ -386,16 +442,20 @@ class PictureController:
     async def list_activation_images(self, token: str):
         act_dir = UPLOAD_DIR / "activations" / token
         if not act_dir.exists() or not act_dir.is_dir():
-            raise HTTPException(status_code=404,
-                                detail="Activation token not found")
+            raise HTTPException(
+                status_code=404,
+                detail="Activation token not found",
+            )
 
         files = []
         for p in sorted(act_dir.iterdir()):
             if p.is_file() and p.suffix.lower() in (".png", ".jpg", ".jpeg"):
-                files.append({
-                    "name": p.name,
-                    "url": f"/pictures/activations/{token}/image/{p.name}",
-                })
+                files.append(
+                    {
+                        "name": p.name,
+                        "url": f"/pictures/activations/{token}/image/{p.name}",
+                    }
+                )
 
         return {"token": token, "images": files}
 
@@ -403,26 +463,23 @@ class PictureController:
         act_file = UPLOAD_DIR / "activations" / token / filename
         if not act_file.exists() or not act_file.is_file():
             raise HTTPException(
-                status_code=404, detail="Activation image not found")
+                status_code=404,
+                detail="Activation image not found",
+            )
 
-        # Choose media type by extension
         ext = act_file.suffix.lower()
-        if ext in (".jpg", ".jpeg"):
-            media_type = "image/jpeg"
-        else:
-            media_type = "image/png"
+        media_type = "image/jpeg" if ext in (".jpg", ".jpeg") else "image/png"
 
         try:
             f = act_file.open("rb")
             return StreamingResponse(f, media_type=media_type)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc))
 
     async def delete_pictures_pva(
         self,
         pictures: list[PicturePvaDTO] = Body(...),
-        picture_catalog: PictureCatalog = Depends(
-            get_picture_catalog),
+        picture_catalog: PictureCatalog = Depends(get_picture_catalog),
         user: AuthenticatedUser = Depends(require_role("admin")),
     ):
         deleted_pictures = []
@@ -433,13 +490,13 @@ class PictureController:
                     picture_catalog.delete(picture.id)
                     try:
                         Path(pic_obj.path).unlink()
-                    except Exception as e:
-                        print(f"Erreur suppression {pic_obj.path}: {e}")
+                    except Exception as exc:
+                        print(f"Erreur suppression {pic_obj.path}: {exc}")
                     deleted_pictures.append(picture.id)
-            except Exception as e:
+            except Exception:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Erreur suppression {picture.id}: {str(e)}",
+                    detail=f"Delete failed: {picture.id}",
                 )
 
         return {"deleted_pictures": deleted_pictures}
@@ -459,32 +516,36 @@ class PictureController:
                 if not picture.room or not picture.room.id:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"room.id manquant pour {picture.id}")
+                        detail=f"Missing room.id for {picture.id}",
+                    )
 
                 room = room_catalog.find_by_id(picture.room.id)
                 if not room:
                     raise HTTPException(
                         status_code=404,
-                        detail=f"Salle '{picture.room.id}' non trouvée")
+                        detail=f"Room not found: {picture.room.id}",
+                    )
 
                 pic = picture_catalog.find_by_id(picture.id)
                 if not pic:
                     raise HTTPException(
                         status_code=404,
-                        detail=f"Image '{picture.id}' non trouvée")
+                        detail=f"Picture not found: {picture.id}",
+                    )
 
                 pic.room = room
                 pic.validation_date = validation_date
                 pic.is_validated = True
 
                 updated = picture_catalog.save(pic)
-                updated_pictures.append(
-                    picture_to_picturePvaDTO_mapper.apply(updated))
+                updated_pictures.append(picture_to_picturePvaDTO_mapper.apply(updated))
 
-            except Exception as e:
+            except HTTPException:
+                raise
+            except Exception:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Erreur maj de {picture.id}: {str(e)}",
+                    detail=f"Update failed: {picture.id}",
                 )
 
         return updated_pictures
@@ -492,24 +553,29 @@ class PictureController:
     async def get_validated_pictures_by_room(
         self,
         room_id: uuid.UUID = FastAPIPath(
-            ..., description="ID de la salle (room_id)"),
+            ...,
+            description="ID de la salle (room_id)",
+        ),
         limit: int = Query(500, ge=1, le=500),
         offset: int = Query(0, ge=0),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
         user: AuthenticatedUser = Depends(require_role("admin")),
     ):
         pictures = picture_catalog.find_validated_by_room_id(
-            room_id=room_id, limit=limit, offset=offset)
+            room_id=room_id,
+            limit=limit,
+            offset=offset,
+        )
 
         pictures = sorted(
             pictures,
-            key=lambda p: (p.validation_date or datetime.min.replace(
-                tzinfo=timezone.utc)),
+            key=lambda p: (
+                p.validation_date or datetime.min.replace(tzinfo=timezone.utc)
+            ),
             reverse=True,
         )
 
-        return [picture_to_picturePvaDTO_mapper.apply(
-            picture) for picture in pictures]
+        return [picture_to_picturePvaDTO_mapper.apply(p) for p in pictures]
 
 
 picture_controller = PictureController()
