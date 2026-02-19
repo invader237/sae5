@@ -281,10 +281,21 @@ class ModelController:
         all_layers = [name for name, _ in model.named_modules() if name]
         recommended = self._recommended_layers(all_layers, size=8)
 
+        # Step-by-step info: first-level children with their type
+        steps = [
+            {
+                "step": idx,
+                "name": name,
+                "display_name": type(mod).__name__,
+            }
+            for idx, (name, mod) in enumerate(model.named_children())
+        ]
+
         return {
             "model_version": model_version,
             "layers": all_layers,
             "recommended": recommended,
+            "steps": steps,
         }
 
 
