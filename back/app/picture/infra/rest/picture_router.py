@@ -194,7 +194,9 @@ class PictureController:
                 detail="Paramètre 'type' requis (analyse|database)",
             )
 
-        if upload_file.content_type not in {"image/jpeg", "image/png", "image/jpg"}:
+        if upload_file.content_type not in {
+            "image/jpeg", "image/png", "image/jpg"
+        }:
             raise HTTPException(
                 status_code=400,
                 detail="Type de fichier non supporté",
@@ -303,7 +305,9 @@ class PictureController:
         try:
             image_bytes = Path(picture.path).read_bytes()
         except Exception:
-            raise HTTPException(status_code=400, detail="Cannot read picture file")
+            raise HTTPException(
+                status_code=400, detail="Cannot read picture file"
+                )
 
         active_model = model_catalog.find_active_model()
         if not active_model:
@@ -356,7 +360,9 @@ class PictureController:
         offset: int = Query(0, ge=0),
         picture_catalog: PictureCatalog = Depends(get_picture_catalog),
     ):
-        pictures = picture_catalog.find_by_not_validated(limit=limit, offset=offset)
+        pictures = picture_catalog.find_by_not_validated(
+            limit=limit, offset=offset
+        )
         return [picture_to_picturePvaDTO_mapper.apply(p) for p in pictures]
 
     async def get_pva_status(self):
@@ -397,7 +403,9 @@ class PictureController:
                 picture_obj.validation_date = validation_date
                 picture_obj.is_validated = True
                 updated = picture_catalog.save(picture_obj)
-                updated_pictures.append(picture_to_pictureDTO_mapper.apply(updated))
+                updated_pictures.append(
+                    picture_to_pictureDTO_mapper.apply(updated)
+                )
             except Exception:
                 raise HTTPException(
                     status_code=400,
@@ -538,7 +546,9 @@ class PictureController:
                 pic.is_validated = True
 
                 updated = picture_catalog.save(pic)
-                updated_pictures.append(picture_to_picturePvaDTO_mapper.apply(updated))
+                updated_pictures.append(
+                    picture_to_picturePvaDTO_mapper.apply(updated)
+                )
 
             except HTTPException:
                 raise
