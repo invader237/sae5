@@ -5,12 +5,11 @@ import math
 import os
 import uuid
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 from PIL import Image
 from torch import nn
-import torchvision.utils as vutils
 
 from app.model.domain.service.transforms import (
     open_image_from_bytes,
