@@ -4,12 +4,12 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Image,
   Pressable,
   ActivityIndicator,
   Modal,
   FlatList,
 } from "react-native";
+import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import axiosInstance, { baseURL } from "@/api/axiosConfig";
@@ -18,21 +18,18 @@ import { Colors, BorderRadius, Shadows } from "@/constants/theme";
 type PictureOption = {
   id: string;
   label: string;
-  previewUrl: string; // full
-  thumbUrl: string; // thumbnail (selector)
-};
-
-type LayerCatalogResponse = {
-  model_version: string;
-  layers: string[];
-  recommended?: string[];
+  previewUrl: string;
+  thumbUrl: string;
 };
 
 type ActivationItem = {
+  step?: number;
   layer: string;
+  display_name?: string;
   type: "original" | "heatmap" | "overlay";
   url: string;
   shape?: number[];
+  error?: string;
 };
 
 type ActivationsResponse = {
@@ -44,38 +41,28 @@ type ActivationsResponse = {
   };
 };
 
+type StepEntry = {
+  step: number;
+  display_name: string;
+  layer: string;
+  shape?: number[];
+  heatmap?: ActivationItem;
+  overlay?: ActivationItem;
+};
+
 export default function ModelActivationVisualization() {
-  // ---------------------------
-  // Pictures
-  // ---------------------------
+  /* ---- Pictures ---- */
   const [pictures, setPictures] = useState<PictureOption[]>([]);
   const [picturesLoading, setPicturesLoading] = useState(false);
   const [selectedPictureId, setSelectedPictureId] = useState<string>("");
   const [pictureModalOpen, setPictureModalOpen] = useState(false);
 
-  // ---------------------------
-  // Layers
-  // ---------------------------
-  const [availableLayers, setAvailableLayers] = useState<string[]>([]);
-  const [recommendedLayers, setRecommendedLayers] = useState<string[]>([]);
-  const [layersLoading, setLayersLoading] = useState(false);
-
-  const [selectedLayers, setSelectedLayers] = useState<string[]>([
-    "conv1",
-    "layer2.0.conv1",
-    "layer3.0.conv1",
-    "layer4.2.conv3",
-  ]);
-
-  // ---------------------------
-  // Options overlays/heatmaps
-  // ---------------------------
+  /* ---- Options ---- */
   const [includeOverlays, setIncludeOverlays] = useState(true);
   const [includeHeatmaps, setIncludeHeatmaps] = useState(true);
+  const [showHeatmaps, setShowHeatmaps] = useState(false);
 
-  // ---------------------------
-  // Result
-  // ---------------------------
+  /* ---- Result ---- */
   const [result, setResult] = useState<ActivationsResponse | null>(null);
   const [generating, setGenerating] = useState(false);
 
@@ -84,36 +71,13 @@ export default function ModelActivationVisualization() {
     [pictures, selectedPictureId],
   );
 
-  // ===========================
-  // Helpers UI
-  // ===========================
-  const toggleLayer = (layer: string) => {
-    setSelectedLayers((prev) => {
-      if (prev.includes(layer)) return prev.filter((x) => x !== layer);
-      return [...prev, layer];
-    });
-  };
-
-  const isSelected = (layer: string) => selectedLayers.includes(layer);
-
-  const selectedLayersLabel = useMemo(() => {
-    if (!selectedLayers.length) return "(aucune)";
-    if (selectedLayers.length <= 8) return selectedLayers.join(", ");
-    return `${selectedLayers.slice(0, 8).join(", ")} … (+${
-      selectedLayers.length - 8
-    })`;
-  }, [selectedLayers]);
-
-  // ===========================
-  // Fetch pictures (to-validate = true)
-  // ===========================
+  /* ==== Fetch pictures (to-validate) ==== */
   const fetchPictures = async () => {
     setPicturesLoading(true);
     try {
       const resp = await axiosInstance.get("/pictures/to-validate", {
         params: { limit: 9, offset: 0 },
       });
-
       const list = Array.isArray(resp.data) ? resp.data : [];
       const mapped: PictureOption[] = list
         .filter((x: any) => x?.id)
@@ -122,7 +86,6 @@ export default function ModelActivationVisualization() {
           const roomLabel =
             x?.room?.name ?? x?.room?.label ?? x?.room ?? "Image";
           const short = id.slice(0, 8);
-
           return {
             id,
             label: `${roomLabel} • ${short}`,
@@ -130,9 +93,7 @@ export default function ModelActivationVisualization() {
             thumbUrl: `/pictures/${id}/recover?type=thumbnail`,
           };
         });
-
       setPictures(mapped);
-
       if (mapped.length > 0) {
         setSelectedPictureId((prev) => {
           if (prev && mapped.some((p) => p.id === prev)) return prev;
@@ -146,120 +107,68 @@ export default function ModelActivationVisualization() {
     }
   };
 
-  const fetchLayers = async () => {
-    setLayersLoading(true);
-    try {
-      const resp = await axiosInstance.get<LayerCatalogResponse>(
-        "/models/active/layers",
-      );
-
-      const layers = Array.isArray(resp.data?.layers) ? resp.data.layers : [];
-      const clean = layers.filter((x) => typeof x === "string" && x.trim());
-
-      setAvailableLayers(clean);
-
-      const rec = Array.isArray(resp.data?.recommended)
-        ? resp.data.recommended
-        : [];
-      setRecommendedLayers(rec);
-
-      if (!selectedLayers.length) {
-        const preset = (rec.length ? rec : clean.slice(0, 8)).slice(0, 8);
-        setSelectedLayers(preset);
-      }
-    } catch {
-      setAvailableLayers([]);
-      setRecommendedLayers([]);
-    } finally {
-      setLayersLoading(false);
-    }
-  };
-
-  const refreshAll = async () => {
-    // refresh images + layers
-    await Promise.all([fetchPictures(), fetchLayers()]);
-  };
-
   useEffect(() => {
-    refreshAll();
+    fetchPictures();
   }, []);
 
-  // ===========================
-  // Generate activations
-  // ===========================
+  /* ==== Generate activations (all layers, step by step) ==== */
   const generate = async () => {
     if (!selectedPictureId) return;
-    if (!selectedLayers.length) return;
-
     setGenerating(true);
     setResult(null);
-
     try {
       const resp = await axiosInstance.post<ActivationsResponse>(
         `/pictures/${selectedPictureId}/activations`,
         {
-          layers: selectedLayers,
+          layers: null,
           include_heatmaps: includeHeatmaps,
           include_overlays: includeOverlays,
         },
       );
-
       setResult(resp.data);
     } finally {
       setGenerating(false);
     }
   };
 
-  // ===========================
-  // Items affichés
-  // ===========================
-  const items = useMemo(() => {
-    const it = result?.activations?.items ?? [];
-    return Array.isArray(it) ? it : [];
+  /* ==== Steps grouped by step index ==== */
+  const steps = useMemo<StepEntry[]>(() => {
+    const items = result?.activations?.items ?? [];
+    const map = new Map<number, StepEntry>();
+
+    for (const item of items) {
+      if (item.type === "original") continue;
+      const step = item.step ?? 0;
+      if (!map.has(step)) {
+        map.set(step, {
+          step,
+          display_name: item.display_name || item.layer,
+          layer: item.layer,
+          shape: item.shape ?? undefined,
+        });
+      }
+      const entry = map.get(step)!;
+      if (item.type === "heatmap") entry.heatmap = item;
+      if (item.type === "overlay") entry.overlay = item;
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.step - b.step);
   }, [result]);
 
-  const originals = useMemo(
-    () => items.filter((x) => x.type === "original"),
-    [items],
-  );
-  const overlays = useMemo(
-    () => items.filter((x) => x.type === "overlay"),
-    [items],
-  );
-  const heatmaps = useMemo(
-    () => items.filter((x) => x.type === "heatmap"),
-    [items],
+  const originalItem = useMemo(
+    () =>
+      (result?.activations?.items ?? []).find((i) => i.type === "original") ??
+      null,
+    [result],
   );
 
-  // ===========================
-  // Layers list affichée
-  // ===========================
-  const layersForUI = useMemo(() => {
-    if (recommendedLayers.length) return recommendedLayers;
-    // fallback : montrer un sous-ensemble raisonnable si pas de recommended
-    const preferred = [
-      "conv1",
-      "layer1.0.conv1",
-      "layer1.2.conv3",
-      "layer2.0.conv1",
-      "layer2.3.conv3",
-      "layer3.0.conv1",
-      "layer3.5.conv3",
-      "layer4.2.conv3",
-      "avgpool",
-    ];
-    const existingPreferred = preferred.filter((x) =>
-      availableLayers.includes(x),
-    );
-    if (existingPreferred.length) return existingPreferred;
+  /* ==== Shape label ==== */
+  const shapeLabel = (shape?: number[]) => {
+    if (!shape || !shape.length) return "";
+    return shape.join(" × ");
+  };
 
-    // sinon, limiter à 30 premières pour ne pas tuer l’UI
-    return availableLayers.slice(0, 30);
-  }, [availableLayers, recommendedLayers]);
-
-  // ===========================
-  // Picture selector modal item
-  // ===========================
+  /* ==== Picture selector thumbnail ==== */
   const renderThumb = ({ item }: { item: PictureOption }) => {
     const selected = item.id === selectedPictureId;
     return (
@@ -280,17 +189,16 @@ export default function ModelActivationVisualization() {
         }}
       >
         <Image
-          source={{ uri: `${baseURL}${item.thumbUrl}` }}
+          source={`${baseURL}${item.thumbUrl}`}
           style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="disk"
         />
       </Pressable>
     );
   };
 
-  // ===========================
-  // UI
-  // ===========================
+  /* ==== UI ==== */
   return (
     <>
       <View
@@ -310,12 +218,12 @@ export default function ModelActivationVisualization() {
               style={{ color: Colors.text }}
               numberOfLines={2}
             >
-              Visualisation des activations
+              Visualisation couche par couche
             </Text>
           </View>
 
           <TouchableOpacity
-            onPress={refreshAll}
+            onPress={fetchPictures}
             className="flex-row items-center justify-center"
             style={{
               backgroundColor: Colors.primary,
@@ -328,7 +236,7 @@ export default function ModelActivationVisualization() {
           </TouchableOpacity>
         </View>
 
-        {/* Select image (bouton + modal grid) */}
+        {/* Image selector */}
         <View className="gap-2">
           <Text style={{ color: Colors.text, fontWeight: "700" }}>Image</Text>
 
@@ -356,8 +264,9 @@ export default function ModelActivationVisualization() {
             >
               {selectedPicture ? (
                 <Image
-                  source={{ uri: `${baseURL}${selectedPicture.thumbUrl}` }}
+                  source={`${baseURL}${selectedPicture.thumbUrl}`}
                   style={{ width: 44, height: 44, borderRadius: 12 }}
+                  cachePolicy="disk"
                 />
               ) : (
                 <View
@@ -396,80 +305,7 @@ export default function ModelActivationVisualization() {
           </TouchableOpacity>
         </View>
 
-        {/* Layers chips (5–8 recommandé) */}
-        <View className="gap-2">
-          <Text style={{ color: Colors.text, fontWeight: "700" }}>
-            Couches à visualiser (recommandé: 5 à 8)
-          </Text>
-
-          <View
-            style={{
-              backgroundColor: Colors.inputBackground,
-              borderRadius: BorderRadius.md,
-              borderWidth: 1,
-              borderColor: Colors.border,
-              padding: 10,
-            }}
-          >
-            {layersLoading ? (
-              <ActivityIndicator />
-            ) : (
-              <ScrollView
-                style={{ maxHeight: 160 }}
-                showsVerticalScrollIndicator
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    justifyContent: "flex-start",
-                    columnGap: 10,
-                    rowGap: 10,
-                  }}
-                >
-                  {layersForUI.map((layer) => {
-                    const selected = isSelected(layer);
-
-                    return (
-                      <Pressable
-                        key={layer}
-                        onPress={() => toggleLayer(layer)}
-                        style={{
-                          width: "31%", // 3 colonnes + columnGap
-                          paddingVertical: 12,
-                          borderRadius: BorderRadius.lg,
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: selected
-                            ? Colors.primary
-                            : Colors.white,
-                          borderWidth: 1,
-                          borderColor: selected
-                            ? Colors.primary
-                            : Colors.border,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: selected ? Colors.white : Colors.text,
-                            fontWeight: "600",
-                            fontSize: 12,
-                            textAlign: "center",
-                          }}
-                          numberOfLines={1}
-                        >
-                          {layer}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </ScrollView>
-            )}
-          </View>
-        </View>
-
-        {/* Toggle overlays/heatmaps */}
+        {/* Toggle overlays / heatmaps */}
         <View style={{ flexDirection: "row", gap: 10 }}>
           <TouchableOpacity
             onPress={() => setIncludeOverlays((v) => !v)}
@@ -537,18 +373,13 @@ export default function ModelActivationVisualization() {
         {/* Generate */}
         <TouchableOpacity
           onPress={generate}
-          disabled={
-            generating || !selectedPictureId || selectedLayers.length === 0
-          }
+          disabled={generating || !selectedPictureId}
           style={{
             backgroundColor: Colors.primary,
             borderRadius: BorderRadius.full,
             paddingVertical: 14,
             alignItems: "center",
-            opacity:
-              generating || !selectedPictureId || selectedLayers.length === 0
-                ? 0.6
-                : 1,
+            opacity: generating || !selectedPictureId ? 0.6 : 1,
           }}
         >
           {generating ? (
@@ -562,64 +393,149 @@ export default function ModelActivationVisualization() {
           )}
         </TouchableOpacity>
 
-        {/* Images */}
+        {/* Results – step by step */}
         {result && (
-          <View style={{ gap: 14 }}>
-            {overlays.length > 0 && (
-              <View style={{ gap: 8 }}>
-                <Text style={{ color: Colors.text, fontWeight: "800" }}>
-                  Overlays
+          <View style={{ gap: 16 }}>
+            {/* Original image */}
+            {originalItem && (
+              <View style={{ gap: 6 }}>
+                <Text
+                  style={{
+                    color: Colors.text,
+                    fontWeight: "800",
+                    fontSize: 15,
+                  }}
+                >
+                  Image originale
                 </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={{ flexDirection: "row", gap: 12 }}>
-                    {overlays.map((it) => (
-                      <View
-                        key={`${it.layer}-${it.type}-${it.url}`}
-                        style={{ gap: 6 }}
-                      >
-                        <Image
-                          source={{ uri: `${baseURL}${it.url}` }}
-                          style={{ width: 160, height: 160, borderRadius: 14 }}
-                        />
-                        <Text
-                          style={{ color: Colors.textSecondary, fontSize: 12 }}
-                        >
-                          {it.layer}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </ScrollView>
+                <Image
+                  source={`${baseURL}${originalItem.url}`}
+                  style={{ width: 160, height: 160, borderRadius: 14 }}
+                  cachePolicy="disk"
+                />
               </View>
             )}
 
-            {heatmaps.length > 0 && (
-              <View style={{ gap: 8 }}>
-                <Text style={{ color: Colors.text, fontWeight: "800" }}>
-                  Heatmaps
-                </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={{ flexDirection: "row", gap: 12 }}>
-                    {heatmaps.map((it) => (
-                      <View
-                        key={`${it.layer}-${it.type}-${it.url}`}
-                        style={{ gap: 6 }}
-                      >
-                        <Image
-                          source={{ uri: `${baseURL}${it.url}` }}
-                          style={{ width: 160, height: 160, borderRadius: 14 }}
-                        />
-                        <Text
-                          style={{ color: Colors.textSecondary, fontSize: 12 }}
-                        >
-                          {it.layer}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </ScrollView>
+            {/* View toggle */}
+            {steps.length > 0 && (
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <Pressable
+                  onPress={() => setShowHeatmaps(false)}
+                  style={{
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderRadius: BorderRadius.full,
+                    backgroundColor: !showHeatmaps
+                      ? Colors.primary
+                      : Colors.inputBackground,
+                    borderWidth: 1,
+                    borderColor: !showHeatmaps
+                      ? Colors.primary
+                      : Colors.border,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: !showHeatmaps ? Colors.white : Colors.text,
+                      fontWeight: "700",
+                      fontSize: 13,
+                    }}
+                  >
+                    Overlays
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setShowHeatmaps(true)}
+                  style={{
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderRadius: BorderRadius.full,
+                    backgroundColor: showHeatmaps
+                      ? Colors.primary
+                      : Colors.inputBackground,
+                    borderWidth: 1,
+                    borderColor: showHeatmaps
+                      ? Colors.primary
+                      : Colors.border,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: showHeatmaps ? Colors.white : Colors.text,
+                      fontWeight: "700",
+                      fontSize: 13,
+                    }}
+                  >
+                    Heatmaps
+                  </Text>
+                </Pressable>
               </View>
             )}
+
+            {/* Steps carousel */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 14, paddingRight: 4 }}
+            >
+              {steps.map((entry) => {
+                const img = showHeatmaps ? entry.heatmap : entry.overlay;
+                if (!img) return null;
+
+                return (
+                  <View
+                    key={entry.step}
+                    style={{
+                      width: 140,
+                      alignItems: "center",
+                      gap: 6,
+                      backgroundColor: Colors.inputBackground,
+                      borderRadius: BorderRadius.lg,
+                      paddingVertical: 10,
+                      paddingHorizontal: 6,
+                    }}
+                  >
+                    <Image
+                      source={`${baseURL}${img.url}`}
+                      style={{ width: 120, height: 120, borderRadius: 12 }}
+                      cachePolicy="disk"
+                    />
+
+                    <Text
+                      style={{
+                        color: Colors.text,
+                        fontWeight: "800",
+                        fontSize: 12,
+                      }}
+                    >
+                      Étape {entry.step + 1}
+                    </Text>
+                    <Text
+                      style={{
+                        color: Colors.primary,
+                        fontWeight: "700",
+                        fontSize: 14,
+                        textAlign: "center",
+                      }}
+                      numberOfLines={1}
+                    >
+                      {entry.display_name}
+                    </Text>
+                    {entry.shape && (
+                      <Text
+                        style={{
+                          color: Colors.textSecondary,
+                          fontSize: 10,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {shapeLabel(entry.shape)}
+                      </Text>
+                    )}
+                  </View>
+                );
+              })}
+            </ScrollView>
           </View>
         )}
       </View>
@@ -665,23 +581,21 @@ export default function ModelActivationVisualization() {
                 Choisir une image
               </Text>
 
-              <View style={{ flexDirection: "row", gap: 10 }}>
-                <TouchableOpacity
-                  onPress={() => setPictureModalOpen(false)}
-                  style={{
-                    backgroundColor: Colors.inputBackground,
-                    borderRadius: BorderRadius.full,
-                    width: 40,
-                    height: 40,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderWidth: 1,
-                    borderColor: Colors.border,
-                  }}
-                >
-                  <MaterialIcons name="close" size={20} color={Colors.text} />
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                onPress={() => setPictureModalOpen(false)}
+                style={{
+                  backgroundColor: Colors.inputBackground,
+                  borderRadius: BorderRadius.full,
+                  width: 40,
+                  height: 40,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 1,
+                  borderColor: Colors.border,
+                }}
+              >
+                <MaterialIcons name="close" size={20} color={Colors.text} />
+              </TouchableOpacity>
             </View>
 
             {picturesLoading ? (
