@@ -93,7 +93,6 @@ class ModelController:
             methods=["GET"],
         )
 
-
     def get_models(
         self,
         model_catalog: ModelCatalog = Depends(get_model_catalog),
@@ -238,8 +237,12 @@ class ModelController:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(e),
             )
-        
-    def _recommended_layers(self, all_layers: List[str], size: int = 8) -> List[str]:
+
+    def _recommended_layers(
+            self,
+            all_layers: List[str],
+            size: int = 8) -> List[str]:
+
         preset8 = [
             "conv1",
             "layer1.0.conv1",
@@ -260,7 +263,6 @@ class ModelController:
 
         preset = preset5 if size <= 5 else preset8
         return [x for x in preset if x in all_layers]
-
 
     def get_active_model_layers(
         self,
@@ -297,7 +299,6 @@ class ModelController:
             "recommended": recommended,
             "steps": steps,
         }
-
 
     def get_active_model_layers_preset(
         self,
